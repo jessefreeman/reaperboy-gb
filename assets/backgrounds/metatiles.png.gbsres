@@ -1,0 +1,12 @@
+{
+  "_resourceType": "background",
+  "id": "9424719a-0df1-4a67-b6e7-19e26080d903",
+  "name": "metatiles",
+  "symbol": "bg_metatiles",
+  "tileColors": "04!003+023+005+014+044+008+014+044+005+014+002+01!0624+008+01!0023+",
+  "filename": "metatiles.png",
+  "width": 16,
+  "height": 8,
+  "imageWidth": 128,
+  "imageHeight": 64
+}

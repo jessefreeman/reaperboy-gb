@@ -1,0 +1,89 @@
+{
+  "_resourceType": "settings",
+  "startSceneId": "a5dc9d98-277b-43cd-99c2-56484d0b6eff",
+  "startX": 10,
+  "startY": 1,
+  "startMoveSpeed": 1,
+  "startAnimSpeed": 15,
+  "startDirection": "down",
+  "showCollisionExtraTiles": false,
+  "showCollisionTileValues": false,
+  "collisionLayerOpacity": 60,
+  "sgbEnabled": false,
+  "customHead": "",
+  "defaultBackgroundPaletteIds": [
+    "56875f51-8aa1-45a1-96d3-ca57cdbf66b9",
+    "80e07357-0a82-473b-9d4f-462a7a19eb47",
+    "6a746a65-dc2d-40cf-a95d-dc9216c682c7",
+    "0eaf2ceb-dfa1-488a-be31-519af0a9cd54",
+    "026873e7-a4a5-4a3a-9b85-1f90fd97f55b",
+    "5485df92-bea4-4101-b1ec-3c3fac74c4a6",
+    "dmg",
+    "default-ui"
+  ],
+  "defaultSpritePaletteIds": [
+    "765bf48f-18a2-40b1-96e7-4bcf218f855d",
+    "cc63bb41-3b21-41ac-b147-0c5a9a837895",
+    "fb48d5ef-8208-48b5-90b9-d03fbd020b8b",
+    "default-sprite",
+    "default-sprite",
+    "default-sprite",
+    "default-sprite",
+    "default-sprite"
+  ],
+  "defaultSpritePaletteId": "default-sprite",
+  "defaultUIPaletteId": "default-ui",
+  "playerPaletteId": "",
+  "defaultFontId": "4bd653f0-e08d-424e-9e5b-c1f3aaa21e47",
+  "defaultCharacterEncoding": "",
+  "defaultPlayerSprites": {
+    "TOPDOWN": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+    "PLATFORM": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+    "ADVENTURE": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+    "SHMUP": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+    "POINTNCLICK": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+    "LOGO": "581d34d0-9591-4e6e-a609-1d94f203b0cd"
+  },
+  "musicDriver": "huge",
+  "cartType": "mbc5",
+  "batterylessEnabled": false,
+  "customColorsWhite": "E8F8E0",
+  "customColorsLight": "B0F088",
+  "customColorsDark": "509878",
+  "customColorsBlack": "202850",
+  "customControlsUp": [
+    "ArrowUp",
+    "i"
+  ],
+  "customControlsDown": [
+    "ArrowDown",
+    "k"
+  ],
+  "customControlsLeft": [
+    "j",
+    "ArrowLeft"
+  ],
+  "customControlsRight": [
+    "ArrowRight",
+    "l"
+  ],
+  "customControlsA": [
+    "x"
+  ],
+  "customControlsB": [
+    "z"
+  ],
+  "customControlsStart": [
+    "s"
+  ],
+  "customControlsSelect": [
+    "a"
+  ],
+  "colorMode": "mixed",
+  "colorCorrection": "default",
+  "generateDebugFilesEnabled": false,
+  "compilerPreset": 3000,
+  "scriptEventPresets": {},
+  "scriptEventDefaultPresets": {},
+  "runSceneSelectionOnly": false
+}

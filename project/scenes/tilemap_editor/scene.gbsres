@@ -1,0 +1,31 @@
+{
+  "_resourceType": "scene",
+  "id": "e9e7c884-fcbd-43af-a95c-db0b8f941a3d",
+  "_index": 2,
+  "type": "TOPDOWN",
+  "name": "Tilemap Editor",
+  "symbol": "scene_3",
+  "x": 168,
+  "y": 200,
+  "width": 20,
+  "height": 16,
+  "backgroundId": "82f25976-e193-495b-a755-a3bee28b79f5",
+  "tilesetId": "260e21e3-7aba-43f3-9058-77853673dd79",
+  "colorModeOverride": "none",
+  "paletteIds": [
+    "56875f51-8aa1-45a1-96d3-ca57cdbf66b9",
+    "",
+    "0eaf2ceb-dfa1-488a-be31-519af0a9cd54",
+    "fb48d5ef-8208-48b5-90b9-d03fbd020b8b",
+    "",
+    "",
+    "e5c2b602-8011-4c5c-968c-09366644a18f"
+  ],
+  "spritePaletteIds": [],
+  "autoFadeSpeed": 1,
+  "script": [],
+  "playerHit1Script": [],
+  "playerHit2Script": [],
+  "playerHit3Script": [],
+  "collisions": "00140+"
+}

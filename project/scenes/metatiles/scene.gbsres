@@ -1,0 +1,32 @@
+{
+  "_resourceType": "scene",
+  "id": "a3d7bdfe-b7c5-4469-bb78-47e835752429",
+  "_index": 0,
+  "type": "TOPDOWN",
+  "name": "Metatiles",
+  "symbol": "scene_1",
+  "x": 184,
+  "y": 104,
+  "width": 16,
+  "height": 8,
+  "backgroundId": "9424719a-0df1-4a67-b6e7-19e26080d903",
+  "tilesetId": "260e21e3-7aba-43f3-9058-77853673dd79",
+  "colorModeOverride": "none",
+  "paletteIds": [
+    "",
+    "",
+    "0eaf2ceb-dfa1-488a-be31-519af0a9cd54",
+    "fb48d5ef-8208-48b5-90b9-d03fbd020b8b",
+    "026873e7-a4a5-4a3a-9b85-1f90fd97f55b",
+    "5485df92-bea4-4101-b1ec-3c3fac74c4a6",
+    "dmg",
+    "default-ui"
+  ],
+  "spritePaletteIds": [],
+  "autoFadeSpeed": 1,
+  "script": [],
+  "playerHit1Script": [],
+  "playerHit2Script": [],
+  "playerHit3Script": [],
+  "collisions": "004+0f3+0079+"
+}

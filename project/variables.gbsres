@@ -1,0 +1,85 @@
+{
+  "_resourceType": "variables",
+  "variables": [
+    {
+      "id": "0",
+      "name": "V_EDIT_MODE",
+      "symbol": "var_v_edit_mode"
+    },
+    {
+      "id": "1",
+      "name": "V_START_X",
+      "symbol": "var_v_start_x"
+    },
+    {
+      "id": "2",
+      "name": "V_START_Y",
+      "symbol": "var_v_start_y"
+    },
+    {
+      "id": "3",
+      "name": "V_SELECTOR_X",
+      "symbol": "var_v_selector_x"
+    },
+    {
+      "id": "4",
+      "name": "V_SELECTOR_Y",
+      "symbol": "var_v_selector_y"
+    },
+    {
+      "id": "5",
+      "name": "V_SELECTOR_MODE",
+      "symbol": "var_v_selector_mode"
+    },
+    {
+      "id": "6",
+      "name": "V_CURRENT_BRUSH_ID",
+      "symbol": "var_v_current_brush_id"
+    },
+    {
+      "id": "7",
+      "name": "MAX_TILE_",
+      "symbol": "var_max_tile_"
+    },
+    {
+      "id": "8",
+      "name": "V_TILE_MAP_ID",
+      "symbol": "var_v_tile_map_id"
+    },
+    {
+      "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L0",
+      "name": "L_SET_TO_POSITION",
+      "symbol": "var_l_set_to_position"
+    },
+    {
+      "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L1",
+      "name": "EDIT_MODE_LABEL",
+      "symbol": "var_edit_mode_label"
+    },
+    {
+      "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L2",
+      "name": "L_OLD_MODE",
+      "symbol": "var_l_old_mode"
+    }
+  ],
+  "constants": [
+    {
+      "id": "7c5b1588-1427-4cf0-9fdf-f73eeacd0263",
+      "name": "C_PAINT_MODE",
+      "symbol": "const_c_paint_mode",
+      "value": 0
+    },
+    {
+      "id": "5d71a4b9-8ca7-4a39-a472-27bca7ec1d7d",
+      "name": "C_TILE_MODE",
+      "symbol": "const_c_tile_mode",
+      "value": 1
+    },
+    {
+      "id": "1d18d1a1-e61f-4505-818c-31edb587ed8c",
+      "name": "C_CODE_MODE",
+      "symbol": "const_c_code_mode",
+      "value": 2
+    }
+  ]
+}

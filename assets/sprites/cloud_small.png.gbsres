@@ -1,0 +1,100 @@
+{
+  "_resourceType": "sprite",
+  "id": "1bf30148-09c3-44bb-b7d8-080e67c4846a",
+  "name": "cloud_small",
+  "symbol": "sprite_cloud_small",
+  "states": [
+    {
+      "id": "5e037015-2e62-4330-ae56-36f90ebd53ac",
+      "name": "",
+      "animationType": "multi_movement",
+      "flipLeft": true,
+      "animations": [
+        {
+          "id": "32d19dc3-416f-4dd3-a496-7f3609f3f12d",
+          "frames": [
+            {
+              "id": "4dc5b2ef-4835-46af-a992-05f0d56ce4f1",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "a047fff4-97a4-4370-9a0c-8b68f29d0b96",
+          "frames": [
+            {
+              "id": "14fbcdba-cf53-44b9-856c-6e5bcfb1844b",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "eacb3f2f-bc13-4605-81d6-7f6b1bc0546c",
+          "frames": [
+            {
+              "id": "1b45e165-fb63-4d9a-a110-3895c461e3fa",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "ad872b7c-95b8-408d-bb96-0568339c763d",
+          "frames": [
+            {
+              "id": "b9600b56-edcc-4ee2-9432-7cda570be363",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "04982edc-5511-42fb-b266-63b7650838aa",
+          "frames": [
+            {
+              "id": "71f4058f-f3bf-4c38-807c-d9e79914ec9b",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "6e2324a6-7c4d-4fad-92cf-97d8a7db1f9d",
+          "frames": [
+            {
+              "id": "b7b7947c-a7e4-4268-b49b-53b399681d1f",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "b2a63f51-fb44-45fd-9d82-37acbf4f4d06",
+          "frames": [
+            {
+              "id": "3eef5498-07dc-4930-9a19-29f87811c44f",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "efe41309-861c-4c31-b867-ee4f68a949c4",
+          "frames": [
+            {
+              "id": "3a07c99a-29d3-4268-88c2-74a35905133d",
+              "tiles": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "numTiles": 0,
+  "canvasWidth": 32,
+  "canvasHeight": 32,
+  "boundsX": 0,
+  "boundsY": 0,
+  "boundsWidth": 16,
+  "boundsHeight": 16,
+  "animSpeed": 15,
+  "filename": "cloud_small.png",
+  "width": 16,
+  "height": 8,
+  "checksum": "99362b5655b2cba7788dd4cb478ed8352631e0e2"
+}

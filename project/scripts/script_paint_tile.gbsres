@@ -1,0 +1,102 @@
+{
+  "_resourceType": "script",
+  "id": "03f3e0c0-c6f4-4dea-b765-e627bba98fd8",
+  "name": "SCRIPT_PAINT_TILE",
+  "description": "",
+  "variables": {},
+  "actors": {},
+  "symbol": "script_7",
+  "script": [
+    {
+      "command": "EVENT_TEXT",
+      "args": {
+        "text": [
+          "PAINT $V_SELECTOR_X $V_SELECTOR_Y\n$V0$"
+        ],
+        "__section": "text",
+        "avatarId": "",
+        "minHeight": 4,
+        "maxHeight": 7,
+        "textX": 1,
+        "textY": 1,
+        "textHeight": 5,
+        "position": "bottom",
+        "clearPrevious": true,
+        "showFrame": "true",
+        "speedIn": -1,
+        "speedOut": -1,
+        "closeWhen": "key",
+        "closeButton": "a",
+        "closeDelayTime": 0.5,
+        "closeDelayFrames": 30,
+        "__comment": true
+      },
+      "id": "21bf3d28-6b7e-4820-a30e-1e79b2022bd8"
+    },
+    {
+      "command": "EVENT_TEXT",
+      "args": {
+        "text": [
+          "TILE ID"
+        ],
+        "__section": "text",
+        "avatarId": "",
+        "minHeight": 4,
+        "maxHeight": 7,
+        "textX": 1,
+        "textY": 1,
+        "textHeight": 5,
+        "position": "bottom",
+        "clearPrevious": true,
+        "showFrame": "true",
+        "speedIn": -1,
+        "speedOut": -1,
+        "closeWhen": "key",
+        "closeButton": "a",
+        "closeDelayTime": 0.5,
+        "closeDelayFrames": 30,
+        "__collapse": true,
+        "__comment": true
+      },
+      "id": "000e0ee4-b39a-46a8-a5e3-1fe12dea8225"
+    },
+    {
+      "command": "EVENT_GET_META_TILE_AT_POS",
+      "args": {
+        "x": {
+          "type": "number",
+          "value": 0
+        },
+        "y": {
+          "type": "number",
+          "value": 0
+        },
+        "output": "V0",
+        "__comment": true
+      },
+      "id": "4eacb3b0-7fba-40db-a169-64808bf02373"
+    },
+    {
+      "command": "EVENT_GBVM_SCRIPT",
+      "args": {
+        "script": "VM_GET_TILE_XY VAR_V_TILE_MAP_ID, VAR_V_SELECTOR_X, VAR_V_SELECTOR_Y",
+        "references": [
+          {
+            "type": "variable",
+            "id": "8"
+          },
+          {
+            "type": "variable",
+            "id": "3"
+          },
+          {
+            "type": "variable",
+            "id": "4"
+          }
+        ],
+        "__comment": false
+      },
+      "id": "12ac5a1c-e6a2-462e-ba22-b1d906270a8b"
+    }
+  ]
+}

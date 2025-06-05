@@ -1,0 +1,160 @@
+{
+  "_resourceType": "sprite",
+  "id": "f5c1d686-4822-427c-b1f7-82d6e72635be",
+  "name": "reaper_boy",
+  "symbol": "sprite_reaper_boy",
+  "states": [
+    {
+      "id": "109f4956-f5df-4f49-9d44-7ad9f7197d62",
+      "name": "",
+      "animationType": "multi",
+      "flipLeft": true,
+      "animations": [
+        {
+          "id": "2481a445-e088-42c5-aea9-4af5c3d1d418",
+          "frames": [
+            {
+              "id": "280c18af-3a5c-4c8c-ae3b-46c4246dcd67",
+              "tiles": [
+                {
+                  "id": "4f9033a0-c78c-4d56-82e3-76c067569ab8",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 0,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": false
+                }
+              ]
+            },
+            {
+              "id": "1868075a-db8f-4431-bfd3-1b253e3f12dd",
+              "tiles": [
+                {
+                  "id": "f3bc070b-6a65-4faa-acfb-840b812ebd5d",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 8,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b3e78810-bf0b-4500-bc35-ee79446e40c7",
+          "frames": [
+            {
+              "id": "838461d3-e107-4632-9903-49179ce2b2a1",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "3be18186-9883-4c5c-9d22-e66e89f93067",
+          "frames": [
+            {
+              "id": "d9c5f41b-3f2d-454a-b99d-99bdbb78b555",
+              "tiles": [
+                {
+                  "id": "58059da7-2625-479a-9b3c-100909774586",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 16,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "5f2d65d9-0aa6-4cd1-9466-f4ffd5149924",
+          "frames": [
+            {
+              "id": "29929d3e-2f01-411a-8ff5-210cba1993fe",
+              "tiles": [
+                {
+                  "id": "458c1aaf-23e0-4dcc-b9b3-82179f0d82a0",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 24,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "1bb71496-c7d2-4ccd-88d8-19140042458b",
+          "frames": [
+            {
+              "id": "4d58b6ba-31af-44dc-977b-38c79b2ef577",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "ff14a898-0184-487f-b280-732eea4bc72d",
+          "frames": [
+            {
+              "id": "6b4b9c8c-845c-46ee-b763-fb743a2c0657",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "e8d5ec0c-b581-4d5b-bfe8-6c6e45510675",
+          "frames": [
+            {
+              "id": "361f3d22-1942-4d23-b4b8-63d640ef10b5",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "9ab7705b-7c68-4555-be4a-4059386202b6",
+          "frames": [
+            {
+              "id": "cc846a77-b5b3-47b1-beb9-4c80eedeb639",
+              "tiles": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "numTiles": 4,
+  "canvasWidth": 16,
+  "canvasHeight": 16,
+  "boundsX": 4,
+  "boundsY": 0,
+  "boundsWidth": 8,
+  "boundsHeight": 8,
+  "animSpeed": 15,
+  "filename": "reaper_boy.png",
+  "width": 32,
+  "height": 16,
+  "checksum": "81641426c3f2428b3471fce004053c1b51244295"
+}

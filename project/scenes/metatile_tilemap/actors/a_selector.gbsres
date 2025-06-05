@@ -1,0 +1,79 @@
+{
+  "_resourceType": "actor",
+  "id": "d5043213-d1dc-4d02-b470-9d13dfa87721",
+  "name": "A_Selector",
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "fb2d44b0-44da-40f6-ae90-389233c3652b",
+  "prefabId": "",
+  "direction": "down",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "paletteId": "",
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "prefabScriptOverrides": {},
+  "symbol": "actor_0",
+  "script": [],
+  "startScript": [
+    {
+      "command": "EVENT_ACTOR_DEACTIVATE",
+      "args": {
+        "actorId": "$self$"
+      },
+      "id": "6fad46a9-2be0-4d13-96c9-d2ddb902f0d7"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_POSITION",
+      "args": {
+        "actorId": "$self$",
+        "x": {
+          "type": "number",
+          "value": 10
+        },
+        "y": {
+          "type": "number",
+          "value": 10
+        },
+        "__collapse": false
+      },
+      "id": "88619409-7d41-4efe-b2fb-38dd56fd7324"
+    },
+    {
+      "command": "EVENT_ACTOR_GET_POSITION",
+      "args": {
+        "actorId": "$self$",
+        "vectorX": "3",
+        "vectorY": "4"
+      },
+      "id": "58688ecc-be27-47de-af7f-112b0d667ef6"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_ANIMATION_SPEED",
+      "args": {
+        "actorId": "$self$",
+        "speed": 255
+      },
+      "id": "4662640b-1800-4a61-9893-d8e6ae4f9f33"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_FRAME",
+      "args": {
+        "actorId": "$self$",
+        "frame": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      "id": "ca6d8eea-0f5e-427e-b5d9-86dd3eb48c89"
+    }
+  ],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": [],
+  "x": 7,
+  "y": 10,
+  "_index": 0
+}

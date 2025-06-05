@@ -1,0 +1,150 @@
+{
+  "_resourceType": "sprite",
+  "id": "e8a763e5-0185-4283-8bb2-bee164d317a9",
+  "name": "enemy_walker",
+  "symbol": "sprite_enemy_walker",
+  "states": [
+    {
+      "id": "319a185d-dfcf-4b4a-871d-2f898daa38bf",
+      "name": "",
+      "animationType": "multi",
+      "flipLeft": true,
+      "animations": [
+        {
+          "id": "4a77136d-2804-40f5-8173-e3930921a96d",
+          "frames": [
+            {
+              "id": "63bac425-c3e5-41e3-9a01-704f0c89057c",
+              "tiles": [
+                {
+                  "id": "fef9e9ad-6ecb-4008-80aa-017a22d68d0b",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 0,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 1,
+                  "priority": false
+                }
+              ]
+            },
+            {
+              "id": "873a2aa9-821d-4e67-80a3-d2ac22ac6aaf",
+              "tiles": [
+                {
+                  "id": "743333ff-33c8-467b-be87-09d73e977f82",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 8,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 1,
+                  "priority": false
+                }
+              ]
+            },
+            {
+              "id": "caee2f9b-aa55-41f0-b0cf-89a0f52d8b2a",
+              "tiles": [
+                {
+                  "id": "9970d7a8-ac80-4018-af70-896882d62bef",
+                  "x": 4,
+                  "y": 0,
+                  "sliceX": 16,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 1,
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a85b0b49-49e9-4f95-961a-af0350c1499c",
+          "frames": [
+            {
+              "id": "e6a9bf32-233d-40a8-b59e-55328dd38b73",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "a65f0115-74b8-4612-85d4-2bb60868cbe8",
+          "frames": [
+            {
+              "id": "145d89a7-b120-460e-8825-fe1ec2245da3",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "3128cbe4-1516-4005-b396-dd402d94d3ee",
+          "frames": [
+            {
+              "id": "7095fea0-a95c-4568-8606-80c758ebc69c",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "449faefc-88bc-460f-a070-683804f33f3c",
+          "frames": [
+            {
+              "id": "08cd4bf0-e768-492b-afd4-c752a73b9605",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "eeb4f7c9-6d55-4554-9983-17cb619c0c28",
+          "frames": [
+            {
+              "id": "d33e9208-9c27-4d58-8e4d-1c8f278026ba",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "d691834b-da7d-4d18-b18d-6d9d2d030d8e",
+          "frames": [
+            {
+              "id": "58927ebd-841a-46f9-a659-e41274c44f14",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "47180426-a79a-445a-9f16-9df1d5acb5b8",
+          "frames": [
+            {
+              "id": "67cb6eb0-b302-46ca-8db5-a9c65bf286b5",
+              "tiles": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "numTiles": 3,
+  "canvasWidth": 16,
+  "canvasHeight": 16,
+  "boundsX": 0,
+  "boundsY": 0,
+  "boundsWidth": 16,
+  "boundsHeight": 16,
+  "animSpeed": 15,
+  "filename": "enemy_walker.png",
+  "width": 32,
+  "height": 16,
+  "checksum": "8264b1b251a43745a3e638ffb72b9ea65c710da7"
+}

@@ -1,0 +1,207 @@
+{
+  "_resourceType": "script",
+  "id": "f1877a0b-a5f9-48df-be64-96a920412ec8",
+  "name": "SCRIPT_CHANGE_MODE",
+  "description": "",
+  "variables": {
+    "V0": {
+      "id": "V0",
+      "name": "V_NEW_MODE",
+      "passByReference": true
+    }
+  },
+  "actors": {},
+  "symbol": "script_4",
+  "script": [
+    {
+      "command": "EVENT_SET_VALUE",
+      "args": {
+        "variable": "5",
+        "value": {
+          "type": "variable",
+          "value": "V0"
+        },
+        "__collapse": false,
+        "__comment": false
+      },
+      "id": "ef7227a6-57cd-4d38-9af7-a7a4f5996c1e"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "5"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "__collapseElse": true,
+        "__disableElse": true
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "4",
+              "value": {
+                "type": "number",
+                "value": 13
+              },
+              "__comment": false,
+              "__label": "Set selector y to paint row"
+            },
+            "id": "40384702-3937-4e6b-b06d-abbdb289710c"
+          },
+          {
+            "command": "EVENT_SET_INPUT_SCRIPT",
+            "args": {
+              "input": [
+                "right"
+              ],
+              "override": true,
+              "__scriptTabs": "press",
+              "__comment": true
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_CALL_CUSTOM_EVENT",
+                  "args": {
+                    "customEventId": "a67be606-c2d3-4328-8fe6-2dde7afa7c7c",
+                    "$variable[V1]$": {
+                      "type": "number",
+                      "value": 0
+                    },
+                    "$variable[V2]$": {
+                      "type": "number",
+                      "value": 0
+                    },
+                    "$variable[V4]$": {
+                      "type": "number",
+                      "value": 0
+                    },
+                    "$variable[V5]$": {
+                      "type": "number",
+                      "value": 0
+                    },
+                    "$actor[0]$": "player"
+                  },
+                  "id": "2c69b9d7-ea2a-4e2c-884e-7f0caa36b26d"
+                }
+              ]
+            },
+            "id": "a44ae1d0-5ba1-4ac0-a6ad-8d2994472e1d"
+          }
+        ],
+        "false": []
+      },
+      "id": "2b98a9f0-efb4-4283-be11-13b77d2cc00f"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "5"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        "__collapseElse": true,
+        "__disableElse": true
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "4",
+              "value": {
+                "type": "number",
+                "value": 10
+              },
+              "__comment": false,
+              "__label": "Set selector y to paint row"
+            },
+            "id": "017d8323-a09d-4736-94f7-0778b6ccbf76"
+          }
+        ],
+        "false": []
+      },
+      "id": "33cacdc5-93f9-4144-aec6-46e49cdf7816"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "5"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        "__collapseElse": true,
+        "__disableElse": true
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "4",
+              "value": {
+                "type": "number",
+                "value": 8
+              },
+              "__comment": false,
+              "__label": "Set selector y to paint row"
+            },
+            "id": "2e5e1fa7-c79a-4ddf-9058-8f03efbae4c1"
+          }
+        ],
+        "false": []
+      },
+      "id": "51f50f0e-bc41-4f3f-b1a5-3560e00983e5"
+    },
+    {
+      "command": "EVENT_TEXT",
+      "args": {
+        "text": [
+          "$V0$"
+        ],
+        "__section": "text",
+        "avatarId": "",
+        "minHeight": 4,
+        "maxHeight": 7,
+        "textX": 1,
+        "textY": 1,
+        "textHeight": 5,
+        "position": "bottom",
+        "clearPrevious": true,
+        "showFrame": "true",
+        "speedIn": -1,
+        "speedOut": -1,
+        "closeWhen": "key",
+        "closeButton": "a",
+        "closeDelayTime": 0.5,
+        "closeDelayFrames": 30,
+        "__comment": true
+      },
+      "id": "ab539750-6c18-4877-9abf-80db2ecaad8e"
+    }
+  ]
+}
