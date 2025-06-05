@@ -6,36 +6,36 @@
   "variables": {
     "V0": {
       "id": "V0",
-      "name": "V_SET_TO_POS",
+      "name": "P_SET_TO_POS",
       "passByReference": true
     },
     "V1": {
       "id": "V1",
-      "name": "V_MAX_X_TILE_ID",
+      "name": "P_MAX_X_TILE_ID",
       "passByReference": true
     },
     "V2": {
       "id": "V2",
-      "name": "V_MIN_X_TILE_ID",
+      "name": "P_MIN_X_TILE_ID",
       "passByReference": true
     },
     "V3": {
       "id": "V3",
-      "name": "V_MAX_Y_TILE_ID",
+      "name": "P_MAX_Y_TILE_ID",
       "passByReference": true
     },
     "V4": {
       "id": "V4",
-      "name": "V_MIN_Y_TILE_ID",
+      "name": "P_MIN_Y_TILE_ID",
+      "passByReference": true
+    },
+    "V5": {
+      "id": "V5",
+      "name": "P_DIRECTION",
       "passByReference": true
     }
   },
-  "actors": {
-    "0": {
-      "id": "0",
-      "name": "P_ACTOR_SELECTOR"
-    }
-  },
+  "actors": {},
   "symbol": "script_5",
   "script": [
     {
@@ -46,13 +46,23 @@
       "children": {
         "true": [
           {
-            "command": "EVENT_IF_INPUT",
+            "command": "EVENT_IF",
             "args": {
-              "input": [
-                "right"
-              ],
+              "condition": {
+                "type": "eq",
+                "valueA": {
+                  "type": "variable",
+                  "value": "V5"
+                },
+                "valueB": {
+                  "type": "constant",
+                  "value": "e3da32fc-b629-4444-87a4-383ada9c7f29"
+                }
+              },
               "__collapseElse": true,
-              "__collapse": true
+              "__collapse": true,
+              "__label": "If right pressed",
+              "__disableElse": true
             },
             "children": {
               "true": [
@@ -62,7 +72,8 @@
                     "input": [
                       "select"
                     ],
-                    "__collapseElse": false
+                    "__collapseElse": false,
+                    "__collapse": true
                   },
                   "children": {
                     "true": [
@@ -156,7 +167,9 @@
                         "value": "V1"
                       }
                     },
-                    "__collapseElse": true
+                    "__collapseElse": true,
+                    "__disableElse": true,
+                    "__collapse": true
                   },
                   "children": {
                     "true": [
@@ -189,16 +202,26 @@
               ],
               "false": []
             },
-            "id": "a6a928b5-b00b-4ab4-a882-fdec018ba5b8"
+            "id": "e668a961-d221-4241-a9e8-09d40ef717db"
           },
           {
-            "command": "EVENT_IF_INPUT",
+            "command": "EVENT_IF",
             "args": {
-              "input": [
-                "left"
-              ],
+              "condition": {
+                "type": "eq",
+                "valueA": {
+                  "type": "variable",
+                  "value": "V5"
+                },
+                "valueB": {
+                  "type": "constant",
+                  "value": "0fe32af1-f5cb-423e-92a3-7dc37381eb38"
+                }
+              },
               "__collapseElse": true,
-              "__collapse": true
+              "__disableElse": true,
+              "__collapse": true,
+              "__label": "If left pressed"
             },
             "children": {
               "true": [
@@ -208,7 +231,8 @@
                     "input": [
                       "select"
                     ],
-                    "__collapseElse": false
+                    "__collapseElse": false,
+                    "__collapse": true
                   },
                   "children": {
                     "true": [
@@ -302,7 +326,9 @@
                         "value": "V2"
                       }
                     },
-                    "__collapseElse": true
+                    "__collapseElse": true,
+                    "__disableElse": true,
+                    "__collapse": true
                   },
                   "children": {
                     "true": [
@@ -335,16 +361,25 @@
               ],
               "false": []
             },
-            "id": "7b7089a9-e240-4dd7-bc19-78ab7a58a863"
+            "id": "2db47dcc-74d6-40fd-ba3e-b05984039139"
           },
           {
-            "command": "EVENT_IF_INPUT",
+            "command": "EVENT_IF",
             "args": {
-              "input": [
-                "up"
-              ],
+              "condition": {
+                "type": "eq",
+                "valueA": {
+                  "type": "variable",
+                  "value": "V5"
+                },
+                "valueB": {
+                  "type": "constant",
+                  "value": "97158607-0785-4d61-9ad6-788bbb19bc3c"
+                }
+              },
               "__collapseElse": true,
-              "__collapse": true
+              "__disableElse": true,
+              "__label": "If up pressed"
             },
             "children": {
               "true": [
@@ -449,7 +484,8 @@
                         "value": "V4"
                       }
                     },
-                    "__collapseElse": true
+                    "__collapseElse": true,
+                    "__collapse": false
                   },
                   "children": {
                     "true": [
@@ -472,16 +508,25 @@
               ],
               "false": []
             },
-            "id": "c7c0e8dd-567e-47df-b8c4-31a0021a7244"
+            "id": "fdf63767-7723-4074-a277-fff863a888f0"
           },
           {
-            "command": "EVENT_IF_INPUT",
+            "command": "EVENT_IF",
             "args": {
-              "input": [
-                "down"
-              ],
+              "condition": {
+                "type": "eq",
+                "valueA": {
+                  "type": "variable",
+                  "value": "V5"
+                },
+                "valueB": {
+                  "type": "constant",
+                  "value": "9810e9cb-af78-40aa-8163-bdec9d4e0d16"
+                }
+              },
               "__collapseElse": true,
-              "__collapse": true
+              "__disableElse": true,
+              "__label": "If down pressed"
             },
             "children": {
               "true": [
@@ -491,7 +536,8 @@
                     "input": [
                       "select"
                     ],
-                    "__collapseElse": false
+                    "__collapseElse": false,
+                    "__collapse": true
                   },
                   "children": {
                     "true": [
@@ -563,7 +609,8 @@
                       {
                         "command": "EVENT_INC_VALUE",
                         "args": {
-                          "variable": "4"
+                          "variable": "4",
+                          "__comment": false
                         },
                         "id": "b5f39dd1-2fa5-4c93-a039-6f555b03a91d"
                       }
@@ -585,7 +632,8 @@
                         "value": "V3"
                       }
                     },
-                    "__collapseElse": true
+                    "__collapseElse": true,
+                    "__disableElse": true
                   },
                   "children": {
                     "true": [
@@ -618,58 +666,7 @@
               ],
               "false": []
             },
-            "id": "4dabbfbb-bc9d-469d-9819-771dd684dee0"
-          },
-          {
-            "command": "EVENT_IF",
-            "args": {
-              "condition": {
-                "type": "eq",
-                "valueA": {
-                  "type": "variable",
-                  "value": "V0"
-                },
-                "valueB": {
-                  "type": "true"
-                }
-              },
-              "__collapseElse": true,
-              "__label": "See if actor needs to jump to new position",
-              "__collapse": true
-            },
-            "children": {
-              "true": [
-                {
-                  "command": "EVENT_SET_VALUE",
-                  "args": {
-                    "variable": "V0",
-                    "value": {
-                      "type": "false"
-                    },
-                    "__label": "Reset set to position flag"
-                  },
-                  "id": "88662d51-7b3d-4eef-b6ad-fc9306568834"
-                },
-                {
-                  "command": "EVENT_ACTOR_SET_POSITION",
-                  "args": {
-                    "actorId": "0",
-                    "x": {
-                      "type": "variable",
-                      "value": "3"
-                    },
-                    "y": {
-                      "type": "variable",
-                      "value": "4"
-                    },
-                    "__label": "Set actor at new position without animation"
-                  },
-                  "id": "42c34ddd-0243-4161-957f-cd0ea50b3e20"
-                }
-              ],
-              "false": []
-            },
-            "id": "4a555fc3-39b1-46ea-a993-b248b78ddab4"
+            "id": "5686f203-1b36-4bde-8721-95d9582d0d3c"
           }
         ]
       },

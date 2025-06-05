@@ -60,26 +60,67 @@
       "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L2",
       "name": "L_OLD_MODE",
       "symbol": "var_l_old_mode"
+    },
+    {
+      "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L3",
+      "name": "V_GET_BRUSH_ID",
+      "symbol": "var_v_get_brush_id"
     }
   ],
   "constants": [
     {
       "id": "7c5b1588-1427-4cf0-9fdf-f73eeacd0263",
-      "name": "C_PAINT_MODE",
-      "symbol": "const_c_paint_mode",
+      "name": "C_EDIT_PAINT_MODE",
+      "symbol": "const_c_edit_paint_mode",
       "value": 0
     },
     {
       "id": "5d71a4b9-8ca7-4a39-a472-27bca7ec1d7d",
-      "name": "C_TILE_MODE",
-      "symbol": "const_c_tile_mode",
+      "name": "C_EDIT_PLAYER_MODE",
+      "symbol": "const_c_edit_player_mode",
       "value": 1
     },
     {
       "id": "1d18d1a1-e61f-4505-818c-31edb587ed8c",
-      "name": "C_CODE_MODE",
-      "symbol": "const_c_code_mode",
+      "name": "C_EDIT_CODE_MODE",
+      "symbol": "const_c_edit_code_mode",
       "value": 2
+    },
+    {
+      "id": "97158607-0785-4d61-9ad6-788bbb19bc3c",
+      "name": "C_UP",
+      "symbol": "const_c_up",
+      "value": 0
+    },
+    {
+      "id": "e3da32fc-b629-4444-87a4-383ada9c7f29",
+      "name": "C_RIGHT",
+      "symbol": "const_c_right",
+      "value": 1
+    },
+    {
+      "id": "9810e9cb-af78-40aa-8163-bdec9d4e0d16",
+      "name": "C_DOWN",
+      "symbol": "const_c_down",
+      "value": 2
+    },
+    {
+      "id": "0fe32af1-f5cb-423e-92a3-7dc37381eb38",
+      "name": "C_LEFT",
+      "symbol": "const_c_left",
+      "value": 3
+    },
+    {
+      "id": "0d23b171-63ce-4320-bb0a-fdb78e7f2dd6",
+      "name": "C_ACTION",
+      "symbol": "const_c_action",
+      "value": 0
+    },
+    {
+      "id": "4d32fc1b-320b-48d4-9bc5-fad082884fb8",
+      "name": "C_CANCEL",
+      "symbol": "const_c_cancel",
+      "value": 1
     }
   ]
 }

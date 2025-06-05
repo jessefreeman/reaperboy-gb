@@ -40,7 +40,7 @@ echo "Writing to: $TMP_FILE"
 print_file() {
   echo "### FILE: $1" >> "$TMP_FILE"
   cat "$1" >> "$TMP_FILE"
-  echo -e "\n\n" >> "$TMP_FILE"
+  echo -e "/n/n" >> "$TMP_FILE"
   echo "✔ Added: $1"
 }
 

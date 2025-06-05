@@ -3,7 +3,7 @@
   "id": "82f25976-e193-495b-a755-a3bee28b79f5",
   "name": "map_editor",
   "symbol": "bg_map_editor",
-  "tileColors": "0017+065+00!064+009+0610+004+0610+003e+0514+00a0+",
+  "tileColors": "0017+065+00!064+009+0610+004+0610+004+0610+002a+0514+00a0+",
   "filename": "map_editor.png",
   "width": 20,
   "height": 16,

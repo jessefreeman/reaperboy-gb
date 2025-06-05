@@ -1,0 +1,259 @@
+{
+  "_resourceType": "script",
+  "id": "226976de-11f0-4ccb-ade3-ec478def0a0e",
+  "name": "SCRIPT_PLAYER_START",
+  "description": "",
+  "variables": {
+    "V0": {
+      "id": "V0",
+      "name": "P_SET_TO_POS",
+      "passByReference": true
+    },
+    "V1": {
+      "id": "V1",
+      "name": "P_MAX_TILE_ID",
+      "passByReference": true
+    },
+    "V2": {
+      "id": "V2",
+      "name": "P_MIN_TILE_ID",
+      "passByReference": true
+    },
+    "V3": {
+      "id": "V3",
+      "name": "P_DIRECTION",
+      "passByReference": true
+    }
+  },
+  "actors": {},
+  "symbol": "script_3",
+  "script": [
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "V3"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "e3da32fc-b629-4444-87a4-383ada9c7f29"
+          }
+        },
+        "__collapseElse": true,
+        "__disableElse": true,
+        "__label": "Test if direction is right"
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_INC_VALUE",
+            "args": {
+              "variable": "3",
+              "__collapse": false
+            },
+            "id": "7b25be0c-45c4-4adb-8f6a-fc8c7a7b4005"
+          },
+          {
+            "command": "EVENT_IF",
+            "args": {
+              "condition": {
+                "type": "gt",
+                "valueA": {
+                  "type": "variable",
+                  "value": "3"
+                },
+                "valueB": {
+                  "type": "variable",
+                  "value": "V1"
+                }
+              },
+              "__collapseElse": true,
+              "__collapse": false
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_SET_VALUE",
+                  "args": {
+                    "variable": "3",
+                    "value": {
+                      "type": "variable",
+                      "value": "V2"
+                    }
+                  },
+                  "id": "53eaf4ca-08d2-4340-9a4e-7ec50fc00981"
+                },
+                {
+                  "command": "EVENT_SET_VALUE",
+                  "args": {
+                    "variable": "V0",
+                    "value": {
+                      "type": "true"
+                    }
+                  },
+                  "id": "39811999-4227-4b49-97d0-064b9ea936ec"
+                }
+              ],
+              "false": []
+            },
+            "id": "55c5076f-5342-4200-b207-d10e9ec8e372"
+          }
+        ],
+        "false": []
+      },
+      "id": "1c44f404-cd5c-472d-84a0-a31e222f34c1"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "V3"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "0fe32af1-f5cb-423e-92a3-7dc37381eb38"
+          }
+        },
+        "__collapseElse": true,
+        "__disableElse": true,
+        "__label": "Test if direction is left"
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_DEC_VALUE",
+            "args": {
+              "variable": "3"
+            },
+            "id": "732fc943-ff87-4a8f-aae6-fb90abeef507"
+          },
+          {
+            "command": "EVENT_IF",
+            "args": {
+              "condition": {
+                "type": "lt",
+                "valueA": {
+                  "type": "variable",
+                  "value": "3"
+                },
+                "valueB": {
+                  "type": "variable",
+                  "value": "V2"
+                }
+              },
+              "__collapseElse": true
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_SET_VALUE",
+                  "args": {
+                    "variable": "3",
+                    "value": {
+                      "type": "variable",
+                      "value": "V1"
+                    }
+                  },
+                  "id": "6db3a6b5-75ac-4d63-920c-6362b324137a"
+                },
+                {
+                  "command": "EVENT_SET_VALUE",
+                  "args": {
+                    "variable": "V0",
+                    "value": {
+                      "type": "true"
+                    }
+                  },
+                  "id": "d95d7c87-43c9-4f8f-9c3b-439fb52cc172"
+                }
+              ],
+              "false": []
+            },
+            "id": "4edb165e-0e0c-41c9-a420-02f10ceda76c"
+          }
+        ],
+        "false": []
+      },
+      "id": "c63d1cd8-9b6b-4b15-8d8e-aabd9472a574"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "V3"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "97158607-0785-4d61-9ad6-788bbb19bc3c"
+          }
+        },
+        "__collapseElse": true,
+        "__label": "Test if direction is up",
+        "__disableElse": true
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_CALL_CUSTOM_EVENT",
+            "args": {
+              "customEventId": "f1877a0b-a5f9-48df-be64-96a920412ec8",
+              "$variable[V0]$": {
+                "type": "constant",
+                "value": "1d18d1a1-e61f-4505-818c-31edb587ed8c"
+              },
+              "__comment": true
+            },
+            "id": "88fc7c3c-6565-4d57-812b-30c213558073"
+          }
+        ],
+        "false": []
+      },
+      "id": "9e093dfe-ec1f-45d2-95e4-fd3ef7e86fb8"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "V3"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "9810e9cb-af78-40aa-8163-bdec9d4e0d16"
+          }
+        },
+        "__collapseElse": true,
+        "__label": "Test if direction is down",
+        "__disableElse": true
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_CALL_CUSTOM_EVENT",
+            "args": {
+              "customEventId": "f1877a0b-a5f9-48df-be64-96a920412ec8",
+              "$variable[V0]$": {
+                "type": "constant",
+                "value": "7c5b1588-1427-4cf0-9fdf-f73eeacd0263"
+              }
+            },
+            "id": "63ea2346-8354-4d4f-9fd1-1a12057a14e2"
+          }
+        ],
+        "false": []
+      },
+      "id": "2ea53aa9-0f6e-406f-a529-514834818183"
+    }
+  ]
+}

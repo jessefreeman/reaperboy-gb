@@ -10,7 +10,12 @@
       "passByReference": true
     }
   },
-  "actors": {},
+  "actors": {
+    "0": {
+      "id": "0",
+      "name": "P_ACTOR_SELECTOR"
+    }
+  },
   "symbol": "script_4",
   "script": [
     {
@@ -36,22 +41,44 @@
             "value": "5"
           },
           "valueB": {
-            "type": "number",
-            "value": 0
+            "type": "constant",
+            "value": "7c5b1588-1427-4cf0-9fdf-f73eeacd0263"
           }
         },
         "__collapseElse": true,
-        "__disableElse": true
+        "__disableElse": true,
+        "__collapse": false,
+        "__label": "Check if paint mode"
       },
       "children": {
         "true": [
+          {
+            "command": "EVENT_TEXT_DRAW",
+            "args": {
+              "text": "PAINT",
+              "x": 2,
+              "y": 3,
+              "location": "background"
+            },
+            "id": "c9faed60-3049-4028-b4bd-55a86203fb49"
+          },
+          {
+            "command": "EVENT_ACTOR_SET_STATE",
+            "args": {
+              "actorId": "0",
+              "spriteStateId": "New Platform",
+              "loopAnim": true,
+              "__comment": true
+            },
+            "id": "45c4bfb8-cc6d-47b6-a454-69a65c320d60"
+          },
           {
             "command": "EVENT_SET_VALUE",
             "args": {
               "variable": "4",
               "value": {
                 "type": "number",
-                "value": 13
+                "value": 11
               },
               "__comment": false,
               "__label": "Set selector y to paint row"
@@ -72,26 +99,7 @@
               "true": [
                 {
                   "command": "EVENT_CALL_CUSTOM_EVENT",
-                  "args": {
-                    "customEventId": "a67be606-c2d3-4328-8fe6-2dde7afa7c7c",
-                    "$variable[V1]$": {
-                      "type": "number",
-                      "value": 0
-                    },
-                    "$variable[V2]$": {
-                      "type": "number",
-                      "value": 0
-                    },
-                    "$variable[V4]$": {
-                      "type": "number",
-                      "value": 0
-                    },
-                    "$variable[V5]$": {
-                      "type": "number",
-                      "value": 0
-                    },
-                    "$actor[0]$": "player"
-                  },
+                  "args": {},
                   "id": "2c69b9d7-ea2a-4e2c-884e-7f0caa36b26d"
                 }
               ]
@@ -113,8 +121,8 @@
             "value": "5"
           },
           "valueB": {
-            "type": "number",
-            "value": 1
+            "type": "constant",
+            "value": "5d71a4b9-8ca7-4a39-a472-27bca7ec1d7d"
           }
         },
         "__collapseElse": true,
@@ -134,6 +142,25 @@
               "__label": "Set selector y to paint row"
             },
             "id": "017d8323-a09d-4736-94f7-0778b6ccbf76"
+          },
+          {
+            "command": "EVENT_TEXT_DRAW",
+            "args": {
+              "text": "START",
+              "x": 2,
+              "y": 3,
+              "location": "background"
+            },
+            "id": "99cfa78d-7962-4a9d-9d6b-56e2610b8b36"
+          },
+          {
+            "command": "EVENT_ACTOR_SET_STATE",
+            "args": {
+              "actorId": "0",
+              "spriteStateId": "Player",
+              "loopAnim": true
+            },
+            "id": "39b923fa-b9a2-465e-9a2e-331dbe513b46"
           }
         ],
         "false": []
@@ -150,15 +177,26 @@
             "value": "5"
           },
           "valueB": {
-            "type": "number",
-            "value": 2
+            "type": "constant",
+            "value": "1d18d1a1-e61f-4505-818c-31edb587ed8c"
           }
         },
         "__collapseElse": true,
-        "__disableElse": true
+        "__disableElse": true,
+        "__comment": true
       },
       "children": {
         "true": [
+          {
+            "command": "EVENT_TEXT_DRAW",
+            "args": {
+              "text": "CODE ",
+              "x": 2,
+              "y": 3,
+              "location": "background"
+            },
+            "id": "47a0e2f5-2d79-49e5-95f4-c013f2ae2a6a"
+          },
           {
             "command": "EVENT_SET_VALUE",
             "args": {

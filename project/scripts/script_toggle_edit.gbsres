@@ -20,7 +20,8 @@
           "value": "0"
         },
         "__collapseElse": false,
-        "__label": "Setup Play Mode"
+        "__label": "Setup Play Mode",
+        "__collapse": false
       },
       "children": {
         "true": [
@@ -74,7 +75,7 @@
               "palette5": "keep",
               "palette6": "keep",
               "palette7": "keep",
-              "__comment": true
+              "__comment": false
             },
             "id": "34586190-bb50-4020-acf6-3a9846505e56"
           },
@@ -89,7 +90,7 @@
               "palette5": "keep",
               "palette6": "keep",
               "palette7": "keep",
-              "__comment": true,
+              "__comment": false,
               "actorId": "0"
             },
             "id": "fe780f0e-369a-40a0-b3a1-ed6f89e2545d"
@@ -160,7 +161,7 @@
               "customEventId": "f1877a0b-a5f9-48df-be64-96a920412ec8",
               "$variable[V0]$": {
                 "type": "constant",
-                "value": "5d71a4b9-8ca7-4a39-a472-27bca7ec1d7d"
+                "value": "7c5b1588-1427-4cf0-9fdf-f73eeacd0263"
               }
             },
             "id": "ddc54905-6c9e-445d-9065-632d5ec53638"
@@ -176,7 +177,8 @@
           {
             "command": "EVENT_ACTOR_DEACTIVATE",
             "args": {
-              "actorId": "$self$"
+              "actorId": "$self$",
+              "__collapse": true
             },
             "id": "e6e8c584-80d3-4da0-bad4-5426c6744fa3"
           },
@@ -212,8 +214,8 @@
                 "type": "number",
                 "value": 0
               },
-              "__collapse": false,
-              "__comment": true
+              "__collapse": true,
+              "__comment": false
             },
             "id": "c295b272-d475-4636-83de-990027051e87"
           },
@@ -228,7 +230,8 @@
               "palette5": "keep",
               "palette6": "4526c28c-4fe8-4417-a391-d3d517531a84",
               "palette7": "keep",
-              "__comment": true
+              "__comment": false,
+              "__collapse": true
             },
             "id": "790a6ba8-7e2f-4b2d-bca6-7850c3509fbe"
           },
@@ -242,7 +245,8 @@
               "frames": {
                 "type": "number",
                 "value": 1
-              }
+              },
+              "__collapse": true
             },
             "id": "de590432-4002-41c9-abb4-4aaf3c9afbe2"
           },
@@ -257,14 +261,28 @@
               "palette5": "keep",
               "palette6": "4526c28c-4fe8-4417-a391-d3d517531a84",
               "palette7": "keep",
-              "__comment": true
+              "__comment": false,
+              "__collapse": true
             },
             "id": "55715cb0-8ee2-4f37-b5ad-2c5579c59ec6"
           },
           {
+            "command": "EVENT_CALL_CUSTOM_EVENT",
+            "args": {
+              "customEventId": "f1877a0b-a5f9-48df-be64-96a920412ec8",
+              "$variable[V0]$": {
+                "type": "constant",
+                "value": "7c5b1588-1427-4cf0-9fdf-f73eeacd0263"
+              },
+              "$actor[0]$": "0"
+            },
+            "id": "74849185-97c4-48ab-8b86-775b7c06b37c"
+          },
+          {
             "command": "EVENT_ACTOR_ACTIVATE",
             "args": {
-              "actorId": "0"
+              "actorId": "0",
+              "__collapse": true
             },
             "id": "9ac71725-670e-4e35-bbe3-d56230a17973"
           },
@@ -279,7 +297,8 @@
               "y": {
                 "type": "variable",
                 "value": "4"
-              }
+              },
+              "__comment": true
             },
             "id": "4e890ef9-7f94-4c0e-bbc9-9aba0fc1b984"
           },
@@ -290,7 +309,7 @@
               "x": 2,
               "y": 3,
               "location": "background",
-              "__collapse": false
+              "__collapse": true
             },
             "id": "6f040dbf-2c9f-45b2-b65d-973baf0981e0"
           },
@@ -308,13 +327,7 @@
               "true": [
                 {
                   "command": "EVENT_CALL_CUSTOM_EVENT",
-                  "args": {
-                    "customEventId": "03f3e0c0-c6f4-4dea-b765-e627bba98fd8",
-                    "$variable[V0]$": {
-                      "type": "variable",
-                      "value": "8"
-                    }
-                  },
+                  "args": {},
                   "id": "d667c3b5-08a6-4c13-93dc-5e1b2205d6e1"
                 }
               ]

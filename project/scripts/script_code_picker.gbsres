@@ -3,17 +3,32 @@
   "id": "edb338be-b644-4e2a-bfca-26b88c1a991e",
   "name": "SCRIPT_CODE_PICKER",
   "description": "",
-  "variables": {},
+  "variables": {
+    "V0": {
+      "id": "V0",
+      "name": "V_DIRECTION",
+      "passByReference": true
+    }
+  },
   "actors": {},
   "symbol": "script_0",
   "script": [
     {
-      "command": "EVENT_IF_INPUT",
+      "command": "EVENT_IF",
       "args": {
-        "input": [
-          "down"
-        ],
-        "__collapseElse": true
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "V0"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "9810e9cb-af78-40aa-8163-bdec9d4e0d16"
+          }
+        },
+        "__collapseElse": true,
+        "__disableElse": true
       },
       "children": {
         "true": [
@@ -31,7 +46,7 @@
         ],
         "false": []
       },
-      "id": "57f13517-39fc-4803-a0b2-095436c565d3"
+      "id": "09944675-40c8-4e8c-af31-e0f5a1267433"
     }
   ]
 }
