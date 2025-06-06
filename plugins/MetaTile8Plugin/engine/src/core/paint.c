@@ -4,6 +4,11 @@
 #include "meta_tiles.h"
 #include "paint.h"     // ← add this so paint(x,y) is declared
 
+#define PLATFORM_X_MIN 2
+#define PLATFORM_X_MAX 21
+#define PLATFORM_Y_MIN 11
+#define PLATFORM_Y_MAX 20
+
 UBYTE get_tile_type(UBYTE tile_id) BANKED {
     switch(tile_id) {
         case TILE_PLATFORM_LEFT:
@@ -33,9 +38,44 @@ void vm_paint(SCRIPT_CTX *THIS) BANKED {
     paint(x,y);
 }
 
-// Paint the tile at (x, y) with the metatile at (5, 0):
 void paint(UBYTE x, UBYTE y) BANKED {
-    replace_meta_tile(x, y, 5, 1);
+    // 0) Hard‐coded bounds:
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX || y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX) return;
+
+    // 1) Only paint on empty:
+    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != 5) return;
+
+    // 2) Read neighbors (within bounds because of step 0):
+    UBYTE leftType = 0, rightType = 0;
+    if (x > PLATFORM_X_MIN) {
+        leftType = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]);
+    }
+    if (x < PLATFORM_X_MAX) {
+        rightType = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]);
+    }
+
+    // 3a) If there’s a platform to the right (i.e. x is immediately left of it),
+    //     place a LEFT cap at x and turn (x+1) into MIDDLE:
+    if (rightType == 1) {
+        replace_meta_tile(x,     y, TILE_PLATFORM_LEFT,   1);
+        replace_meta_tile(x + 1, y, TILE_PLATFORM_MIDDLE, 1);
+        return;
+    }
+
+    // 3b) If there’s a platform to the left (i.e. x is immediately right of it),
+    //     place a RIGHT cap at x and turn (x-1) into MIDDLE:
+    if (leftType == 1) {
+        replace_meta_tile(x,     y, TILE_PLATFORM_RIGHT,  1);
+        replace_meta_tile(x - 1, y, TILE_PLATFORM_MIDDLE, 1);
+        return;
+    }
+
+    // 4) Otherwise start a new 2‐tile platform (x=LEFT, x+1=RIGHT) if x+1 is in bounds and empty:
+    if (x < PLATFORM_X_MAX &&
+        get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) == 5) {
+        replace_meta_tile(x,     y, TILE_PLATFORM_LEFT,  1);
+        replace_meta_tile(x + 1, y, TILE_PLATFORM_RIGHT, 1);
+    }
 }
 
 // VM wrapper for “get_brush_tile”.
