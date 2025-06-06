@@ -121,6 +121,36 @@
       "name": "C_CANCEL",
       "symbol": "const_c_cancel",
       "value": 1
+    },
+    {
+      "id": "2e3579ec-760d-4a50-a2d0-bea569787eb7",
+      "name": "TILE_EMPTY",
+      "symbol": "const_tile_empty",
+      "value": 5
+    },
+    {
+      "id": "a9a21d13-f6fc-481c-bfbb-69949519e013",
+      "name": "TILE_PLATFORM",
+      "symbol": "const_tile_platform",
+      "value": 0
+    },
+    {
+      "id": "ff4532d5-8f76-4aae-9208-a2b6db93d17f",
+      "name": "TILE_ENEMY",
+      "symbol": "const_tile_enemy",
+      "value": 2
+    },
+    {
+      "id": "f9931826-bf08-4441-889a-a120b3b7a654",
+      "name": "TILE_EXIT",
+      "symbol": "const_tile_exit",
+      "value": 3
+    },
+    {
+      "id": "58c3bbf6-28a1-42e7-8b30-85941a4d669f",
+      "name": "TILE_PLAYER",
+      "symbol": "const_tile_player",
+      "value": 4
     }
   ]
 }

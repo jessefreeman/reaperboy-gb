@@ -1,0 +1,65 @@
+{
+  "_resourceType": "script",
+  "id": "370f55b4-5f2c-490a-823c-cf177b64c995",
+  "name": "SCRIPT_PAINT_TILE",
+  "description": "",
+  "variables": {},
+  "actors": {},
+  "symbol": "script_7",
+  "script": [
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "lt",
+          "valueA": {
+            "type": "variable",
+            "value": "8"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "f9931826-bf08-4441-889a-a120b3b7a654"
+          }
+        },
+        "__collapseElse": false
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_DELETE_META_TILE",
+            "args": {
+              "x": {
+                "type": "variable",
+                "value": "3"
+              },
+              "y": {
+                "type": "variable",
+                "value": "4"
+              },
+              "commit": true
+            },
+            "id": "7c213fb4-cf22-4ca3-8bff-25c49abb17ce"
+          }
+        ],
+        "false": [
+          {
+            "command": "EVENT_PAINT_TILE",
+            "args": {
+              "x": {
+                "type": "variable",
+                "value": "3"
+              },
+              "y": {
+                "type": "variable",
+                "value": "4"
+              },
+              "__collapse": false
+            },
+            "id": "f72bf403-7ff0-4a2c-abe9-39f831c06a5a"
+          }
+        ]
+      },
+      "id": "006fb474-d39b-4168-8cf9-aa17cb832447"
+    }
+  ]
+}

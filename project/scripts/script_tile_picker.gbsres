@@ -1,7 +1,7 @@
 {
   "_resourceType": "script",
   "id": "49708853-c312-43bc-8721-f482bcd134db",
-  "name": "SCRIPT_PAINT_PICKER",
+  "name": "SCRIPT_TILE_PICKER",
   "description": "",
   "variables": {
     "V0": {
@@ -710,7 +710,8 @@
           }
         },
         "__collapseElse": false,
-        "__collapse": false
+        "__collapse": false,
+        "__label": "Test to delete tile"
       },
       "children": {
         "true": [
@@ -733,7 +734,8 @@
               "actorId": "0",
               "spriteStateId": "",
               "loopAnim": true,
-              "__label": "Reset brush"
+              "__label": "Reset brush",
+              "__collapse": true
             },
             "id": "42fcea80-5891-464f-a67e-11c486f14498"
           }

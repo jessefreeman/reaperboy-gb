@@ -274,7 +274,8 @@
             "args": {
               "actorId": "d5043213-d1dc-4d02-b470-9d13dfa87721",
               "vectorX": "3",
-              "vectorY": "4"
+              "vectorY": "4",
+              "__collapse": true
             },
             "id": "cc3bd092-dd9a-4df5-b16c-b592ab981036"
           },
@@ -325,7 +326,7 @@
                           "option8": "",
                           "cancelOnB": true,
                           "layout": "menu",
-                          "__collapse": false
+                          "__collapse": true
                         },
                         "id": "08905eb6-1457-45c4-92b3-1c460a1d06d3"
                       },
@@ -345,7 +346,8 @@
                           },
                           "__collapseElse": true,
                           "__disableElse": true,
-                          "__label": "Was edit mode selected?"
+                          "__label": "Was edit mode selected?",
+                          "__collapse": false
                         },
                         "children": {
                           "true": [
@@ -354,7 +356,8 @@
                               "args": {
                                 "customEventId": "43c5a146-9737-41d7-8a73-c7241fcb4493",
                                 "$actor[0]$": "d5043213-d1dc-4d02-b470-9d13dfa87721",
-                                "__label": "Toggle Edit Mode"
+                                "__label": "Toggle Edit Mode",
+                                "__collapse": true
                               },
                               "id": "fd61e2c1-396f-42dc-8b72-e836df77662b"
                             },
@@ -581,7 +584,7 @@
                                       ],
                                       "override": true,
                                       "__scriptTabs": "press",
-                                      "__collapse": true
+                                      "__collapse": false
                                     },
                                     "children": {
                                       "true": [
@@ -606,9 +609,17 @@
                                             "closeWhen": "key",
                                             "closeButton": "a",
                                             "closeDelayTime": 0.5,
-                                            "closeDelayFrames": 30
+                                            "closeDelayFrames": 30,
+                                            "__comment": true
                                           },
                                           "id": "ef5b0012-c586-4c71-a2f8-ce3c4c875a13"
+                                        },
+                                        {
+                                          "command": "EVENT_CALL_CUSTOM_EVENT",
+                                          "args": {
+                                            "customEventId": "370f55b4-5f2c-490a-823c-cf177b64c995"
+                                          },
+                                          "id": "1a8d0998-80eb-4638-b02b-41a88fc2209a"
                                         }
                                       ]
                                     },
@@ -680,7 +691,7 @@
                           },
                           "__collapseElse": true,
                           "__disableElse": true,
-                          "__collapse": false,
+                          "__collapse": true,
                           "__label": "Was restart selected"
                         },
                         "children": {

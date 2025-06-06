@@ -1,5 +1,5 @@
 export const id = "EVENT_GET_BRUSH_TILE";
-export const name = "Get Brush Tile";
+export const name = "Get Brush Tile At Position";
 export const groups = ["Tile Editor"];
 
 export const autoLabel = (fetchArg) => {
@@ -53,6 +53,6 @@ export const compile = (input, helpers) => {
   _stackPush(tmp1);
   _stackPush(tmp0);
   		
-  _callNative("vm_get_brush_tile");
+  _callNative("vm_get_brush_tile_pos");
   _stackPop(3);   
 };
