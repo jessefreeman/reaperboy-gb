@@ -2,6 +2,21 @@
 #ifndef PAINT_H
 #define PAINT_H
 
+// Metatile IDs
+
+#define TILE_EMPTY           0
+#define TILE_PLATFORM_LEFT   4
+#define TILE_PLATFORM_MIDDLE 5
+#define TILE_PLATFORM_RIGHT  6
+
+#define TILE_PLAYER          20
+#define TILE_ENEMY           21
+
+#define TILE_EXIT_TOP_LEFT     16
+#define TILE_EXIT_TOP_RIGHT    17
+#define TILE_EXIT_BOTTOM_LEFT  32
+#define TILE_EXIT_BOTTOM_RIGHT 33
+
 #include <gbdk/platform.h>
 #include "vm.h"  // for SCRIPT_CTX and script_get_arg8
 

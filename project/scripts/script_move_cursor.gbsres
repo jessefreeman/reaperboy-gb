@@ -40,7 +40,7 @@
         "__collapseElse": true,
         "__label": "Paint Mode",
         "__comment": false,
-        "__collapse": true,
+        "__collapse": false,
         "__disableElse": true
       },
       "children": {

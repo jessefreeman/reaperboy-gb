@@ -35,7 +35,12 @@
       "passByReference": true
     }
   },
-  "actors": {},
+  "actors": {
+    "0": {
+      "id": "0",
+      "name": "P_ACTOR_SELECTOR"
+    }
+  },
   "symbol": "script_5",
   "script": [
     {
@@ -379,7 +384,8 @@
               },
               "__collapseElse": true,
               "__disableElse": true,
-              "__label": "If up pressed"
+              "__label": "If up pressed",
+              "__collapse": true
             },
             "children": {
               "true": [
@@ -526,7 +532,8 @@
               },
               "__collapseElse": true,
               "__disableElse": true,
-              "__label": "If down pressed"
+              "__label": "If down pressed",
+              "__collapse": true
             },
             "children": {
               "true": [
@@ -673,14 +680,66 @@
       "id": "3d626faf-ecfb-4188-8f72-1cdbc940a882"
     },
     {
-      "command": "EVENT_GROUP",
+      "command": "EVENT_GET_BRUSH_TILE",
       "args": {
-        "__label": "Paint"
+        "x": {
+          "type": "variable",
+          "value": "3"
+        },
+        "y": {
+          "type": "variable",
+          "value": "4"
+        },
+        "output": "8",
+        "__comment": false
+      },
+      "id": "e8663bb3-d98b-45b2-b97c-4a117a35c5a7"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "lt",
+          "valueA": {
+            "type": "variable",
+            "value": "8"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        "__collapseElse": false,
+        "__collapse": false
       },
       "children": {
-        "true": []
+        "true": [
+          {
+            "command": "EVENT_ACTOR_SET_STATE",
+            "args": {
+              "actorId": "0",
+              "spriteStateId": "Delete",
+              "loopAnim": true,
+              "__collapse": true,
+              "__label": "Change brush to delete"
+            },
+            "id": "66706425-3a86-4b4d-adf9-8dbb30f200e4"
+          }
+        ],
+        "false": [
+          {
+            "command": "EVENT_ACTOR_SET_STATE",
+            "args": {
+              "actorId": "0",
+              "spriteStateId": "",
+              "loopAnim": true,
+              "__label": "Reset brush"
+            },
+            "id": "42fcea80-5891-464f-a67e-11c486f14498"
+          }
+        ]
       },
-      "id": "8613c565-787e-42ce-bb8e-4a909db95928"
+      "id": "d09af944-aba8-451b-84eb-cfc20c8bd42b"
     }
   ]
 }
