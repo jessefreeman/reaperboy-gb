@@ -10,6 +10,33 @@
 #define PLATFORM_Y_MIN 11
 #define PLATFORM_Y_MAX 20
 #define PLATFORM_MIN_VERTICAL_GAP 1
+#define PLATFORM_MAX_LENGTH 8
+#define TILE_0 48  // Or whatever metatile ID represents '0'
+
+const UBYTE PLATFORM_PATTERNS[16][4] = {
+    {0b000000, 0b000000, 0b000000, 0b000000}, // 0
+    {0b000001, 0b100000, 0b000100, 0b100000}, // 1
+    {0b001100, 0b001100, 0b000011, 0b110000}, // 2
+    {0b001101, 0b101100, 0b001011, 0b110100}, // 3
+    {0b001111, 0b111100, 0b001111, 0b111100}, // 4
+    {0b011000, 0b000110, 0b000001, 0b100000}, // 5
+    {0b011100, 0b001110, 0b000111, 0b111000}, // 6
+    {0b011101, 0b101110, 0b001011, 0b110100}, // 7
+    {0b011110, 0b011110, 0b011110, 0b011110}, // 8
+    {0b100001, 0b100001, 0b010010, 0b010010}, // 9
+    {0b110011, 0b110011, 0b001100, 0b001100}, // A
+    {0b110110, 0b011011, 0b110110, 0b011011}, // B
+    {0b111011, 0b110111, 0b110111, 0b111011}, // C
+    {0b111100, 0b001111, 0b111100, 0b001111}, // D
+    {0b111101, 0b101111, 0b111101, 0b101111}, // E
+    {0b111111, 0b111111, 0b111111, 0b111111}  // F
+};
+
+UBYTE current_code[18] = {
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0
+};
 
 UBYTE get_tile_type(UBYTE tile_id) BANKED {
     switch(tile_id) {
@@ -31,7 +58,58 @@ UBYTE get_tile_type(UBYTE tile_id) BANKED {
     }
 }
 
-#define PLATFORM_MAX_LENGTH 8
+UBYTE extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED {
+    *row0 = 0;
+    *row1 = 0;
+    for (UBYTE i = 0; i < 6; i++) {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + i, y)]) == 1)
+            *row0 |= (1 << (5 - i));
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + i, y + 1)]) == 1)
+            *row1 |= (1 << (5 - i));
+    }
+    return 1;
+}
+
+UBYTE match_platform_pattern(UBYTE row0, UBYTE row1) BANKED {
+    for (UBYTE i = 0; i < 16; i++) {
+        for (UBYTE v = 0; v < 4; v++) {
+            if (PLATFORM_PATTERNS[i][v] == row0) {
+                if (PLATFORM_PATTERNS[i][v ^ 1] == row1) return i;
+            }
+        }
+    }
+    return 0xFF; // Not found
+}
+
+void update_code_at_chunk(UBYTE chunk_x, UBYTE chunk_index) BANKED {
+    UBYTE row0, row1;
+    extract_chunk_pattern(chunk_x, PLATFORM_Y_MIN, &row0, &row1);
+    UBYTE code_index = match_platform_pattern(row0, row1);
+
+    current_code[chunk_index] = (code_index != 0xFF) ? code_index : 0;
+
+    UBYTE cursor_x = 4 + (chunk_index % 15);
+    UBYTE cursor_y = 6 + (chunk_index / 15);
+
+    replace_meta_tile(cursor_x, cursor_y, TILE_0 + current_code[chunk_index], 1);
+}
+
+void display_code_tile(UBYTE code_index) BANKED {
+    if (code_index > 15) return;
+
+    static UBYTE cursor_x = 4;
+    static UBYTE cursor_y = 6;
+
+    UBYTE tile_id = TILE_0 + code_index; // TILE_0 must be defined as your base code tile
+
+    replace_meta_tile(cursor_x, cursor_y, tile_id, 1);
+
+    cursor_x++;
+    if (cursor_x > 18) {
+        cursor_x = 4;
+        cursor_y++;
+    }
+}
 
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED {
     for (BYTE dy = -PLATFORM_MIN_VERTICAL_GAP; dy <= PLATFORM_MIN_VERTICAL_GAP; dy++) {
@@ -138,11 +216,32 @@ void paint(UBYTE x, UBYTE y) BANKED {
     }
 
     rebuild_platform_row(y);
+
+    // Delay reading tilemap until it's been updated
+    UBYTE chunk_index = (x - 1) / 6;
+    UBYTE chunk_x = 1 + chunk_index * 6;
+
+    // Delay a little if needed (optional, in case updates are async)
+    for (UBYTE i = 0; i < 8; i++) wait_vbl_done();
+
+    update_code_at_chunk(chunk_x, chunk_index);
+
+        UBYTE row0 = 0, row1 = 0;
+    extract_chunk_pattern(chunk_x, PLATFORM_Y_MIN, &row0, &row1);
+
+        replace_meta_tile(4, 7, TILE_0 + (row0 >> 4), 1);
+    replace_meta_tile(5, 7, TILE_0 + (row0 & 0xF), 1);
+    replace_meta_tile(6, 7, TILE_0 + (row1 >> 4), 1);
+    replace_meta_tile(7, 7, TILE_0 + (row1 & 0xF), 1);
+
 }
 
 void delete_tile_at_pos(UBYTE x, UBYTE y, UBYTE commit) BANKED {
     replace_meta_tile(x, y, TILE_EMPTY, commit);
     if (commit) rebuild_platform_row(y);
+    UBYTE chunk_index = (x - 1) / 6;
+    UBYTE chunk_x = 1 + chunk_index * 6;
+    update_code_at_chunk(chunk_x, chunk_index);
 }
 
 void vm_paint(SCRIPT_CTX *THIS) BANKED {
