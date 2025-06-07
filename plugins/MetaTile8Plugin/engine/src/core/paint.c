@@ -12,6 +12,9 @@
 #define PLATFORM_MIN_VERTICAL_GAP 1
 #define PLATFORM_MAX_LENGTH 8
 #define TILE_0 48  // Or whatever metatile ID represents '0'
+#define DEBUG_DRAW_QUADRANTS 1
+
+void draw_quadrant_ids() BANKED;
 
 const UBYTE PLATFORM_PATTERNS[16][4] = {
     {0b000000, 0b000000, 0b000000, 0b000000}, // 0
@@ -94,22 +97,16 @@ void update_code_at_chunk(UBYTE chunk_x, UBYTE chunk_index) BANKED {
     replace_meta_tile(cursor_x, cursor_y, TILE_0 + current_code[chunk_index], 1);
 }
 
-void display_code_tile(UBYTE code_index) BANKED {
+void display_code_tile(UBYTE code_index, UBYTE i) BANKED {
     if (code_index > 15) return;
 
-    static UBYTE cursor_x = 4;
-    static UBYTE cursor_y = 6;
-
-    UBYTE tile_id = TILE_0 + code_index; // TILE_0 must be defined as your base code tile
+    UBYTE cursor_x = 4 + (i % 15);
+    UBYTE cursor_y = 6 + (i / 15);
+    UBYTE tile_id = TILE_0 + code_index;
 
     replace_meta_tile(cursor_x, cursor_y, tile_id, 1);
-
-    cursor_x++;
-    if (cursor_x > 18) {
-        cursor_x = 4;
-        cursor_y++;
-    }
 }
+
 
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED {
     for (BYTE dy = -PLATFORM_MIN_VERTICAL_GAP; dy <= PLATFORM_MIN_VERTICAL_GAP; dy++) {
@@ -191,24 +188,35 @@ void rebuild_platform_row(UBYTE y) BANKED {
     }
 }
 
+#define HEX_TILE_BASE  91  // tile ID at (11, 5)
+#define CHUNKS_PER_ROW 3
+#define CHUNK_WIDTH    6
+#define CHUNK_HEIGHT   2
 
+void draw_quadrant_ids() BANKED {
+    for (UBYTE i = 0; i < 24; i++) {
+        UBYTE chunk_x = 3 + (i % CHUNKS_PER_ROW) * CHUNK_WIDTH;
+        UBYTE chunk_y = PLATFORM_Y_MIN + (i / CHUNKS_PER_ROW) * CHUNK_HEIGHT;
+
+        replace_meta_tile(chunk_x, chunk_y + 1, HEX_TILE_BASE + i, 1);
+    }
+}
 
 void paint(UBYTE x, UBYTE y) BANKED {
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX || y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX) return;
     if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != 5) return;
 
-    // Check vertical conflicts
     if (check_platform_vertical_conflict(x, y)) return;
-    if (x < PLATFORM_X_MAX && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) == 5) {
-        if (check_platform_vertical_conflict(x + 1, y)) return;
-    }
+    if (x < PLATFORM_X_MAX 
+        && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) == 5 
+        && check_platform_vertical_conflict(x + 1, y)) return;
 
     UBYTE left = (x > PLATFORM_X_MIN) ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]) : 0;
     UBYTE right = (x < PLATFORM_X_MAX) ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) : 0;
 
     if (left == 1 || right == 1) {
         replace_meta_tile(x, y, TILE_PLATFORM_MIDDLE, 1);
-    } else if (x < PLATFORM_X_MAX && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) == 5) {
+    } else if (x < PLATFORM_X_MAX && right == 5) {
         replace_meta_tile(x, y, TILE_PLATFORM_LEFT, 1);
         replace_meta_tile(x + 1, y, TILE_PLATFORM_RIGHT, 1);
     } else {
@@ -217,23 +225,26 @@ void paint(UBYTE x, UBYTE y) BANKED {
 
     rebuild_platform_row(y);
 
-    // Delay reading tilemap until it's been updated
     UBYTE chunk_index = (x - 1) / 6;
     UBYTE chunk_x = 1 + chunk_index * 6;
 
-    // Delay a little if needed (optional, in case updates are async)
     for (UBYTE i = 0; i < 8; i++) wait_vbl_done();
 
     update_code_at_chunk(chunk_x, chunk_index);
 
-        UBYTE row0 = 0, row1 = 0;
+    UBYTE row0 = 0, row1 = 0;
     extract_chunk_pattern(chunk_x, PLATFORM_Y_MIN, &row0, &row1);
 
-        replace_meta_tile(4, 7, TILE_0 + (row0 >> 4), 1);
+    replace_meta_tile(4, 7, TILE_0 + (row0 >> 4), 1);
     replace_meta_tile(5, 7, TILE_0 + (row0 & 0xF), 1);
     replace_meta_tile(6, 7, TILE_0 + (row1 >> 4), 1);
     replace_meta_tile(7, 7, TILE_0 + (row1 & 0xF), 1);
 
+    draw_quadrant_ids();
+
+    for (UBYTE i = 0; i < 18; i++) {
+        display_code_tile(current_code[i], i);
+    }
 }
 
 void delete_tile_at_pos(UBYTE x, UBYTE y, UBYTE commit) BANKED {
@@ -242,6 +253,17 @@ void delete_tile_at_pos(UBYTE x, UBYTE y, UBYTE commit) BANKED {
     UBYTE chunk_index = (x - 1) / 6;
     UBYTE chunk_x = 1 + chunk_index * 6;
     update_code_at_chunk(chunk_x, chunk_index);
+
+    draw_quadrant_ids();
+
+
+    // Update the display for the current code
+    for (UBYTE i = 0; i < 18; i++) {
+        display_code_tile(current_code[i], i);
+    }
+
+    // Rebuild the platform row to ensure all tiles are correct
+    rebuild_platform_row(y);
 }
 
 void vm_paint(SCRIPT_CTX *THIS) BANKED {
