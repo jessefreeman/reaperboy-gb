@@ -76,12 +76,21 @@ UBYTE extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED {
 UBYTE match_platform_pattern(UBYTE row0, UBYTE row1) BANKED {
     for (UBYTE i = 0; i < 16; i++) {
         for (UBYTE v = 0; v < 4; v++) {
-            if (PLATFORM_PATTERNS[i][v] == row0) {
-                if (PLATFORM_PATTERNS[i][v ^ 1] == row1) return i;
+            if (PLATFORM_PATTERNS[i][v] == row0 &&
+                PLATFORM_PATTERNS[i][v ^ 1] == row1) {
+                return i;
             }
         }
     }
-    return 0xFF; // Not found
+
+    // Fallback: try matching just row0
+    for (UBYTE i = 0; i < 16; i++) {
+        for (UBYTE v = 0; v < 4; v++) {
+            if (PLATFORM_PATTERNS[i][v] == row0) return i;
+        }
+    }
+
+    return 0xFF;
 }
 
 void update_code_at_chunk(UBYTE chunk_x, UBYTE chunk_index) BANKED {
@@ -198,7 +207,14 @@ void draw_quadrant_ids() BANKED {
         UBYTE chunk_x = 3 + (i % CHUNKS_PER_ROW) * CHUNK_WIDTH;
         UBYTE chunk_y = PLATFORM_Y_MIN + (i / CHUNKS_PER_ROW) * CHUNK_HEIGHT;
 
-        replace_meta_tile(chunk_x, chunk_y + 1, HEX_TILE_BASE + i, 1);
+        UBYTE row0 = 0, row1 = 0;
+        extract_chunk_pattern(chunk_x, chunk_y, &row0, &row1);
+        UBYTE code_index = match_platform_pattern(row0, row1);
+        if (code_index != 0xFF) {
+            replace_meta_tile(chunk_x, chunk_y + 1, TILE_0 + code_index, 1);
+        } else {
+            replace_meta_tile(chunk_x, chunk_y + 1, TILE_0, 1); // fallback to 0
+        }
     }
 }
 
@@ -256,14 +272,14 @@ void delete_tile_at_pos(UBYTE x, UBYTE y, UBYTE commit) BANKED {
 
     draw_quadrant_ids();
 
+    // Rebuild the platform row to ensure all tiles are correct
+    rebuild_platform_row(y);
 
     // Update the display for the current code
     for (UBYTE i = 0; i < 18; i++) {
         display_code_tile(current_code[i], i);
     }
 
-    // Rebuild the platform row to ensure all tiles are correct
-    rebuild_platform_row(y);
 }
 
 void vm_paint(SCRIPT_CTX *THIS) BANKED {
