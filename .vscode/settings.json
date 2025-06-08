@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "meta_tiles.h": "c"
+        "meta_tiles.h": "c",
+        "paint.h": "c",
+        "tile_utils.h": "c"
     }
 }
