@@ -8,6 +8,9 @@
 
 #define PLATFORM_Y_MIN 11
 #define TILE_0 48
+#define SEGMENTS_PER_ROW 3
+#define SEGMENT_WIDTH    6
+#define SEGMENT_HEIGHT   2
 
 const UBYTE PLATFORM_PATTERNS[16][4] = {
     {0b000000, 0b000000, 0b000000, 0b000000}, // 0
@@ -83,4 +86,20 @@ void vm_update_code(SCRIPT_CTX *THIS) BANKED {
         update_code_at_chunk(chunk_x, i);
         display_code_tile(current_code[i], i);
     }
+}
+
+void draw_segment_ids() BANKED {
+    for (UBYTE i = 0; i < 24; i++) {
+        UBYTE segment_x = 3 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;
+        UBYTE segment_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT;
+
+        UBYTE row0 = 0, row1 = 0;
+        extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+        UBYTE code_index = match_platform_pattern(row0, row1);
+        replace_meta_tile(segment_x, segment_y + 1, TILE_0 + ((code_index != 0xFF) ? code_index : 0), 1);
+    }
+}
+
+void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED {
+    draw_segment_ids();
 }

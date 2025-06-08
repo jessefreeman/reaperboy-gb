@@ -60,6 +60,18 @@
         ]
       },
       "id": "006fb474-d39b-4168-8cf9-aa17cb832447"
+    },
+    {
+      "command": "EVENT_UPDATE_CODE",
+      "args": {
+        "__collapse": false
+      },
+      "id": "c678e924-cee7-408d-8901-b07c0ba31664"
+    },
+    {
+      "command": "EVENT_DRAW_SEGMENTS",
+      "args": {},
+      "id": "54411b8c-067b-4bc1-9d57-cd19bc0c8435"
     }
   ]
 }
