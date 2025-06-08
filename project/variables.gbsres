@@ -47,6 +47,16 @@
       "symbol": "var_v_tile_map_id"
     },
     {
+      "id": "9",
+      "name": "V_DEBUG_PATTERN",
+      "symbol": "var_v_debug_pattern"
+    },
+    {
+      "id": "10",
+      "name": "V_DEBUG_VARIANT",
+      "symbol": "var_v_debug_variant"
+    },
+    {
       "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L0",
       "name": "L_SET_TO_POSITION",
       "symbol": "var_l_set_to_position"

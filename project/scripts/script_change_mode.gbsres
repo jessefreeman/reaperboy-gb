@@ -86,6 +86,11 @@
             "id": "40384702-3937-4e6b-b06d-abbdb289710c"
           },
           {
+            "command": "EVENT_DRAW_SEGMENTS",
+            "args": {},
+            "id": "fe973eed-d8fa-4ddf-8c64-98898015620d"
+          },
+          {
             "command": "EVENT_SET_INPUT_SCRIPT",
             "args": {
               "input": [

@@ -5,10 +5,10 @@
   "type": "TOPDOWN",
   "name": "Metatiles",
   "symbol": "scene_1",
-  "x": 184,
-  "y": 104,
+  "x": 176,
+  "y": 48,
   "width": 16,
-  "height": 8,
+  "height": 16,
   "backgroundId": "9424719a-0df1-4a67-b6e7-19e26080d903",
   "tilesetId": "260e21e3-7aba-43f3-9058-77853673dd79",
   "colorModeOverride": "none",
@@ -28,5 +28,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "004+0f3+0079+"
+  "collisions": "004+0f3+00f9+"
 }

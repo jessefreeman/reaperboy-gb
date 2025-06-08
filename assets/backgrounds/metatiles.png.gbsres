@@ -3,10 +3,10 @@
   "id": "9424719a-0df1-4a67-b6e7-19e26080d903",
   "name": "metatiles",
   "symbol": "bg_metatiles",
-  "tileColors": "04!003+023+005+014+044+008+014+044+005+014+002+01!0624+008+01!0023+",
+  "tileColors": "04!003+023+005+014+044+008+014+044+005+014+002+01!0624+008+01!003+0716+00a+0716+00a+0717+009+0716+002a+",
   "filename": "metatiles.png",
   "width": 16,
-  "height": 8,
+  "height": 16,
   "imageWidth": 128,
-  "imageHeight": 64
+  "imageHeight": 128
 }

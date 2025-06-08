@@ -70,7 +70,10 @@
     },
     {
       "command": "EVENT_DRAW_SEGMENTS",
-      "args": {},
+      "args": {
+        "patternVar": "9",
+        "variantVar": "10"
+      },
       "id": "54411b8c-067b-4bc1-9d57-cd19bc0c8435"
     }
   ]

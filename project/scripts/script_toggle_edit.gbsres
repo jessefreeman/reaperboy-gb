@@ -75,7 +75,7 @@
               "palette5": "keep",
               "palette6": "keep",
               "palette7": "keep",
-              "__comment": false
+              "__comment": true
             },
             "id": "34586190-bb50-4020-acf6-3a9846505e56"
           },
@@ -215,7 +215,7 @@
                 "value": 0
               },
               "__collapse": true,
-              "__comment": false
+              "__comment": true
             },
             "id": "c295b272-d475-4636-83de-990027051e87"
           },
