@@ -11,6 +11,7 @@
 #define SEGMENTS_PER_ROW 3
 #define SEGMENT_WIDTH    6
 #define SEGMENT_HEIGHT   2
+#define TILE_HEX_DEBUG 96
 
 const UBYTE PLATFORM_PATTERNS[16][4] = {
     {0b000000, 0b000000, 0b000000, 0b000000}, // 0
@@ -96,7 +97,12 @@ void draw_segment_ids() BANKED {
         UBYTE row0 = 0, row1 = 0;
         extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
         UBYTE code_index = match_platform_pattern(row0, row1);
-        replace_meta_tile(segment_x, segment_y + 1, TILE_0 + ((code_index != 0xFF) ? code_index : 0), 1);
+
+        if (code_index != 0xFF) {
+            replace_meta_tile(segment_x, segment_y + 1, TILE_HEX_DEBUG + code_index, 1);
+        } else {
+            replace_meta_tile(segment_x, segment_y + 1, TILE_HEX_DEBUG + 0, 1); // fallback to 0
+        }
     }
 }
 
