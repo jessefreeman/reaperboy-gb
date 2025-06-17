@@ -18,7 +18,7 @@
               "tiles": [
                 {
                   "id": "28d937a0-5262-46c2-8f8c-16a0734a2867",
-                  "x": 0,
+                  "x": -4,
                   "y": 0,
                   "sliceX": 0,
                   "sliceY": 0,
@@ -27,11 +27,11 @@
                   "palette": 0,
                   "paletteIndex": 0,
                   "objPalette": "OBP0",
-                  "priority": false
+                  "priority": true
                 },
                 {
                   "id": "135c2375-39ac-432b-8ad9-afff5f2aa5e1",
-                  "x": 8,
+                  "x": 4,
                   "y": 0,
                   "sliceX": 8,
                   "sliceY": 0,
@@ -40,7 +40,51 @@
                   "palette": 0,
                   "paletteIndex": 0,
                   "objPalette": "OBP0",
-                  "priority": false
+                  "priority": true
+                },
+                {
+                  "id": "68180413-816d-401c-b1af-9a5074897482",
+                  "x": 12,
+                  "y": 0,
+                  "sliceX": 16,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": true
+                }
+              ]
+            },
+            {
+              "id": "095ec461-a203-43fe-8bd8-b554f7c182f3",
+              "tiles": [
+                {
+                  "id": "5758cce1-5c97-41eb-8fa6-0ffd5572cf7a",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 24,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": true
+                },
+                {
+                  "id": "d2711ebb-7fa5-42dd-be4a-1a0fe865d0dd",
+                  "x": 8,
+                  "y": 0,
+                  "sliceX": 32,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": true
                 }
               ]
             }
@@ -112,8 +156,8 @@
       ]
     }
   ],
-  "numTiles": 2,
-  "canvasWidth": 16,
+  "numTiles": 5,
+  "canvasWidth": 24,
   "canvasHeight": 16,
   "boundsX": 0,
   "boundsY": 0,
@@ -121,7 +165,7 @@
   "boundsHeight": 16,
   "animSpeed": 15,
   "filename": "cloud_large.png",
-  "width": 24,
+  "width": 40,
   "height": 16,
   "checksum": "446c82021d342a9bee0fd957979ba7e9f834743f"
 }

@@ -1,11 +1,11 @@
 {
   "_resourceType": "palette",
   "id": "fb48d5ef-8208-48b5-90b9-d03fbd020b8b",
-  "name": "Star Sprites",
+  "name": "Star BG",
   "colors": [
-    "feff52",
-    "B0F088",
-    "509878",
-    "202850"
+    "087cc5",
+    "fede10",
+    "199cff",
+    "291029"
   ]
 }

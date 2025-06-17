@@ -7,7 +7,7 @@
     {
       "id": "5e037015-2e62-4330-ae56-36f90ebd53ac",
       "name": "",
-      "animationType": "multi_movement",
+      "animationType": "fixed",
       "flipLeft": true,
       "animations": [
         {
@@ -15,7 +15,34 @@
           "frames": [
             {
               "id": "4dc5b2ef-4835-46af-a992-05f0d56ce4f1",
-              "tiles": []
+              "tiles": [
+                {
+                  "id": "664e4bbd-f577-40cb-b385-d84c01fc8681",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 0,
+                  "sliceY": -8,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": true
+                },
+                {
+                  "id": "0c0de5db-086a-4c19-9791-2304a63d6937",
+                  "x": 8,
+                  "y": 0,
+                  "sliceX": 8,
+                  "sliceY": -8,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 0,
+                  "priority": true
+                }
+              ]
             }
           ]
         },
@@ -85,13 +112,13 @@
       ]
     }
   ],
-  "numTiles": 0,
-  "canvasWidth": 32,
-  "canvasHeight": 32,
+  "numTiles": 2,
+  "canvasWidth": 16,
+  "canvasHeight": 16,
   "boundsX": 0,
   "boundsY": 0,
-  "boundsWidth": 16,
-  "boundsHeight": 16,
+  "boundsWidth": 0,
+  "boundsHeight": 0,
   "animSpeed": 15,
   "filename": "cloud_small.png",
   "width": 16,

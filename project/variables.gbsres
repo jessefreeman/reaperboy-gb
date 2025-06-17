@@ -57,6 +57,61 @@
       "symbol": "var_v_debug_variant"
     },
     {
+      "id": "11",
+      "name": "V_ENEMY_Y",
+      "symbol": "var_v_enemy_y"
+    },
+    {
+      "id": "12",
+      "name": "V_ALIVE_ENEMIES",
+      "symbol": "var_v_alive_enemies"
+    },
+    {
+      "id": "13",
+      "name": "V_DEAD_ENEMIES",
+      "symbol": "var_v_dead_enemies"
+    },
+    {
+      "id": "14",
+      "name": "V_EXIT_POSITION",
+      "symbol": "var_v_exit_position"
+    },
+    {
+      "id": "15",
+      "name": "V_GAME_ERROR",
+      "symbol": "var_v_game_error"
+    },
+    {
+      "id": "16",
+      "name": "V_TMP_NEXT_ROW",
+      "symbol": "var_v_tmp_next_row"
+    },
+    {
+      "id": "17",
+      "name": "V_TEMP_TILE_ID",
+      "symbol": "var_v_temp_tile_id"
+    },
+    {
+      "id": "18",
+      "name": "V_CLOUD_1_NEXT_X",
+      "symbol": "var_v_cloud_1_next_x"
+    },
+    {
+      "id": "19",
+      "name": "V_CLOUD_1_NEXT_Y",
+      "symbol": "var_v_cloud_1_next_y"
+    },
+    {
+      "id": "20",
+      "name": "V_CLOUD_2_NEXT_X",
+      "symbol": "var_v_cloud_2_next_x"
+    },
+    {
+      "id": "21",
+      "name": "V_CLOUD_2_NEXT_Y",
+      "symbol": "var_v_cloud_2_next_y"
+    },
+    {
       "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L0",
       "name": "L_SET_TO_POSITION",
       "symbol": "var_l_set_to_position"
@@ -75,6 +130,61 @@
       "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L3",
       "name": "V_GET_BRUSH_ID",
       "symbol": "var_v_get_brush_id"
+    },
+    {
+      "id": "79367e84-119c-4003-87d8-44c5da07cf1d__L0",
+      "name": "L_Y_POSITION",
+      "symbol": "var_l_y_position"
+    },
+    {
+      "id": "79367e84-119c-4003-87d8-44c5da07cf1d__L1",
+      "name": "L_TMP_Y",
+      "symbol": "var_l_tmp_y_0"
+    },
+    {
+      "id": "79367e84-119c-4003-87d8-44c5da07cf1d__L2",
+      "name": "L_NEXT_TILE_ID",
+      "symbol": "var_l_next_tile_id"
+    },
+    {
+      "id": "79367e84-119c-4003-87d8-44c5da07cf1d__L3",
+      "name": "L_TMP_DIRECTION",
+      "symbol": "var_l_tmp_direction_0"
+    },
+    {
+      "id": "79367e84-119c-4003-87d8-44c5da07cf1d__L4",
+      "name": "L_TMP_NEXT_X_OFFSET",
+      "symbol": "var_l_tmp_next_x_offset"
+    },
+    {
+      "id": "3261d8af-239f-41cd-9218-bf0115dd5371__L0",
+      "name": "L_START_Y",
+      "symbol": "var_l_start_y"
+    },
+    {
+      "id": "3261d8af-239f-41cd-9218-bf0115dd5371__L3",
+      "name": "L_DIRECTION",
+      "symbol": "var_l_direction"
+    },
+    {
+      "id": "3261d8af-239f-41cd-9218-bf0115dd5371__L4",
+      "name": "L_NEXT_TILE_X",
+      "symbol": "var_l_next_tile_x"
+    },
+    {
+      "id": "3261d8af-239f-41cd-9218-bf0115dd5371__L2",
+      "name": "L_NEXT_TILE_ID",
+      "symbol": "var_l_next_tile_id_0"
+    },
+    {
+      "id": "3261d8af-239f-41cd-9218-bf0115dd5371__L1",
+      "name": "L_ALIVE",
+      "symbol": "var_l_alive"
+    },
+    {
+      "id": "2831d729-b9f0-411a-975e-37365014931b__L0",
+      "name": "L_NEXT_Y",
+      "symbol": "var_l_next_y"
     }
   ],
   "constants": [
@@ -134,33 +244,45 @@
     },
     {
       "id": "2e3579ec-760d-4a50-a2d0-bea569787eb7",
-      "name": "TILE_EMPTY",
-      "symbol": "const_tile_empty",
+      "name": "C_TILE_EMPTY",
+      "symbol": "const_c_tile_empty",
       "value": 5
     },
     {
       "id": "a9a21d13-f6fc-481c-bfbb-69949519e013",
-      "name": "TILE_PLATFORM",
-      "symbol": "const_tile_platform",
+      "name": "C_TILE_PLATFORM",
+      "symbol": "const_c_tile_platform",
       "value": 0
     },
     {
       "id": "ff4532d5-8f76-4aae-9208-a2b6db93d17f",
-      "name": "TILE_ENEMY",
-      "symbol": "const_tile_enemy",
+      "name": "C_TILE_ENEMY",
+      "symbol": "const_c_tile_enemy",
       "value": 2
     },
     {
       "id": "f9931826-bf08-4441-889a-a120b3b7a654",
-      "name": "TILE_EXIT",
-      "symbol": "const_tile_exit",
+      "name": "C_TILE_EXIT",
+      "symbol": "const_c_tile_exit",
       "value": 3
     },
     {
       "id": "58c3bbf6-28a1-42e7-8b30-85941a4d669f",
-      "name": "TILE_PLAYER",
-      "symbol": "const_tile_player",
+      "name": "C_TILE_PLAYER",
+      "symbol": "const_c_tile_player",
       "value": 4
+    },
+    {
+      "id": "cce80199-2741-4de9-aa6b-c62c63ec6ce5",
+      "name": "C_ERROR_NO_EXIT",
+      "symbol": "const_c_error_no_exit",
+      "value": 1
+    },
+    {
+      "id": "dddaa3b4-14eb-4170-ad62-ced0ed091463",
+      "name": "C_EXIT_TOP_LEFT_TILE_ID",
+      "symbol": "const_c_exit_top_left_tile_",
+      "value": 32
     }
   ]
 }

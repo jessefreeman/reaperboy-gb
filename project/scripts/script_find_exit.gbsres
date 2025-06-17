@@ -1,0 +1,123 @@
+{
+  "_resourceType": "script",
+  "id": "cf3efca5-d713-4602-8c51-904cef257ae8",
+  "name": "SCRIPT_FIND_EXIT",
+  "description": "",
+  "variables": {},
+  "actors": {
+    "0": {
+      "id": "0",
+      "name": "Actor A"
+    }
+  },
+  "symbol": "script_10",
+  "script": [
+    {
+      "command": "EVENT_SET_VALUE",
+      "args": {
+        "variable": "16",
+        "value": {
+          "type": "number",
+          "value": 11
+        },
+        "__label": "Start row count at 11"
+      },
+      "id": "4f0d6290-1231-4fc1-8845-dd93f8c909bd"
+    },
+    {
+      "command": "EVENT_LOOP_WHILE",
+      "args": {
+        "condition": {
+          "type": "lt",
+          "valueA": {
+            "type": "variable",
+            "value": "16"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_GET_META_TILE_AT_POS",
+            "args": {
+              "x": {
+                "type": "property",
+                "target": "player",
+                "property": "xpos"
+              },
+              "y": {
+                "type": "variable",
+                "value": "16"
+              },
+              "output": "17"
+            },
+            "id": "9c674369-5a34-475e-831e-fb99c7b9dcfa"
+          },
+          {
+            "command": "EVENT_IF",
+            "args": {
+              "condition": {
+                "type": "eq",
+                "valueA": {
+                  "type": "variable",
+                  "value": "17"
+                },
+                "valueB": {
+                  "type": "constant",
+                  "value": "dddaa3b4-14eb-4170-ad62-ced0ed091463"
+                }
+              },
+              "__collapseElse": true,
+              "__disableElse": true
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_ACTOR_SET_POSITION",
+                  "args": {
+                    "actorId": "0",
+                    "x": {
+                      "type": "property",
+                      "target": "player",
+                      "property": "xpos"
+                    },
+                    "y": {
+                      "type": "variable",
+                      "value": "16"
+                    }
+                  },
+                  "id": "0543a8d7-52b2-4a5d-b4b7-d835ef9728c6"
+                },
+                {
+                  "command": "EVENT_SET_VALUE",
+                  "args": {
+                    "variable": "16",
+                    "value": {
+                      "type": "number",
+                      "value": 21
+                    }
+                  },
+                  "id": "572e3944-5461-4833-afbc-acb97850f42b"
+                }
+              ],
+              "false": []
+            },
+            "id": "09261720-cbf1-4d31-bc4a-972b1c8deb59"
+          },
+          {
+            "command": "EVENT_INC_VALUE",
+            "args": {
+              "variable": "16"
+            },
+            "id": "372df3b5-f76b-47b0-9a9e-75bed5397ebf"
+          }
+        ]
+      },
+      "id": "23901d5f-2b11-47f9-9a27-b8bd7bde1596"
+    }
+  ]
+}

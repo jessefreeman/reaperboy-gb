@@ -18,7 +18,7 @@
               "tiles": [
                 {
                   "id": "fef9e9ad-6ecb-4008-80aa-017a22d68d0b",
-                  "x": 4,
+                  "x": 0,
                   "y": 0,
                   "sliceX": 0,
                   "sliceY": 0,
@@ -36,7 +36,7 @@
               "tiles": [
                 {
                   "id": "743333ff-33c8-467b-be87-09d73e977f82",
-                  "x": 4,
+                  "x": 0,
                   "y": 0,
                   "sliceX": 8,
                   "sliceY": 0,
@@ -54,7 +54,7 @@
               "tiles": [
                 {
                   "id": "9970d7a8-ac80-4018-af70-896882d62bef",
-                  "x": 4,
+                  "x": 0,
                   "y": 0,
                   "sliceX": 16,
                   "sliceY": 0,
@@ -92,7 +92,21 @@
           "frames": [
             {
               "id": "7095fea0-a95c-4568-8606-80c758ebc69c",
-              "tiles": []
+              "tiles": [
+                {
+                  "id": "ae8d39ba-3111-4c0b-9d64-dd7f1c00d28f",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 24,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 1,
+                  "priority": false
+                }
+              ]
             }
           ]
         },
@@ -133,15 +147,109 @@
           ]
         }
       ]
+    },
+    {
+      "id": "47f0bfcf-4b82-4d60-b612-0e224aaba6e8",
+      "name": "Death",
+      "animations": [
+        {
+          "id": "9afe4f66-1270-4807-af9d-33af762192a9",
+          "frames": [
+            {
+              "id": "98c851cf-667f-465d-a15c-971f970a38a0",
+              "tiles": [
+                {
+                  "id": "af5f4b04-4714-4364-a207-3137df7bad73",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 24,
+                  "sliceY": 0,
+                  "palette": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "objPalette": "OBP0",
+                  "paletteIndex": 1,
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "12eb027c-27d2-420b-a8a7-953e7cdda5b6",
+          "frames": [
+            {
+              "id": "950cbc42-2f61-4e90-baca-2ca40909547e",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "766ec59a-44e2-4693-b0ff-5fbb412ef1fc",
+          "frames": [
+            {
+              "id": "ba3bc9e4-472f-4238-98ba-2ef09b1b338b",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "f84c8c62-1348-43b3-9d5d-1946a85cd778",
+          "frames": [
+            {
+              "id": "d88e34f6-d51a-4023-a6ae-1d0d85a58a06",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "32307fe0-7d6b-4c8d-ba77-1e97cba3013d",
+          "frames": [
+            {
+              "id": "113d4bf9-b331-4648-89fb-a55e5086520a",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "c580a69b-ac60-45d1-a7aa-24cd58646a12",
+          "frames": [
+            {
+              "id": "6a48ab38-3cd0-4c2a-8cfe-aeb1667d813d",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "de33aeea-ae96-4373-841f-b781bbffbd8b",
+          "frames": [
+            {
+              "id": "4c32abde-3341-4add-bdde-414103fce6f1",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "d3735ffa-47f4-48a0-8722-581dde853d5f",
+          "frames": [
+            {
+              "id": "cb47fc95-1da2-4aa6-948b-c2c07a6c0fad",
+              "tiles": []
+            }
+          ]
+        }
+      ],
+      "animationType": "fixed",
+      "flipLeft": true
     }
   ],
-  "numTiles": 3,
-  "canvasWidth": 16,
+  "numTiles": 4,
+  "canvasWidth": 8,
   "canvasHeight": 16,
   "boundsX": 0,
   "boundsY": 0,
-  "boundsWidth": 16,
-  "boundsHeight": 16,
+  "boundsWidth": 8,
+  "boundsHeight": 8,
   "animSpeed": 15,
   "filename": "enemy_walker.png",
   "width": 32,

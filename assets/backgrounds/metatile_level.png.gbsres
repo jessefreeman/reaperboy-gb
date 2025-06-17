@@ -3,7 +3,7 @@
   "id": "b4984510-3fe8-4ce8-986e-ac9a2b62d173",
   "name": "metatile_level",
   "symbol": "bg_metatile_level",
-  "tileColors": "00f2+0114+004+0114+004+0114+004+0114+004+0114+00e+01a+00aa+",
+  "tileColors": "0011+04!00e0+0114+004+0114+004+0114+004+0114+004+0114+00e+01a+00aa+",
   "filename": "metatile_level.png",
   "width": 24,
   "height": 23,

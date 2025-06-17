@@ -1,0 +1,19 @@
+{
+  "_resourceType": "actorPrefab",
+  "id": "2831d729-b9f0-411a-975e-37365014931b",
+  "name": "PF_Cloud",
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "39e712d3-bd25-4625-bf61-29cacfecc88f",
+  "moveSpeed": 1,
+  "animSpeed": 255,
+  "paletteId": "",
+  "persistent": false,
+  "collisionGroup": "",
+  "script": [],
+  "startScript": [],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}

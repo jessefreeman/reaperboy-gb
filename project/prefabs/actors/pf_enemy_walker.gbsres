@@ -1,0 +1,639 @@
+{
+  "_resourceType": "actorPrefab",
+  "id": "3261d8af-239f-41cd-9218-bf0115dd5371",
+  "name": "PF_ENEMY_WALKER",
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "e8a763e5-0185-4283-8bb2-bee164d317a9",
+  "moveSpeed": 0.25,
+  "animSpeed": 15,
+  "paletteId": "",
+  "persistent": false,
+  "collisionGroup": "1",
+  "script": [
+    {
+      "id": "8d9f0ff5-55a7-4083-a116-e21c96ac94cf",
+      "command": "EVENT_IF_ACTOR_RELATIVE_TO_ACTOR",
+      "args": {
+        "actorId": "player",
+        "operation": "up",
+        "otherActorId": "0",
+        "__collapseElse": false,
+        "__collapse": false,
+        "__comment": false
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_GROUP",
+            "args": {
+              "__comment": false
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_ACTOR_SET_DIRECTION",
+                  "args": {
+                    "actorId": "$self$",
+                    "direction": {
+                      "type": "direction",
+                      "value": "down"
+                    }
+                  },
+                  "id": "4f7aab19-1c54-4b75-b2fd-93cf60e93d21"
+                },
+                {
+                  "command": "EVENT_GROUP",
+                  "args": {
+                    "__label": "Update Stars"
+                  },
+                  "children": {
+                    "true": [
+                      {
+                        "id": "99587fe6-989d-43e3-9089-249ac4c2b4a1",
+                        "command": "EVENT_DEC_VALUE",
+                        "args": {
+                          "variable": "12",
+                          "__collapse": false
+                        }
+                      },
+                      {
+                        "command": "EVENT_INC_VALUE",
+                        "args": {
+                          "variable": "13"
+                        },
+                        "id": "610b8e34-5fcf-4747-a4d2-9680ddf15c6c"
+                      },
+                      {
+                        "command": "EVENT_CALL_CUSTOM_EVENT",
+                        "args": {
+                          "customEventId": "c317fac2-57d1-480a-859a-a161119053b4",
+                          "$variable[V0]$": {
+                            "type": "number",
+                            "value": 0
+                          },
+                          "$variable[V1]$": {
+                            "type": "number",
+                            "value": 4
+                          },
+                          "$variable[V2]$": {
+                            "type": "number",
+                            "value": 8
+                          },
+                          "$variable[V3]$": {
+                            "type": "variable",
+                            "value": "13"
+                          }
+                        },
+                        "id": "cf6ba522-44df-4291-9b8d-a316c30d5bc8"
+                      }
+                    ]
+                  },
+                  "id": "9bf032fd-66f7-4919-bf21-d1a1956e2924"
+                },
+                {
+                  "id": "1d448268-01bd-4145-a5f3-1e4776a25135",
+                  "command": "EVENT_ACTOR_COLLISIONS_DISABLE",
+                  "args": {
+                    "actorId": "0",
+                    "__comment": true,
+                    "__collapse": false
+                  }
+                },
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Death",
+                    "loopAnim": false,
+                    "__collapse": false,
+                    "__comment": true
+                  },
+                  "id": "d5d24e3e-d058-4d57-b6cf-3f59bc7c557d"
+                },
+                {
+                  "id": "f41defe5-606e-4192-8ab6-21974a2956df",
+                  "command": "EVENT_PLAYER_BOUNCE",
+                  "args": {
+                    "height": "medium",
+                    "__collapse": false
+                  }
+                },
+                {
+                  "command": "EVENT_ACTOR_SET_POSITION",
+                  "args": {
+                    "actorId": "1",
+                    "x": {
+                      "type": "property",
+                      "target": "0",
+                      "property": "xpos"
+                    },
+                    "y": {
+                      "type": "property",
+                      "target": "0",
+                      "property": "ypos"
+                    },
+                    "__collapse": false,
+                    "__comment": true
+                  },
+                  "id": "f0a11e8a-6cbd-4bc5-afd0-3ccb8ef00f22"
+                },
+                {
+                  "command": "EVENT_ACTOR_SET_FRAME",
+                  "args": {
+                    "actorId": "1",
+                    "frame": {
+                      "type": "number",
+                      "value": 0
+                    },
+                    "__collapse": true,
+                    "__comment": true
+                  },
+                  "id": "04b27070-223d-42d7-8c82-e55deaebe200"
+                },
+                {
+                  "command": "EVENT_ACTOR_ACTIVATE",
+                  "args": {
+                    "actorId": "1",
+                    "__collapse": true,
+                    "__comment": true
+                  },
+                  "id": "71e1e965-e05e-440e-ab6b-451f467977ec"
+                },
+                {
+                  "command": "EVENT_ACTOR_MOVE_TO",
+                  "args": {
+                    "actorId": "$self$",
+                    "x": {
+                      "type": "property",
+                      "target": "$self$",
+                      "property": "pxpos"
+                    },
+                    "y": {
+                      "type": "property",
+                      "target": "$self$",
+                      "property": "pypos"
+                    },
+                    "moveType": "horizontal",
+                    "useCollisions": false,
+                    "__comment": true
+                  },
+                  "id": "c471db00-b818-45ad-9bcb-cd8bc1597809"
+                },
+                {
+                  "command": "EVENT_ACTOR_MOVE_CANCEL",
+                  "args": {
+                    "actorId": "$self$",
+                    "__comment": true
+                  },
+                  "id": "f06cef24-ad0d-4173-a416-b96d582bbd01"
+                },
+                {
+                  "id": "ea4c7153-26f3-4024-9fb9-8eed0d7b1690",
+                  "command": "EVENT_WAIT",
+                  "args": {
+                    "time": {
+                      "type": "number",
+                      "value": 1
+                    },
+                    "frames": {
+                      "type": "number",
+                      "value": 30
+                    },
+                    "__collapse": true,
+                    "__comment": true
+                  }
+                },
+                {
+                  "id": "af6cb909-9f2a-4c54-9f9d-69fd873bb75c",
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "0",
+                    "__collapse": true
+                  }
+                },
+                {
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "1",
+                    "__collapse": true,
+                    "__comment": true
+                  },
+                  "id": "36ea5eed-b09a-4f0d-9aef-1e6eb4b7dc0b"
+                }
+              ]
+            },
+            "id": "dba6f50a-4ec1-404e-9206-456c94331adf"
+          }
+        ],
+        "false": [
+          {
+            "id": "71f8a627-dfd1-4020-a988-581c164b8a73",
+            "command": "EVENT_ACTOR_SET_POSITION",
+            "args": {
+              "actorId": "player",
+              "x": {
+                "type": "variable",
+                "value": "1"
+              },
+              "y": {
+                "type": "number",
+                "value": 0
+              },
+              "__comment": false
+            }
+          },
+          {
+            "id": "f5236de4-27be-428e-a459-4cc0e0a72a42",
+            "command": "EVENT_CAMERA_SHAKE",
+            "args": {
+              "time": 0.5,
+              "magnitude": {
+                "type": "number",
+                "value": 5
+              },
+              "__comment": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "startScript": [
+    {
+      "command": "EVENT_ACTOR_DEACTIVATE",
+      "args": {
+        "actorId": "$self$"
+      },
+      "id": "2c002179-d404-4828-a678-e6b478c1c369"
+    }
+  ],
+  "updateScript": [
+    {
+      "command": "EVENT_GROUP",
+      "args": {
+        "__collapse": false,
+        "__comment": false
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_IF_ACTOR_DIRECTION",
+            "args": {
+              "actorId": "$self$",
+              "direction": {
+                "type": "direction",
+                "value": "down"
+              },
+              "__collapseElse": false
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_COMMENT",
+                  "args": {
+                    "text": "",
+                    "__label": "Do nothing, enemy is dead"
+                  },
+                  "id": "9611659c-9e31-4e93-a89e-87db956b64ff"
+                }
+              ],
+              "false": [
+                {
+                  "command": "EVENT_GROUP",
+                  "args": {
+                    "__label": "Move Enemy"
+                  },
+                  "children": {
+                    "true": [
+                      {
+                        "command": "EVENT_IF_ACTOR_DIRECTION",
+                        "args": {
+                          "actorId": "0",
+                          "direction": {
+                            "type": "direction",
+                            "value": "right"
+                          },
+                          "__collapseElse": false,
+                          "__collapse": true,
+                          "__disableElse": false,
+                          "__comment": false,
+                          "__label": "Set dir var base on current direction"
+                        },
+                        "children": {
+                          "true": [
+                            {
+                              "command": "EVENT_SET_VALUE",
+                              "args": {
+                                "variable": "L3",
+                                "value": {
+                                  "type": "number",
+                                  "value": 1
+                                },
+                                "__collapse": false,
+                                "__comment": false
+                              },
+                              "id": "b7cefbd1-c80b-43f8-a9a9-010f0b7fd371"
+                            },
+                            {
+                              "command": "EVENT_SET_VALUE",
+                              "args": {
+                                "variable": "L4",
+                                "value": {
+                                  "type": "number",
+                                  "value": 1
+                                }
+                              },
+                              "id": "b8f3e4b5-9e1e-483f-8acf-62c01b18d2d2"
+                            }
+                          ],
+                          "false": [
+                            {
+                              "command": "EVENT_SET_VALUE",
+                              "args": {
+                                "variable": "L3",
+                                "value": {
+                                  "type": "number",
+                                  "value": -1
+                                },
+                                "__comment": false
+                              },
+                              "id": "45fbb29c-8cec-4cc6-96f5-bc1f3a8d424a"
+                            },
+                            {
+                              "command": "EVENT_SET_VALUE",
+                              "args": {
+                                "variable": "L4",
+                                "value": {
+                                  "type": "number",
+                                  "value": 0
+                                }
+                              },
+                              "id": "af2361cb-e43f-4c71-a8da-87f3b2bc48e6"
+                            }
+                          ]
+                        },
+                        "id": "cf01648a-8359-4d9e-95c6-42c3c61c28d5"
+                      },
+                      {
+                        "command": "EVENT_SET_VALUE",
+                        "args": {
+                          "variable": "L0",
+                          "value": {
+                            "type": "add",
+                            "valueA": {
+                              "type": "property",
+                              "target": "$self$",
+                              "property": "ypos"
+                            },
+                            "valueB": {
+                              "type": "number",
+                              "value": 1
+                            }
+                          },
+                          "__comment": false,
+                          "__label": "Calculate next Y tile (Below actor)",
+                          "__collapse": true
+                        },
+                        "id": "748ad51d-3669-4637-a45c-0a65bd31b846"
+                      },
+                      {
+                        "command": "EVENT_GET_META_TILE_AT_POS",
+                        "args": {
+                          "x": {
+                            "type": "add",
+                            "valueA": {
+                              "type": "property",
+                              "target": "$self$",
+                              "property": "xpos"
+                            },
+                            "valueB": {
+                              "type": "variable",
+                              "value": "L4"
+                            }
+                          },
+                          "y": {
+                            "type": "variable",
+                            "value": "L0"
+                          },
+                          "output": "L2",
+                          "__collapse": true
+                        },
+                        "id": "ec46d5e1-9da4-477d-a377-84b89c5aa54d"
+                      },
+                      {
+                        "command": "EVENT_IF",
+                        "args": {
+                          "condition": {
+                            "type": "eq",
+                            "valueA": {
+                              "type": "variable",
+                              "value": "L2"
+                            },
+                            "valueB": {
+                              "type": "number",
+                              "value": 0
+                            }
+                          },
+                          "__collapseElse": false,
+                          "__label": "Test if next tile is empty",
+                          "__collapse": true,
+                          "__disableElse": true
+                        },
+                        "children": {
+                          "true": [
+                            {
+                              "command": "EVENT_IF_ACTOR_DIRECTION",
+                              "args": {
+                                "actorId": "$self$",
+                                "direction": {
+                                  "type": "direction",
+                                  "value": "right"
+                                },
+                                "__collapseElse": false,
+                                "__collapse": true
+                              },
+                              "children": {
+                                "true": [
+                                  {
+                                    "command": "EVENT_GROUP",
+                                    "args": {
+                                      "__label": "Flip actor left"
+                                    },
+                                    "children": {
+                                      "true": [
+                                        {
+                                          "command": "EVENT_ACTOR_SET_DIRECTION",
+                                          "args": {
+                                            "actorId": "$self$",
+                                            "direction": {
+                                              "type": "direction",
+                                              "value": "left"
+                                            }
+                                          },
+                                          "id": "1d48e94e-790d-4529-b1e6-77431a95da5f"
+                                        },
+                                        {
+                                          "command": "EVENT_ACTOR_SET_POSITION",
+                                          "args": {
+                                            "actorId": "$self$",
+                                            "x": {
+                                              "type": "sub",
+                                              "valueA": {
+                                                "type": "property",
+                                                "target": "$self$",
+                                                "property": "xpos"
+                                              },
+                                              "valueB": {
+                                                "type": "number",
+                                                "value": 1
+                                              }
+                                            },
+                                            "y": {
+                                              "type": "property",
+                                              "target": "$self$",
+                                              "property": "ypos"
+                                            },
+                                            "__label": "Flip sprite based on left position"
+                                          },
+                                          "id": "cf0d51b0-0a30-4923-9658-cc96e9ed4a9a"
+                                        },
+                                        {
+                                          "command": "EVENT_SET_VALUE",
+                                          "args": {
+                                            "variable": "L3",
+                                            "value": {
+                                              "type": "number",
+                                              "value": -1
+                                            }
+                                          },
+                                          "id": "5b5a6d9a-c10e-4b98-9dc7-3144301c610f"
+                                        }
+                                      ]
+                                    },
+                                    "id": "717bea21-1a13-44ae-b52f-2b4044ea2486"
+                                  }
+                                ],
+                                "false": [
+                                  {
+                                    "command": "EVENT_GROUP",
+                                    "args": {
+                                      "__label": "Flip actor right",
+                                      "__collapse": false
+                                    },
+                                    "children": {
+                                      "true": [
+                                        {
+                                          "command": "EVENT_ACTOR_SET_DIRECTION",
+                                          "args": {
+                                            "actorId": "$self$",
+                                            "direction": {
+                                              "type": "direction",
+                                              "value": "right"
+                                            },
+                                            "__label": "Flip sprite based on right position"
+                                          },
+                                          "id": "a00b4ada-d4dc-4e27-9057-da76f8f28fcb"
+                                        },
+                                        {
+                                          "command": "EVENT_ACTOR_SET_POSITION",
+                                          "args": {
+                                            "actorId": "$self$",
+                                            "x": {
+                                              "type": "add",
+                                              "valueA": {
+                                                "type": "property",
+                                                "target": "$self$",
+                                                "property": "xpos"
+                                              },
+                                              "valueB": {
+                                                "type": "number",
+                                                "value": 1
+                                              }
+                                            },
+                                            "y": {
+                                              "type": "property",
+                                              "target": "$self$",
+                                              "property": "ypos"
+                                            }
+                                          },
+                                          "id": "a14e9a71-aa13-4f7d-a6ed-06d9a67c069f"
+                                        },
+                                        {
+                                          "command": "EVENT_SET_VALUE",
+                                          "args": {
+                                            "variable": "L3",
+                                            "value": {
+                                              "type": "number",
+                                              "value": 1
+                                            }
+                                          },
+                                          "id": "323ef78c-ff45-48f6-9392-60799a95f79b"
+                                        }
+                                      ]
+                                    },
+                                    "id": "1563cf6e-9940-4301-bcee-16219698d5b8"
+                                  }
+                                ]
+                              },
+                              "id": "9be38be1-3473-4d2e-a17d-fe256ec98248"
+                            }
+                          ],
+                          "false": []
+                        },
+                        "id": "f71ee4e8-317c-4944-9e33-84e0a14a47d8"
+                      },
+                      {
+                        "command": "EVENT_VARIABLE_MATH_EVALUATE",
+                        "args": {
+                          "variable": "L5",
+                          "expression": "$L5$ + 1 "
+                        },
+                        "id": "1c558b60-502a-4f86-be6a-99ca9fb04259"
+                      },
+                      {
+                        "command": "EVENT_ACTOR_MOVE_TO",
+                        "args": {
+                          "actorId": "$self$",
+                          "x": {
+                            "type": "add",
+                            "valueA": {
+                              "type": "property",
+                              "target": "$self$",
+                              "property": "xpos"
+                            },
+                            "valueB": {
+                              "type": "variable",
+                              "value": "L3"
+                            }
+                          },
+                          "y": {
+                            "type": "property",
+                            "target": "$self$",
+                            "property": "ypos"
+                          },
+                          "moveType": "horizontal",
+                          "useCollisions": false,
+                          "__comment": false,
+                          "__collapse": false,
+                          "__label": "Move to next tile"
+                        },
+                        "id": "7c5d3471-c08f-4f16-948a-91069096fce6"
+                      }
+                    ]
+                  },
+                  "id": "bd572300-3143-4e54-ab9e-1a754ac34eef"
+                }
+              ]
+            },
+            "id": "3036e75c-db25-44c1-8df4-be32cf6c7cfa"
+          }
+        ]
+      },
+      "id": "123b68b2-b511-4d46-b817-321a76b74fa9"
+    }
+  ],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}
