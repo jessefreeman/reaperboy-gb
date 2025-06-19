@@ -185,6 +185,16 @@
       "id": "2831d729-b9f0-411a-975e-37365014931b__L0",
       "name": "L_NEXT_Y",
       "symbol": "var_l_next_y"
+    },
+    {
+      "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L4",
+      "name": "L_NEXT_ROW",
+      "symbol": "var_l_next_row"
+    },
+    {
+      "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L5",
+      "name": "L_NEXT_COLUMN",
+      "symbol": "var_l_next_column"
     }
   ],
   "constants": [
@@ -246,7 +256,7 @@
       "id": "2e3579ec-760d-4a50-a2d0-bea569787eb7",
       "name": "C_TILE_EMPTY",
       "symbol": "const_c_tile_empty",
-      "value": 5
+      "value": 6
     },
     {
       "id": "a9a21d13-f6fc-481c-bfbb-69949519e013",
@@ -256,21 +266,21 @@
     },
     {
       "id": "ff4532d5-8f76-4aae-9208-a2b6db93d17f",
-      "name": "C_TILE_ENEMY",
-      "symbol": "const_c_tile_enemy",
+      "name": "C_TILE_RIGHT_ENEMY",
+      "symbol": "const_c_tile_right_enemy",
       "value": 2
     },
     {
       "id": "f9931826-bf08-4441-889a-a120b3b7a654",
       "name": "C_TILE_EXIT",
       "symbol": "const_c_tile_exit",
-      "value": 3
+      "value": 4
     },
     {
       "id": "58c3bbf6-28a1-42e7-8b30-85941a4d669f",
       "name": "C_TILE_PLAYER",
       "symbol": "const_c_tile_player",
-      "value": 4
+      "value": 5
     },
     {
       "id": "cce80199-2741-4de9-aa6b-c62c63ec6ce5",
@@ -283,6 +293,54 @@
       "name": "C_EXIT_TOP_LEFT_TILE_ID",
       "symbol": "const_c_exit_top_left_tile_",
       "value": 32
+    },
+    {
+      "id": "69abeb09-5786-48f7-94a8-70f9e94a6bd7",
+      "name": "C_PLAYER_TILE_ID",
+      "symbol": "const_c_player_tile_id",
+      "value": 20
+    },
+    {
+      "id": "50e80fb3-61b9-4534-86f8-f80702c7b0c3",
+      "name": "C_ERROR_NO_PLAYER",
+      "symbol": "const_c_error_no_player",
+      "value": 2
+    },
+    {
+      "id": "b22ae818-234a-4244-b94d-01f18cbfa509",
+      "name": "C_PLATFROM_LEFT_TILE_ID",
+      "symbol": "const_c_platfrom_left_tile_",
+      "value": 4
+    },
+    {
+      "id": "fb49b300-d857-49c1-ba01-74dc2888ea27",
+      "name": "C_PLATFROM_MIDDLE_TILE_ID",
+      "symbol": "const_c_platfrom_middle_til",
+      "value": 5
+    },
+    {
+      "id": "9bcb0f86-f21b-494a-848b-3196073084ba",
+      "name": "C_PLATFROM_RIGHT_TILE_ID",
+      "symbol": "const_c_platfrom_right_tile",
+      "value": 6
+    },
+    {
+      "id": "3f016426-89fb-4a69-9ed4-826e03b90b4d",
+      "name": "C_ENEMY_RIGHT_TILE_ID",
+      "symbol": "const_c_enemy_right_tile_id",
+      "value": 21
+    },
+    {
+      "id": "0af54cb7-f4fa-46b6-8817-f29a63f2641b",
+      "name": "C_ENEMY_LEFT_TILE_ID",
+      "symbol": "const_c_enemy_left_tile_id",
+      "value": 22
+    },
+    {
+      "id": "7b8f4e8a-b5dc-4992-b7c4-fb50a5736b29",
+      "name": "C_TILE_LEFT_ENEMY",
+      "symbol": "const_c_tile_left_enemy",
+      "value": 3
     }
   ]
 }

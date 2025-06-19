@@ -263,7 +263,8 @@
     {
       "command": "EVENT_ACTOR_DEACTIVATE",
       "args": {
-        "actorId": "$self$"
+        "actorId": "$self$",
+        "__comment": true
       },
       "id": "2c002179-d404-4828-a678-e6b478c1c369"
     }

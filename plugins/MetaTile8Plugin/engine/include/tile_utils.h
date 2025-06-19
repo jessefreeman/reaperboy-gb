@@ -9,7 +9,8 @@
 #define TILE_PLATFORM_MIDDLE   5
 #define TILE_PLATFORM_RIGHT    6
 #define TILE_PLAYER            20
-#define TILE_ENEMY             21
+#define TILE_RIGHT_ENEMY       21
+#define TILE_LEFT_ENEMY        22
 #define TILE_EXIT_TOP_LEFT     16
 #define TILE_EXIT_TOP_RIGHT    17
 #define TILE_EXIT_BOTTOM_LEFT  32

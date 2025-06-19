@@ -8,6 +8,18 @@
     "0": {
       "id": "0",
       "name": "A_SELECTOR"
+    },
+    "1": {
+      "id": "1",
+      "name": "P_EXIT_ACTOR"
+    },
+    "2": {
+      "id": "2",
+      "name": "P_ENEMY_1_ACTOR"
+    },
+    "3": {
+      "id": "3",
+      "name": "P_EMEMY_2_ACTOR"
     }
   },
   "symbol": "script_1",
@@ -31,7 +43,8 @@
               "variable": "0",
               "value": {
                 "type": "false"
-              }
+              },
+              "__collapse": true
             },
             "id": "18f10e95-c51c-4253-9280-f1e6a09f8d2e"
           },
@@ -91,7 +104,8 @@
               "palette6": "keep",
               "palette7": "keep",
               "__comment": false,
-              "actorId": "0"
+              "actorId": "0",
+              "__collapse": true
             },
             "id": "fe780f0e-369a-40a0-b3a1-ed6f89e2545d"
           },
@@ -101,21 +115,24 @@
               "text": "PLAY",
               "x": 2,
               "y": 3,
-              "location": "background"
+              "location": "background",
+              "__collapse": true
             },
             "id": "72dc5b03-37b8-44f6-a83e-286300e5f2c1"
           },
           {
             "command": "EVENT_ACTOR_DEACTIVATE",
             "args": {
-              "actorId": "0"
+              "actorId": "0",
+              "__collapse": true
             },
             "id": "7c3d0d87-25b3-418c-8957-2f36db31df2a"
           },
           {
             "command": "EVENT_ACTOR_SHOW",
             "args": {
-              "actorId": "player"
+              "actorId": "player",
+              "__collapse": true
             },
             "id": "99bf05ea-8245-411f-8db0-adcdbe0421e0"
           },
@@ -130,14 +147,16 @@
               "y": {
                 "type": "variable",
                 "value": "2"
-              }
+              },
+              "__collapse": true
             },
             "id": "8f2ae57c-4c3e-4367-8681-7d378b2a8692"
           },
           {
             "command": "EVENT_ACTOR_ACTIVATE",
             "args": {
-              "actorId": "$self$"
+              "actorId": "$self$",
+              "__collapse": true
             },
             "id": "0afe4a8f-5801-4a21-80a9-4e50ae863caa"
           }
@@ -175,12 +194,44 @@
             "id": "ce9daf14-bced-4eec-9c83-8d8646a4e43c"
           },
           {
-            "command": "EVENT_ACTOR_DEACTIVATE",
+            "command": "EVENT_GROUP",
             "args": {
-              "actorId": "$self$",
-              "__collapse": true
+              "__label": "Disable Actors"
             },
-            "id": "e6e8c584-80d3-4da0-bad4-5426c6744fa3"
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "$self$",
+                    "__collapse": false
+                  },
+                  "id": "e6e8c584-80d3-4da0-bad4-5426c6744fa3"
+                },
+                {
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "1"
+                  },
+                  "id": "cff35ea5-aa62-4125-8354-91c5f8fb7fb0"
+                },
+                {
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "2"
+                  },
+                  "id": "545345e6-309b-4746-9cb2-8aabee1207fb"
+                },
+                {
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "3"
+                  },
+                  "id": "7e0169c8-d42c-4661-9761-86bbfe6cee82"
+                }
+              ]
+            },
+            "id": "4bdb8999-c8e2-4cf8-a6f5-6f14fe114db8"
           },
           {
             "command": "EVENT_COPY_BKG_SUBMAP_TO_BKG_BASE",

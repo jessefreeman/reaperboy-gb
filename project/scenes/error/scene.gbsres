@@ -31,10 +31,22 @@
             "value": "cce80199-2741-4de9-aa6b-c62c63ec6ce5"
           }
         },
-        "__collapseElse": false
+        "__collapseElse": false,
+        "__disableElse": true,
+        "__comment": false
       },
       "children": {
         "true": [
+          {
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "T0",
+              "value": {
+                "type": "true"
+              }
+            },
+            "id": "992bf626-d0a0-4c96-a376-ea7ab4f1ada9"
+          },
           {
             "command": "EVENT_TEXT_DRAW",
             "args": {
@@ -46,7 +58,66 @@
             "id": "3140ebe8-bd32-4f08-af8f-007d467a3c5e"
           }
         ],
-        "false": [
+        "false": []
+      },
+      "id": "ea481e58-4b7b-4d67-a15c-d9875e077632"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "15"
+          },
+          "valueB": {
+            "type": "constant",
+            "value": "50e80fb3-61b9-4534-86f8-f80702c7b0c3"
+          }
+        },
+        "__collapseElse": false,
+        "__disableElse": true,
+        "__comment": false
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "T0",
+              "value": {
+                "type": "true"
+              }
+            },
+            "id": "15bfc910-1182-4cdc-8932-dfbc3cc7ea56"
+          },
+          {
+            "command": "EVENT_TEXT_DRAW",
+            "args": {
+              "text": "Error: No player",
+              "x": 1,
+              "y": 1,
+              "location": "background"
+            },
+            "id": "4915b9c7-a3b2-44a7-9afb-89f4fe9c6edd"
+          }
+        ],
+        "false": []
+      },
+      "id": "72fae918-d427-4674-80b4-79a43a1a7c1d"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "variable",
+          "value": "L0"
+        },
+        "__collapseElse": true
+      },
+      "children": {
+        "true": [
           {
             "command": "EVENT_TEXT",
             "args": {
@@ -70,11 +141,36 @@
               "closeDelayTime": 0.5,
               "closeDelayFrames": 30
             },
-            "id": "0534c265-3dd6-483b-80d8-14137465d5f6"
+            "id": "145610dd-910b-4b82-b219-de804255754b"
           }
-        ]
+        ],
+        "false": []
       },
-      "id": "ea481e58-4b7b-4d67-a15c-d9875e077632"
+      "id": "669f1ce0-5fcb-46e2-8f15-bef5dcb3b051"
+    },
+    {
+      "command": "EVENT_COMMENT",
+      "args": {
+        "text": "There needs to be a flag that if an error wasn't found, to call unknown error.",
+        "__label": "TODO: Need a unknown error here"
+      },
+      "id": "f4046e15-b243-4830-b193-27177e8ce63d"
+    },
+    {
+      "command": "EVENT_ACTOR_HIDE",
+      "args": {
+        "actorId": "player",
+        "__comment": true
+      },
+      "id": "163767bd-bc2f-455b-ab45-6d53463f9040"
+    },
+    {
+      "command": "EVENT_FADE_IN",
+      "args": {
+        "speed": 1,
+        "__comment": true
+      },
+      "id": "b2ce0b69-2b5a-4d5a-b284-b4ffbd11dc40"
     }
   ],
   "playerHit1Script": [],

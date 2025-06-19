@@ -68,7 +68,8 @@
         "frame": {
           "type": "number",
           "value": 1
-        }
+        },
+        "__comment": false
       },
       "id": "f00b073b-ec75-4c2c-8a2d-baba604e4751"
     }

@@ -11,5 +11,6 @@ UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED;
 void vm_paint(SCRIPT_CTX *THIS) BANKED;
 void vm_delete_tile_at_pos(SCRIPT_CTX *THIS) OLDCALL BANKED;
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED;
+void vm_move_actor_to_test(SCRIPT_CTX *THIS) OLDCALL BANKED;
 
 #endif
