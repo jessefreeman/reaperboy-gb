@@ -1,11 +1,11 @@
 {
   "_resourceType": "actor",
-  "id": "efd952a9-3e27-421d-9ff0-6eb589498e56",
-  "name": "TestActor",
+  "id": "2bcab10e-5f93-49ab-b30a-d0d4b933bffe",
+  "name": "PF_ENEMY_WALKER_3",
   "frame": 0,
   "animate": false,
-  "spriteSheetId": "e8a763e5-0185-4283-8bb2-bee164d317a9",
-  "prefabId": "",
+  "spriteSheetId": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
+  "prefabId": "3261d8af-239f-41cd-9218-bf0115dd5371",
   "direction": "right",
   "moveSpeed": 1,
   "animSpeed": 15,
@@ -21,7 +21,7 @@
   "hit1Script": [],
   "hit2Script": [],
   "hit3Script": [],
-  "x": 2,
-  "y": 3,
+  "x": 4,
+  "y": 8,
   "_index": 6
 }

@@ -1,7 +1,7 @@
 {
   "_resourceType": "actor",
-  "id": "c59ebace-c2f4-40b7-ac6d-a2a07bd4b9b7",
-  "name": "PF_ENEMY_WALKER_2",
+  "id": "fd69d58d-0d55-4ad8-b70f-7ea48d2d538c",
+  "name": "PF_ENEMY_WALKER_4",
   "frame": 0,
   "animate": false,
   "spriteSheetId": "581d34d0-9591-4e6e-a609-1d94f203b0cd",
@@ -14,7 +14,7 @@
   "persistent": false,
   "collisionGroup": "",
   "prefabScriptOverrides": {},
-  "symbol": "actor_7",
+  "symbol": "actor_5",
   "script": [],
   "startScript": [],
   "updateScript": [],
@@ -22,6 +22,6 @@
   "hit2Script": [],
   "hit3Script": [],
   "x": 4,
-  "y": 7,
-  "_index": 5
+  "y": 9,
+  "_index": 7
 }

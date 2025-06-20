@@ -84,7 +84,8 @@
           {
             "command": "EVENT_GROUP",
             "args": {
-              "__label": "Reset Global Variables"
+              "__label": "Reset Global Variables",
+              "__collapse": true
             },
             "children": {
               "true": [
@@ -835,10 +836,28 @@
       "id": "7826b9e6-44ee-4ba8-92a0-e0ebd1284f9f"
     },
     {
+      "command": "EVENT_SETUP_MAP",
+      "args": {
+        "player": "0",
+        "exit": "43c0c526-187a-4690-a9d2-cb7f3fc63a36",
+        "e1": "4a0c3d10-9943-4a88-9535-c249a0654694",
+        "e2": "c59ebace-c2f4-40b7-ac6d-a2a07bd4b9b7",
+        "e3": "2bcab10e-5f93-49ab-b30a-d0d4b933bffe",
+        "e4": "fd69d58d-0d55-4ad8-b70f-7ea48d2d538c",
+        "e5": "f366f87d-bfcb-43e9-8e5f-46641d48470d",
+        "e6": "c05fa5da-0af0-4902-a27b-48e1bed96229",
+        "__comment": false,
+        "__collapse": false,
+        "countVar": "12"
+      },
+      "id": "01bd760f-9de0-4cc0-be44-9d7f39dafceb"
+    },
+    {
       "command": "EVENT_GROUP",
       "args": {
         "__label": "Find Player",
-        "__collapse": false
+        "__collapse": false,
+        "__comment": true
       },
       "children": {
         "true": [
@@ -928,7 +947,7 @@
       "args": {
         "__label": "Find Exit",
         "__collapse": false,
-        "__comment": false
+        "__comment": true
       },
       "children": {
         "true": [
@@ -1030,7 +1049,8 @@
       "command": "EVENT_GROUP",
       "args": {
         "__label": "Setup Enemies",
-        "__collapse": false
+        "__collapse": false,
+        "__comment": true
       },
       "children": {
         "true": [
@@ -1127,7 +1147,7 @@
       "command": "EVENT_GROUP",
       "args": {
         "__label": "Star Setup",
-        "__collapse": true
+        "__collapse": false
       },
       "children": {
         "true": [
