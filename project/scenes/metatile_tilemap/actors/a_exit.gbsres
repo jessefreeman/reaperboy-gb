@@ -79,6 +79,32 @@
       "command": "EVENT_IF",
       "args": {
         "condition": {
+          "type": "variable",
+          "value": "0"
+        },
+        "__collapseElse": true,
+        "__disableElse": true,
+        "__label": "Test if edit mode was triggered"
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_ACTOR_DEACTIVATE",
+            "args": {
+              "actorId": "$self$",
+              "__collapse": true
+            },
+            "id": "f8fb8842-b43d-417e-9496-917ce94fda64"
+          }
+        ],
+        "false": []
+      },
+      "id": "f0ca6aa8-d397-42f1-8167-ee45ca1f1414"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
           "type": "eq",
           "valueA": {
             "type": "variable",
@@ -89,7 +115,8 @@
             "value": 0
           }
         },
-        "__collapseElse": true
+        "__collapseElse": true,
+        "__collapse": true
       },
       "children": {
         "true": [

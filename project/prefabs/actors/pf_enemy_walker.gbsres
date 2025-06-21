@@ -279,6 +279,32 @@
       "children": {
         "true": [
           {
+            "command": "EVENT_IF",
+            "args": {
+              "condition": {
+                "type": "variable",
+                "value": "0"
+              },
+              "__collapseElse": true,
+              "__disableElse": true,
+              "__label": "Test if edit mode was triggered"
+            },
+            "children": {
+              "true": [
+                {
+                  "command": "EVENT_ACTOR_DEACTIVATE",
+                  "args": {
+                    "actorId": "$self$",
+                    "__collapse": true
+                  },
+                  "id": "b19997af-4b69-4a83-8d48-c71e86ffb2a2"
+                }
+              ],
+              "false": []
+            },
+            "id": "e5f37b4e-6996-4ce0-b4f7-42e5808a7e4b"
+          },
+          {
             "command": "EVENT_IF_ACTOR_DIRECTION",
             "args": {
               "actorId": "$self$",
