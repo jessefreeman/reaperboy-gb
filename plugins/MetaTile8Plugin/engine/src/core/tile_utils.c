@@ -9,19 +9,21 @@ UBYTE get_tile_type(UBYTE tile_id) BANKED
     case TILE_PLATFORM_LEFT:
     case TILE_PLATFORM_MIDDLE:
     case TILE_PLATFORM_RIGHT:
-        return 1;
+        return BRUSH_TILE_PLATFORM;
     case TILE_RIGHT_ENEMY:
-        return 2;
+        return BRUSH_TILE_ENEMY_R;
     case TILE_LEFT_ENEMY:
-        return 3;
+        return BRUSH_TILE_ENEMY_L;
     case TILE_EXIT_TOP_LEFT:
     case TILE_EXIT_TOP_RIGHT:
     case TILE_EXIT_BOTTOM_LEFT:
     case TILE_EXIT_BOTTOM_RIGHT:
-        return 4;
+        return BRUSH_TILE_EXIT;
     case TILE_PLAYER:
-        return 5;
+        return BRUSH_TILE_PLAYER;
+    case TILE_EMPTY:
+        return BRUSH_TILE_EMPTY;
     default:
-        return 6;
+        return BRUSH_TILE_OTHER;
     }
 }

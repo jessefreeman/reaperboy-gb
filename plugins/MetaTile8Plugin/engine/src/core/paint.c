@@ -16,6 +16,17 @@
 #define PLATFORM_MIN_VERTICAL_GAP 1
 #define PLATFORM_MAX_LENGTH 8
 
+// Selector animation state constants
+#define SELECTOR_STATE_DEFAULT        0
+#define SELECTOR_STATE_DELETE         1
+#define SELECTOR_STATE_ENEMY_LEFT     2
+#define SELECTOR_STATE_ENEMY_RIGHT    3
+#define SELECTOR_STATE_NEW_PLATFORM   4
+#define SELECTOR_STATE_PLATFORM_CENTER 5
+#define SELECTOR_STATE_PLATFORM_LEFT  6
+#define SELECTOR_STATE_PLATFORM_RIGHT 7
+#define SELECTOR_STATE_PLAYER         8
+
 // pixels → subpixels
 #define TO_FP(n) ((INT16)((n) << 4))
 
@@ -54,7 +65,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
             UBYTE tt = get_tile_type(tid);
 
             // place player
-            if (!playerPlaced && tt == 5)
+            if (!playerPlaced && tt == BRUSH_TILE_PLAYER)
             {
                 actor_t *p = &actors[playerId];
                 p->pos.x = TO_FP(xx * 8);
@@ -68,7 +79,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
             }
 
             // place exit
-            if (playerPlaced && !exitPlaced && xx == playerX && yy > playerRow && tt == 1)
+            if (playerPlaced && !exitPlaced && xx == playerX && yy > playerRow && tt == BRUSH_TILE_PLATFORM)
             {
                 UBYTE placeX = (tid == TILE_PLATFORM_RIGHT) ? xx - 1 : xx;
                 actor_t *ex = &actors[exitId];
@@ -83,13 +94,13 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
             }
 
             // place enemies
-            if (ec < 6 && (tt == 2 || tt == 3))
+            if (ec < 6 && (tt == BRUSH_TILE_ENEMY_R || tt == BRUSH_TILE_ENEMY_L))
             {
                 actor_t *e = &actors[enemies[ec++]];
-                INT16 fx = (tt == 3) ? (xx * 8 - 8) : (xx * 8);
+                INT16 fx = (tt == BRUSH_TILE_ENEMY_L) ? (xx * 8 - 8) : (xx * 8);
                 e->pos.x = TO_FP(fx);
                 e->pos.y = TO_FP(yy * 8);
-                actor_set_dir(e, tt == 2 ? DIR_RIGHT : DIR_LEFT, TRUE);
+                actor_set_dir(e, tt == BRUSH_TILE_ENEMY_R ? DIR_RIGHT : DIR_LEFT, TRUE);
                 activate_actor(e);
                 replace_meta_tile(xx, yy, TILE_EMPTY, 1);
                 aliveEnemyCount++;
@@ -113,6 +124,53 @@ UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED
     return get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
 }
 
+UBYTE can_place_platform(UBYTE x, UBYTE y) BANKED
+{
+    // Check bounds
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX ||
+        y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX)
+        return 0;
+    
+    // Must be empty tile
+    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
+        return 0;
+    
+    // Check vertical conflicts
+    if (check_platform_vertical_conflict(x, y))
+        return 0;
+    
+    return 1;
+}
+
+UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED
+{
+    if (!can_place_platform(x, y))
+        return 0;
+    
+    UBYTE left = (x > PLATFORM_X_MIN)
+                     ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)])
+                     : BRUSH_TILE_EMPTY;
+    UBYTE right = (x < PLATFORM_X_MAX)
+                      ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)])
+                      : BRUSH_TILE_EMPTY;
+    
+    // Connecting to existing platform(s)
+    if (left == BRUSH_TILE_PLATFORM && right == BRUSH_TILE_PLATFORM)
+        return SELECTOR_STATE_PLATFORM_CENTER;
+    else if (left == BRUSH_TILE_PLATFORM)
+        return SELECTOR_STATE_PLATFORM_RIGHT;
+    else if (right == BRUSH_TILE_PLATFORM)
+        return SELECTOR_STATE_PLATFORM_LEFT;
+    
+    // New platform (need adjacent empty space)
+    if (x < PLATFORM_X_MAX && right == BRUSH_TILE_EMPTY && 
+        can_place_platform(x + 1, y))
+        return SELECTOR_STATE_NEW_PLATFORM;
+    
+    // Can't place a valid platform
+    return 0;
+}
+
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED
 {
     for (BYTE dy = -PLATFORM_MIN_VERTICAL_GAP; dy <= PLATFORM_MIN_VERTICAL_GAP; ++dy)
@@ -122,7 +180,7 @@ UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED
         BYTE cy = y + dy;
         if (cy < PLATFORM_Y_MIN || cy > PLATFORM_Y_MAX)
             continue;
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, cy)]) == 1)
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, cy)]) == BRUSH_TILE_PLATFORM)
             return 1;
     }
     return 0;
@@ -133,7 +191,7 @@ void rebuild_platform_row(UBYTE y) BANKED
     UBYTE seq_start = 255, current_len = 0;
     for (UBYTE i = PLATFORM_X_MIN; i <= PLATFORM_X_MAX + 1; ++i)
     {
-        UBYTE is_plat = (i <= PLATFORM_X_MAX) && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(i, y)]) == 1;
+        UBYTE is_plat = (i <= PLATFORM_X_MAX) && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(i, y)]) == BRUSH_TILE_PLATFORM;
         if (is_plat)
         {
             if (seq_start == 255)
@@ -198,25 +256,25 @@ void paint(UBYTE x, UBYTE y) BANKED
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX ||
         y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX)
         return;
-    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != 5)
+    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
         return;
     if (check_platform_vertical_conflict(x, y))
         return;
-    if (x < PLATFORM_X_MAX && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) == 5 && check_platform_vertical_conflict(x + 1, y))
+    if (x < PLATFORM_X_MAX && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) == BRUSH_TILE_EMPTY && check_platform_vertical_conflict(x + 1, y))
         return;
 
     UBYTE left = (x > PLATFORM_X_MIN)
                      ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)])
-                     : 0;
+                     : BRUSH_TILE_EMPTY;
     UBYTE right = (x < PLATFORM_X_MAX)
                       ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)])
-                      : 0;
+                      : BRUSH_TILE_EMPTY;
 
-    if (left == 1 || right == 1)
+    if (left == BRUSH_TILE_PLATFORM || right == BRUSH_TILE_PLATFORM)
     {
         replace_meta_tile(x, y, TILE_PLATFORM_MIDDLE, 1);
     }
-    else if (x < PLATFORM_X_MAX && right == 5)
+    else if (x < PLATFORM_X_MAX && right == BRUSH_TILE_EMPTY)
     {
         replace_meta_tile(x, y, TILE_PLATFORM_LEFT, 1);
         replace_meta_tile(x + 1, y, TILE_PLATFORM_RIGHT, 1);
@@ -257,6 +315,13 @@ void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED
     script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = get_brush_tile_pos(x, y);
 }
 
+void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED
+{
+    UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+    script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = get_brush_preview_tile(x, y);
+}
+
 void vm_move_actor_to_test(SCRIPT_CTX *THIS) OLDCALL BANKED
 {
     UBYTE ai = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
@@ -267,7 +332,7 @@ void vm_move_actor_to_test(SCRIPT_CTX *THIS) OLDCALL BANKED
         {
             UBYTE tid = sram_map_data[METATILE_MAP_OFFSET(xx, yy)];
             UBYTE tt = get_tile_type(tid);
-            if (tt == 2)
+            if (tt == BRUSH_TILE_ENEMY_R)
             {
                 actor->pos.x = TO_FP(xx * 8);
                 actor->pos.y = TO_FP(yy * 8);
@@ -275,7 +340,7 @@ void vm_move_actor_to_test(SCRIPT_CTX *THIS) OLDCALL BANKED
                 activate_actor(actor);
                 return;
             }
-            else if (tt == 3)
+            else if (tt == BRUSH_TILE_ENEMY_L)
             {
                 actor->pos.x = TO_FP(xx * 8 - 8);
                 actor->pos.y = TO_FP(yy * 8);
@@ -284,5 +349,43 @@ void vm_move_actor_to_test(SCRIPT_CTX *THIS) OLDCALL BANKED
                 return;
             }
         }
+    }
+}
+
+UBYTE get_brush_preview_tile(UBYTE x, UBYTE y) BANKED
+{
+    // Check bounds first
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX ||
+        y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX)
+        return SELECTOR_STATE_DEFAULT;
+    
+    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    
+    // Handle different tile types
+    switch (current_tile_type)
+    {
+        case BRUSH_TILE_EMPTY:
+            // Check if we can place a platform here
+            return get_platform_placement_type(x, y);
+            
+        case BRUSH_TILE_PLATFORM:
+            // Can delete existing platform
+            return SELECTOR_STATE_DELETE;
+            
+        case BRUSH_TILE_PLAYER:
+            return SELECTOR_STATE_PLAYER;
+            
+        case BRUSH_TILE_ENEMY_L:
+            return SELECTOR_STATE_ENEMY_LEFT;
+            
+        case BRUSH_TILE_ENEMY_R:
+            return SELECTOR_STATE_ENEMY_RIGHT;
+            
+        case BRUSH_TILE_EXIT:
+            // Can't interact with exit tiles
+            return SELECTOR_STATE_DEFAULT;
+            
+        default:
+            return SELECTOR_STATE_DEFAULT;
     }
 }

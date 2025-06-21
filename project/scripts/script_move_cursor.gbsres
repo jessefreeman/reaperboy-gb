@@ -73,6 +73,10 @@
               "$variable[V0]$": {
                 "type": "variable",
                 "value": "V1"
+              },
+              "$variable[V6]$": {
+                "type": "variable",
+                "value": "17"
               }
             },
             "id": "8059be73-8563-422b-b3bd-889c80f60081"
@@ -177,7 +181,7 @@
         },
         "__collapseElse": false,
         "__label": "Test how to move selector",
-        "__collapse": true
+        "__collapse": false
       },
       "children": {
         "true": [

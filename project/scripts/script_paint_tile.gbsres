@@ -8,6 +8,21 @@
   "symbol": "script_7",
   "script": [
     {
+      "command": "EVENT_PAINT_TILE",
+      "args": {
+        "x": {
+          "type": "variable",
+          "value": "3"
+        },
+        "y": {
+          "type": "variable",
+          "value": "4"
+        },
+        "__collapse": false
+      },
+      "id": "f72bf403-7ff0-4a2c-abe9-39f831c06a5a"
+    },
+    {
       "command": "EVENT_IF",
       "args": {
         "condition": {
@@ -21,7 +36,8 @@
             "value": "f9931826-bf08-4441-889a-a120b3b7a654"
           }
         },
-        "__collapseElse": false
+        "__collapseElse": false,
+        "__comment": true
       },
       "children": {
         "true": [
@@ -41,23 +57,7 @@
             "id": "7c213fb4-cf22-4ca3-8bff-25c49abb17ce"
           }
         ],
-        "false": [
-          {
-            "command": "EVENT_PAINT_TILE",
-            "args": {
-              "x": {
-                "type": "variable",
-                "value": "3"
-              },
-              "y": {
-                "type": "variable",
-                "value": "4"
-              },
-              "__collapse": false
-            },
-            "id": "f72bf403-7ff0-4a2c-abe9-39f831c06a5a"
-          }
-        ]
+        "false": []
       },
       "id": "006fb474-d39b-4168-8cf9-aa17cb832447"
     },

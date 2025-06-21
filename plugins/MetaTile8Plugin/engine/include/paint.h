@@ -7,10 +7,12 @@
 void paint(UBYTE x, UBYTE y) BANKED;
 void delete_tile_at_pos(UBYTE x, UBYTE y, UBYTE commit) BANKED;
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED;
+UBYTE get_brush_preview_tile(UBYTE x, UBYTE y) BANKED;
 
 void vm_paint(SCRIPT_CTX *THIS) BANKED;
 void vm_delete_tile_at_pos(SCRIPT_CTX *THIS) OLDCALL BANKED;
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED;
+void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED;
 void vm_move_actor_to_test(SCRIPT_CTX *THIS) OLDCALL BANKED;
 void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED;
 
