@@ -28,7 +28,12 @@
  */
 void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
 {
-    UBYTE playerId = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+
+    uint16_t varId = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
+    UBYTE aliveEnemyCount = 0;
+
+    // Hard code the player ID to 0
+    UBYTE playerId = 0; //*(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
     UBYTE exitId = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
     UBYTE enemies[6] = {
         *(UBYTE *)VM_REF_TO_PTR(FN_ARG2),
@@ -70,8 +75,11 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
                 ex->pos.x = TO_FP(placeX * 8);
                 ex->pos.y = TO_FP((yy - 1) * 8);
                 activate_actor(ex);
-                replace_meta_tile(placeX, yy - 1, TILE_EMPTY, 1);
-                exitPlaced = 1;
+
+                replace_meta_tile(placeX, yy - 1, TILE_EXIT_BOTTOM_LEFT, 1);
+                replace_meta_tile(placeX + 1, yy - 1, TILE_EXIT_BOTTOM_RIGHT, 1);
+                replace_meta_tile(placeX, yy - 2, TILE_EXIT_TOP_LEFT, 1);
+                replace_meta_tile(placeX + 1, yy - 2, TILE_EXIT_TOP_RIGHT, 1);
             }
 
             // place enemies
@@ -84,6 +92,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
                 actor_set_dir(e, tt == 2 ? DIR_RIGHT : DIR_LEFT, TRUE);
                 activate_actor(e);
                 replace_meta_tile(xx, yy, TILE_EMPTY, 1);
+                aliveEnemyCount++;
             }
 
             if (playerPlaced && exitPlaced && ec >= 6)
@@ -95,6 +104,8 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
 
     for (; ec < 6; ++ec)
         deactivate_actor(&actors[enemies[ec]]);
+
+    script_memory[varId] = aliveEnemyCount;
 }
 
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED
