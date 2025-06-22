@@ -24,94 +24,65 @@
 #define DEBUG_START_Y 5
 #define DEBUG_TILES_PER_ROW 13 // (18 - 5 = 13 tiles per row)
 
-// 17 base patterns with unique IDs for each variation = 55 total unique patterns (0-54)
+// 18 base patterns with unique IDs for each variation = 57 total unique patterns (0-56)
 const UWORD PLATFORM_PATTERNS[] = {
-    // Pattern 0: ID 0 (all variants the same)
-    0b0000000000, // 00, 01, 02, 03 → ID 0
-    
-    // Pattern 1: IDs 1-4
-    0b0000100000, // 10 → ID 1
-    0b1000000000, // 11 → ID 2
-    0b0000000001, // 12 → ID 3
-    0b0000010000, // 13 → ID 4
-    
-    // Pattern 2: IDs 5-8
-    0b0001100000, // 20 → ID 5
-    0b1100000000, // 21 → ID 6
-    0b0000000011, // 22 → ID 7
-    0b0000011000, // 23 → ID 8
-    
-    // Pattern 3: IDs 9-12
-    0b0011000000, // 30 → ID 9
-    0b0110000000, // 31 → ID 10
-    0b0000000110, // 32 → ID 11
-    0b0000001100, // 33 → ID 12
-    
-    // Pattern 4: IDs 13-16
-    0b0011100000, // 40 → ID 13
-    0b1110000000, // 41 → ID 14
-    0b0000000111, // 42 → ID 15
-    0b0000011100, // 43 → ID 16
-    
-    // Pattern 5: IDs 17-20
-    0b0110100000, // 50 → ID 17
-    0b1011000000, // 51 → ID 18
-    0b0000001101, // 52 → ID 19
-    0b0000010110, // 53 → ID 20
-    
-    // Pattern 6: IDs 21-22 (variants 0&1 same, 2&3 same)
-    0b0111000000, // 60, 61 → ID 21
-    0b0000001110, // 62, 63 → ID 22
-    
-    // Pattern 7: IDs 23-26
-    0b0111100000, // 70 → ID 23
-    0b1111000000, // 71 → ID 24
-    0b0000001111, // 72 → ID 25
-    0b0000011110, // 73 → ID 26
-    
-    // Pattern 8: IDs 27-28 (variants 0&1 same, 2&3 same)
-    0b1000100000, // 80, 81 → ID 27
-    0b0000010001, // 82, 83 → ID 28
-    
-    // Pattern 9: IDs 29-32
-    0b1001100000, // 90 → ID 29
-    0b1100100000, // 91 → ID 30
-    0b0000010011, // 92 → ID 31
-    0b0000011001, // 93 → ID 32
-    
-    // Pattern 10: IDs 33-36
-    0b1011100000, // A0 → ID 33
-    0b1110100000, // A1 → ID 34
-    0b0000010111, // A2 → ID 35
-    0b0000011101, // A3 → ID 36
-    
-    // Pattern 11: IDs 37-38 (variants 0&1 same, 2&3 same)
-    0b1101100000, // B0, B1 → ID 37
-    0b0000011011, // B2, B3 → ID 38
-    
-    // Pattern 12: IDs 39-40 (variants 0&1 same, 2&3 same)
-    0b1111100000, // C0, C1 → ID 39
-    0b0000011111, // C2, C3 → ID 40
-    
-    // Pattern 13: IDs 41-42 (variants 0&3 same, 1&2 same)
-    0b0000110000, // D0, D3 → ID 41
-    0b1000000001, // D1, D2 → ID 42
-    
-    // Pattern 14: IDs 43-46
-    0b0001110000, // E0 → ID 43
-    0b1100000001, // E1 → ID 44
-    0b1000000011, // E2 → ID 45
-    0b0000111000, // E3 → ID 46    // Pattern 15: IDs 47-50
-    0b0001111000, // F0 → ID 47
-    0b1100000011, // F1 → ID 48
-    0b1100000011, // F2 → ID 49 (same as F1)
-    0b0001111000, // F3 → ID 50 (same as F0)
-    
-    // Pattern 16: IDs 51-54
-    0b0011010000, // G0 → ID 51
-    0b0110000001, // G1 → ID 52
-    0b1000000110, // G2 → ID 53
-    0b0000101100  // G3 → ID 54
+    0b0000000000, // Index 0
+    0b0000100000, // Index 1
+    0b1000000000, // Index 2
+    0b0000000001, // Index 3
+    0b0000010000, // Index 4
+    0b0001100000, // Index 5
+    0b1100000000, // Index 6
+    0b0000000011, // Index 7
+    0b0000011000, // Index 8
+    0b0011000000, // Index 9
+    0b0110000000, // Index 10
+    0b0000000110, // Index 11
+    0b0000001100, // Index 12
+    0b0011100000, // Index 13
+    0b1110000000, // Index 14
+    0b0000000111, // Index 15
+    0b0000011100, // Index 16
+    0b0110100000, // Index 17
+    0b1011000000, // Index 18
+    0b0000001101, // Index 19
+    0b0000010110, // Index 20
+    0b0111000000, // Index 21
+    0b0000001110, // Index 22
+    0b0111100000, // Index 23
+    0b1111000000, // Index 24
+    0b0000001111, // Index 25
+    0b0000011110, // Index 26
+    0b1000100000, // Index 27
+    0b0000010001, // Index 28
+    0b1001100000, // Index 29
+    0b1100100000, // Index 30
+    0b0000010011, // Index 31
+    0b0000011001, // Index 32
+    0b1011100000, // Index 33
+    0b1110100000, // Index 34
+    0b0000010111, // Index 35
+    0b0000011101, // Index 36
+    0b1101100000, // Index 37
+    0b0000011011, // Index 38
+    0b1111100000, // Index 39
+    0b0000011111, // Index 40
+    0b0000110000, // Index 41
+    0b1000000001, // Index 42
+    0b0001110000, // Index 43
+    0b1100000001, // Index 44 
+    0b1000000011, // Index 45
+    0b0000111000, // Index 46
+    0b0011110000, // Index 47
+    0b1110000001, // Index 48
+    0b1000000111, // Index 49
+    0b0000111100, // Index 50
+    0b0011010000, // Index 51
+    0b0110000001, // Index 52
+    0b1000000110, // Index 53
+    0b0000101100, // Index 54
+    0b0001111000, // Index 55
+    0b1100000011  // Index 56
 };
 
 #define PLATFORM_PATTERN_COUNT (sizeof(PLATFORM_PATTERNS) / sizeof(PLATFORM_PATTERNS[0]))
@@ -157,7 +128,7 @@ UWORD match_platform_pattern(UWORD pattern) BANKED
     {
         if (PLATFORM_PATTERNS[i] == pattern)
         {
-            return i; // Return the unique pattern ID (0-54)
+            return i; // Return the unique pattern ID (0-56)
         }
     }
     return 0; // fallback to pattern 0
@@ -169,24 +140,24 @@ void update_code_at_chunk(UBYTE chunk_x, UBYTE chunk_y, UBYTE chunk_index) BANKE
     UWORD pattern = extract_chunk_pattern(chunk_x, chunk_y, &row0, &row1);
     UWORD pattern_id = match_platform_pattern(pattern);
 
-    current_code[chunk_index] = pattern_id; // Store unique pattern ID (0-54)
+    current_code[chunk_index] = pattern_id; // Store unique pattern ID (0-56)
 }
 
 void display_code_tile(UWORD pattern_id, UBYTE i) BANKED
-{
-    // pattern_id is now a unique ID from 0-54
+{ // pattern_id is now a unique ID from 0-56
     // Debug tiles are numbered 0-79 starting at (0,6) ending at (15,10)
-    
-    // Safety check - only use IDs 0-54, but we have debug tiles 0-79 available
-    if (pattern_id > 54) {
+
+    // Safety check - only use IDs 0-56, but we have debug tiles 0-79 available
+    if (pattern_id > 56)
+    {
         pattern_id = 0;
     }
-    
+
     // Calculate debug tile position: starting at (0,6), 16 tiles per row
     // Debug tiles go from (0,6) to (15,10) = 5 rows × 16 columns = 80 tiles (0-79)
     UBYTE debug_tile_col = pattern_id % 16;
     UBYTE debug_tile_row = 6 + (pattern_id / 16);
-    
+
     UBYTE meta_tile_index = debug_tile_col + (debug_tile_row * 16);
 
     // Calculate debug display position: starting at (5,5), 13 tiles per row
@@ -210,7 +181,7 @@ void vm_update_code(SCRIPT_CTX *THIS) BANKED
     }
 }
 
-void draw_segment_ids() BANKED
+void draw_segment_ids(void) BANKED
 {
     // Update all 20 zones and display their debug codes at (5,5) area
     for (UBYTE i = 0; i < 20; i++)
@@ -257,4 +228,115 @@ void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED
     (void)THIS;
 
     draw_segment_ids();
+}
+
+// Debug function to draw patterns sequentially
+UBYTE debug_pattern_index = 0;
+
+void draw_debug_pattern(UBYTE pattern_index) BANKED
+{
+    if (pattern_index >= PLATFORM_PATTERN_COUNT)
+    {
+        pattern_index = 0; // Wrap around
+    } // Display the pattern index as decimal digits in the debug area
+    // Show pattern index at (0,2) and (1,2) as decimal digits
+    UBYTE dec_tens = pattern_index / 10; // Tens digit (0-5)
+    UBYTE dec_ones = pattern_index % 10; // Ones digit (0-9)
+
+    // Display decimal digits using TILE_0 (0-9 are consecutive)
+    replace_meta_tile(0, 2, TILE_0 + dec_tens, 1);
+    replace_meta_tile(1, 2, TILE_0 + dec_ones, 1);
+
+    // Display the pattern tile in the debug area
+    display_code_tile(pattern_index, 0);
+
+    // First clear the drawing area by replacing with empty tiles (0)
+    for (UBYTE x = 2; x < 7; x++)
+    {
+        for (UBYTE y = 11; y < 13; y++)
+        {
+            replace_meta_tile(x, y, 0, 1); // Replace with empty tile and commit
+        }
+    }
+
+    // Now get the pattern and replace with platform tiles where needed
+    UWORD pattern = PLATFORM_PATTERNS[pattern_index];
+    for (UBYTE i = 0; i < 5; i++)
+    {
+        // Top row (bits 9-5)
+        if ((pattern >> (9 - i)) & 1)
+        {
+            uint8_t tile_type;
+            if (i == 0)
+            {
+                tile_type = PLATFORM_TILE_1; // Left platform
+            }
+            else if (i == 4)
+            {
+                tile_type = PLATFORM_TILE_3; // Right platform
+            }
+            else
+            {
+                tile_type = PLATFORM_TILE_2; // Middle platform
+            }
+            replace_meta_tile(2 + i, 11, tile_type, 1);
+        }
+
+        // Bottom row (bits 4-0)
+        if ((pattern >> (4 - i)) & 1)
+        {
+            uint8_t tile_type;
+            if (i == 0)
+            {
+                tile_type = PLATFORM_TILE_1; // Left platform
+            }
+            else if (i == 4)
+            {
+                tile_type = PLATFORM_TILE_3; // Right platform
+            }
+            else
+            {
+                tile_type = PLATFORM_TILE_2; // Middle platform
+            }
+            replace_meta_tile(2 + i, 12, tile_type, 1);
+        }
+    }
+}
+
+void vm_debug_next_pattern(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    debug_pattern_index++;
+    if (debug_pattern_index >= PLATFORM_PATTERN_COUNT)
+    {
+        debug_pattern_index = 0; // Wrap around
+    }
+    draw_debug_pattern(debug_pattern_index);
+}
+
+void vm_debug_prev_pattern(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    if (debug_pattern_index == 0)
+    {
+        debug_pattern_index = PLATFORM_PATTERN_COUNT - 1; // Wrap to last
+    }
+    else
+    {
+        debug_pattern_index--;
+    }
+    draw_debug_pattern(debug_pattern_index);
+}
+
+void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    debug_pattern_index = 0;
+    draw_debug_pattern(debug_pattern_index);
 }
