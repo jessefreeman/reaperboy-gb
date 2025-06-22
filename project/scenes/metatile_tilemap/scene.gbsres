@@ -558,9 +558,36 @@
                                             "closeWhen": "key",
                                             "closeButton": "a",
                                             "closeDelayTime": 0.5,
-                                            "closeDelayFrames": 30
+                                            "closeDelayFrames": 30,
+                                            "__comment": true
                                           },
                                           "id": "6e55ae62-453e-4c04-8775-1d244f6abb01"
+                                        },
+                                        {
+                                          "command": "EVENT_IF_INPUT",
+                                          "args": {
+                                            "input": [
+                                              "select"
+                                            ],
+                                            "__collapseElse": false
+                                          },
+                                          "children": {
+                                            "true": [
+                                              {
+                                                "command": "DEBUG_PREV_PATTERN",
+                                                "args": {},
+                                                "id": "1542a384-8e0c-451d-8fd0-5200b28234a2"
+                                              }
+                                            ],
+                                            "false": [
+                                              {
+                                                "command": "DEBUG_NEXT_PATTERN",
+                                                "args": {},
+                                                "id": "51cc7a2c-6019-46ac-862a-f48b3f79af85"
+                                              }
+                                            ]
+                                          },
+                                          "id": "1c0c7419-e162-45ed-aaac-b3bad1514fe4"
                                         }
                                       ]
                                     },
