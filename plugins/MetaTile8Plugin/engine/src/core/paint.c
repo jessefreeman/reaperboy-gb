@@ -211,6 +211,8 @@ void rebuild_platform_row(UBYTE y) BANKED
             {
                 if (current_len == 1)
                 {
+                    // Remove enemies above this platform before deleting it
+                    remove_enemies_above_platform(seq_start, y);
                     replace_meta_tile(seq_start, y, TILE_EMPTY, 1);
                 }
                 else
@@ -234,6 +236,8 @@ void rebuild_platform_row(UBYTE y) BANKED
         {
             if (current_len == 1)
             {
+                // Remove enemies above this platform before deleting it
+                remove_enemies_above_platform(seq_start, y);
                 replace_meta_tile(seq_start, y, TILE_EMPTY, 1);
             }
             else
@@ -390,11 +394,12 @@ void paint(UBYTE x, UBYTE y) BANKED
 
     // Check if this is a valid row for platform placement
     if (!is_valid_platform_row(y))
-        return;
-
-    // If there's already a platform here, delete it
+        return; // If there's already a platform here, delete it
     if (current_tile_type == BRUSH_TILE_PLATFORM)
     {
+        // Remove any enemies above this platform before deleting it
+        remove_enemies_above_platform(x, y);
+
         replace_meta_tile(x, y, TILE_EMPTY, 1);
         rebuild_platform_row(y);
         return;
@@ -547,6 +552,27 @@ void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED
     script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = result;
 }
 
+// Helper function to count total enemies on the map
+UBYTE count_enemies_on_map(void) BANKED
+{
+    UBYTE enemy_count = 0;
+
+    // Scan the entire map area for enemies
+    for (UBYTE yy = PLATFORM_Y_MIN; yy <= PLATFORM_Y_MAX; yy++)
+    {
+        for (UBYTE xx = PLATFORM_X_MIN; xx <= PLATFORM_X_MAX; xx++)
+        {
+            UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(xx, yy)]);
+            if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+            {
+                enemy_count++;
+            }
+        }
+    }
+
+    return enemy_count;
+}
+
 // Helper function to check if there's an enemy nearby (for spacing)
 UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED
 {
@@ -577,6 +603,10 @@ UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 
     // Check if current tile is empty
     if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
+        return 0;
+
+    // Check enemy limit - don't allow more than 6 enemies
+    if (count_enemies_on_map() >= 6)
         return 0;
 
     // Check if there's a platform directly below (enemy stands on platform)
@@ -620,4 +650,20 @@ UBYTE can_paint_enemy_left(UBYTE x, UBYTE y) BANKED
     }
 
     return 0;
+}
+
+// Helper function to remove enemies above a platform when platform is deleted
+void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
+{
+    // Check all rows above the platform position
+    for (UBYTE check_y = PLATFORM_Y_MIN; check_y < y; check_y++)
+    {
+        // Check if there's an enemy at this position
+        UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, check_y)]);
+        if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+        {
+            // Remove the enemy
+            replace_meta_tile(x, check_y, TILE_EMPTY, 1);
+        }
+    }
 }

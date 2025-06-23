@@ -24,8 +24,10 @@ void clear_existing_player_on_row_11(void) BANKED;
 void paint_player(UBYTE x, UBYTE y) BANKED;
 
 // Helper functions for enemy placement
+UBYTE count_enemies_on_map(void) BANKED;
 UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED;
+void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED;
 void delete_enemy(UBYTE x, UBYTE y) BANKED;
 void paint_enemy_left(UBYTE x, UBYTE y) BANKED;
 void paint_enemy_right(UBYTE x, UBYTE y) BANKED;
