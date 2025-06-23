@@ -725,13 +725,38 @@
                     "actorId": "0",
                     "spriteStateId": "Delete",
                     "loopAnim": true,
-                    "__collapse": false
+                    "__collapse": false,
+                    "__label": "Change to delete"
                   },
                   "id": "e0952132-a094-4239-972f-7d3c34d36d3f"
                 }
               ],
-              "true1": [],
-              "true2": [],
+              "true1": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Enemy Right",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to enemy right"
+                  },
+                  "id": "d1098e75-5a2c-4ec1-bafa-b29da6741b30"
+                }
+              ],
+              "true2": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Enemy Left",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to enemy left"
+                  },
+                  "id": "50f2bc31-a6c3-458e-a66a-b96804263755"
+                }
+              ],
               "true3": [
                 {
                   "command": "EVENT_ACTOR_SET_STATE",
@@ -744,7 +769,19 @@
                   "id": "05460bf4-e2f9-4b54-9690-f2098df463a4"
                 }
               ],
-              "true4": [],
+              "true4": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Player",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to player"
+                  },
+                  "id": "b8c0fe8e-4eda-49e4-bc87-013d1b84a398"
+                }
+              ],
               "true5": [
                 {
                   "command": "EVENT_ACTOR_SET_STATE",

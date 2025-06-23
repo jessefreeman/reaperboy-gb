@@ -29,10 +29,9 @@ UBYTE is_valid_platform_row(UBYTE y) BANKED
 #define SELECTOR_STATE_ENEMY_LEFT 2
 #define SELECTOR_STATE_ENEMY_RIGHT 3
 #define SELECTOR_STATE_NEW_PLATFORM 4
-#define SELECTOR_STATE_PLATFORM_CENTER 5
+#define SELECTOR_STATE_PLAYER 5
 #define SELECTOR_STATE_PLATFORM_LEFT 6
 #define SELECTOR_STATE_PLATFORM_RIGHT 7
-#define SELECTOR_STATE_PLAYER 8
 
 // pixels → subpixels
 #define TO_FP(n) ((INT16)((n) << 4))
@@ -346,6 +345,24 @@ void vm_paint(SCRIPT_CTX *THIS) BANKED
 //     script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = 3; // get_brush_preview_tile(x, y);
 // }
 
+// Helper function to check if there's a platform below the given position
+UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED
+{
+    // Check all rows below the current position
+    for (UBYTE check_y = y + 1; check_y <= PLATFORM_Y_MAX; check_y++)
+    {
+        // Only check valid platform rows
+        if (is_valid_platform_row(check_y))
+        {
+            if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, check_y)]) == BRUSH_TILE_PLATFORM)
+            {
+                return 1; // Found a platform below
+            }
+        }
+    }
+    return 0; // No platform found below
+}
+
 // Helper function to get brush tile state
 UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
 {
@@ -355,6 +372,19 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
     switch (current_tile_type)
     {
     case BRUSH_TILE_EMPTY:
+        // Check if we're on row 11 (player placement row)
+        if (y == 11)
+        {
+            // Only allow player placement if there's a platform below
+            if (has_platform_below(x, y))
+            {
+                return SELECTOR_STATE_PLAYER;
+            }
+            else
+            {
+                return SELECTOR_STATE_DEFAULT;
+            }
+        }
         // Check if we can place a platform here
         return get_platform_placement_type(x, y);
 
@@ -363,6 +393,11 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
         return SELECTOR_STATE_DELETE;
 
     case BRUSH_TILE_PLAYER:
+        // If player tile is on row 11, return default (can't interact)
+        if (y == 11)
+        {
+            return SELECTOR_STATE_DEFAULT;
+        }
         return SELECTOR_STATE_PLAYER;
 
     case BRUSH_TILE_ENEMY_L:
