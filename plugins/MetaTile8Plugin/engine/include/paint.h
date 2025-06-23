@@ -10,13 +10,18 @@
 #define SELECTOR_STATE_ENEMY_LEFT 2
 #define SELECTOR_STATE_ENEMY_RIGHT 3
 #define SELECTOR_STATE_NEW_PLATFORM 4
-#define SELECTOR_STATE_PLATFORM_CENTER 5
+#define SELECTOR_STATE_PLAYER 5
 #define SELECTOR_STATE_PLATFORM_LEFT 6
 #define SELECTOR_STATE_PLATFORM_RIGHT 7
-#define SELECTOR_STATE_PLAYER 8
 
 // Helper function to validate platform row placement
 UBYTE is_valid_platform_row(UBYTE y) BANKED;
+
+// Helper functions for player placement
+UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED;
+UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED;
+void clear_existing_player_on_row_11(void) BANKED;
+void paint_player(UBYTE x, UBYTE y) BANKED;
 
 void paint(UBYTE x, UBYTE y) BANKED;
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED;

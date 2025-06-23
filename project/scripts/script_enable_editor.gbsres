@@ -72,7 +72,7 @@
                 "type": "number",
                 "value": 0
               },
-              "__collapse": true,
+              "__collapse": false,
               "__comment": false
             },
             "id": "c295b272-d475-4636-83de-990027051e87"

@@ -23,16 +23,6 @@ UBYTE is_valid_platform_row(UBYTE y) BANKED
     return (y == 13 || y == 15 || y == 17 || y == 19);
 }
 
-// Selector animation state constants
-#define SELECTOR_STATE_DEFAULT 0
-#define SELECTOR_STATE_DELETE 1
-#define SELECTOR_STATE_ENEMY_LEFT 2
-#define SELECTOR_STATE_ENEMY_RIGHT 3
-#define SELECTOR_STATE_NEW_PLATFORM 4
-#define SELECTOR_STATE_PLAYER 5
-#define SELECTOR_STATE_PLATFORM_LEFT 6
-#define SELECTOR_STATE_PLATFORM_RIGHT 7
-
 // pixels → subpixels
 #define TO_FP(n) ((INT16)((n) << 4))
 
@@ -165,9 +155,10 @@ UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED
                       : BRUSH_TILE_EMPTY;
 
     // Connecting to existing platform(s)
-    if (left == BRUSH_TILE_PLATFORM && right == BRUSH_TILE_PLATFORM)
-        return SELECTOR_STATE_PLATFORM_CENTER;
-    else if (left == BRUSH_TILE_PLATFORM)
+    // if (left == BRUSH_TILE_PLATFORM && right == BRUSH_TILE_PLATFORM)
+    //     return SELECTOR_STATE_PLATFORM_CENTER;
+    // else
+    if (left == BRUSH_TILE_PLATFORM)
         return SELECTOR_STATE_PLATFORM_RIGHT;
     else if (right == BRUSH_TILE_PLATFORM)
         return SELECTOR_STATE_PLATFORM_LEFT;
@@ -264,9 +255,63 @@ void rebuild_platform_row(UBYTE y) BANKED
     }
 }
 
+// Helper function to clear any existing player tile on row 11
+void clear_existing_player_on_row_11(void) BANKED
+{
+    for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+    {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        {
+            replace_meta_tile(x, 11, TILE_EMPTY, 1);
+        }
+    }
+}
+
+// Helper function to check if player can be painted at position
+UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
+{
+    // Check if position is valid for player placement
+    if (y != 11)
+        return 0;
+
+    // Check if position is within bounds
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return 0;
+
+    // Check if there's a platform below
+    if (!has_platform_below(x, y))
+        return 0;
+
+    // Check if current tile is empty
+    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
+        return 0;
+
+    return 1; // Can paint player here
+}
+
+// Helper function to paint a player tile
+void paint_player(UBYTE x, UBYTE y) BANKED
+{
+    if (!can_paint_player(x, y))
+        return;
+
+    // Clear any existing player on row 11
+    clear_existing_player_on_row_11();
+
+    // Place the new player tile
+    replace_meta_tile(x, y, TILE_PLAYER, 1);
+}
+
 void paint(UBYTE x, UBYTE y) BANKED
 {
-    // Check bounds
+    // Handle player placement on row 11
+    if (y == 11)
+    {
+        paint_player(x, y);
+        return;
+    }
+
+    // Check bounds for platform placement
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX ||
         y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX)
         return;
@@ -375,8 +420,8 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
         // Check if we're on row 11 (player placement row)
         if (y == 11)
         {
-            // Only allow player placement if there's a platform below
-            if (has_platform_below(x, y))
+            // Use the exact same logic as paint_player
+            if (can_paint_player(x, y))
             {
                 return SELECTOR_STATE_PLAYER;
             }
@@ -415,10 +460,11 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
     }
 }
 
-// VM wrapper function
+// VM wrapper function - uses painting logic as source of truth
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED
 {
     UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
     UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
-    script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = get_brush_tile_state(x, y);
+    UBYTE result = get_brush_tile_state(x, y);
+    script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = result;
 }
