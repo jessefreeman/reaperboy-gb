@@ -7,6 +7,7 @@
 #include "tile_utils.h"
 #include "gbs_types.h"
 #include "actor.h"
+#include "code_gen.h"
 
 // your existing #defines…
 #define PLATFORM_X_MIN 2
@@ -300,20 +301,22 @@ void paint_player(UBYTE x, UBYTE y) BANKED
         return;
 
     // Clear any existing player on row 11
-    clear_existing_player_on_row_11();
-
-    // Place the new player tile
+    clear_existing_player_on_row_11(); // Place the new player tile
     replace_meta_tile(x, y, TILE_PLAYER, 1);
+
+    // Update complete level code display after player change
+    display_complete_level_code();
 }
 
 // Helper function to paint an enemy right tile
 void paint_enemy_right(UBYTE x, UBYTE y) BANKED
 {
     if (!can_paint_enemy_right(x, y))
-        return;
-
-    // Place the enemy tile
+        return; // Place the enemy tile
     replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
+
+    // Update complete level code display after enemy change
+    display_complete_level_code();
 }
 
 // Helper function to delete an enemy tile
@@ -329,6 +332,9 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
     if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         replace_meta_tile(x, y, TILE_EMPTY, 1);
+
+        // Update complete level code display after enemy deletion
+        display_complete_level_code();
     }
 }
 
@@ -341,17 +347,21 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
 
     UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
 
-    // Can paint left enemy over right enemy (switching direction)
-    if (current_tile_type == BRUSH_TILE_ENEMY_R)
+    // Can paint left enemy over right enemy (switching direction)    if (current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+
+        // Update complete level code display after enemy direction change
+        display_complete_level_code();
         return;
     }
 
-    // Can also paint on empty tiles if it would be a valid enemy position
-    if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
+    // Can also paint on empty tiles if it would be a valid enemy position    if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
     {
         replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+
+        // Update complete level code display after enemy placement
+        display_complete_level_code();
         return;
     }
 }
@@ -402,6 +412,9 @@ void paint(UBYTE x, UBYTE y) BANKED
 
         replace_meta_tile(x, y, TILE_EMPTY, 1);
         rebuild_platform_row(y);
+
+        // Update complete level code display after platform change
+        display_complete_level_code();
         return;
     }
 
@@ -440,8 +453,10 @@ void paint(UBYTE x, UBYTE y) BANKED
         // Can't place a valid platform
         return;
     }
-
     rebuild_platform_row(y);
+
+    // Update complete level code display after platform change
+    display_complete_level_code();
 }
 
 void vm_paint(SCRIPT_CTX *THIS) BANKED
