@@ -1,7 +1,7 @@
 {
   "_resourceType": "script",
   "id": "0579db8f-39df-4c4f-85ec-73b78fe2ef3d",
-  "name": "SCRIPT_MOVE_CURSOR",
+  "name": "SCRIPT_MOVE_SELECTOR",
   "description": "",
   "variables": {
     "V0": {
@@ -677,158 +677,178 @@
             "id": "ca6a5534-5847-4b45-b389-ce6e4baa3c6a"
           },
           {
-            "command": "EVENT_GET_BRUSH_TILE",
+            "command": "EVENT_CALL_CUSTOM_EVENT",
             "args": {
-              "x": {
-                "type": "variable",
-                "value": "3"
-              },
-              "y": {
-                "type": "variable",
-                "value": "4"
-              },
-              "output": "8",
-              "__comment": false,
-              "__collapse": false
+              "customEventId": "f032a278-b946-4a11-850a-f5e6e1a1bf9c",
+              "$actor[0]$": "0"
             },
-            "id": "46ece86b-9a6d-47fc-a250-44233735e7e8"
+            "id": "358e0e10-5994-49af-b2fc-cea8696f1a65"
           },
           {
-            "command": "EVENT_SWITCH",
+            "command": "EVENT_GROUP",
             "args": {
-              "variable": "8",
-              "choices": 8,
-              "__collapseCase0": false,
-              "__collapseCase1": false,
-              "__collapseCase2": false,
-              "__collapseCase3": false,
-              "__collapseCase4": false,
-              "__collapseCase5": false,
-              "__collapseCase6": false,
-              "__collapseCase7": false,
-              "__collapseCase8": false,
-              "__collapseCase9": false,
-              "__collapseCase10": false,
-              "__collapseCase11": false,
-              "__collapseCase12": false,
-              "__collapseCase13": false,
-              "__collapseCase14": false,
-              "__collapseCase15": false,
-              "__collapseElse": false,
-              "__collapse": false
+              "__label": "Update selector",
+              "__comment": true
             },
             "children": {
-              "true0": [
+              "true": [
                 {
-                  "command": "EVENT_ACTOR_SET_STATE",
+                  "command": "EVENT_GET_BRUSH_TILE",
                   "args": {
-                    "actorId": "0",
-                    "spriteStateId": "Delete",
-                    "loopAnim": true,
-                    "__collapse": false,
-                    "__label": "Change to delete"
+                    "x": {
+                      "type": "variable",
+                      "value": "3"
+                    },
+                    "y": {
+                      "type": "variable",
+                      "value": "4"
+                    },
+                    "output": "8",
+                    "__comment": false,
+                    "__collapse": true
                   },
-                  "id": "e0952132-a094-4239-972f-7d3c34d36d3f"
-                }
-              ],
-              "true1": [
+                  "id": "46ece86b-9a6d-47fc-a250-44233735e7e8"
+                },
                 {
-                  "command": "EVENT_ACTOR_SET_STATE",
+                  "command": "EVENT_SWITCH",
                   "args": {
-                    "actorId": "0",
-                    "spriteStateId": "Enemy Right",
-                    "loopAnim": true,
-                    "__collapse": false,
-                    "__label": "Change to enemy right"
+                    "variable": "8",
+                    "choices": 8,
+                    "__collapseCase0": false,
+                    "__collapseCase1": false,
+                    "__collapseCase2": false,
+                    "__collapseCase3": false,
+                    "__collapseCase4": false,
+                    "__collapseCase5": false,
+                    "__collapseCase6": false,
+                    "__collapseCase7": false,
+                    "__collapseCase8": false,
+                    "__collapseCase9": false,
+                    "__collapseCase10": false,
+                    "__collapseCase11": false,
+                    "__collapseCase12": false,
+                    "__collapseCase13": false,
+                    "__collapseCase14": false,
+                    "__collapseCase15": false,
+                    "__collapseElse": false,
+                    "__collapse": true
                   },
-                  "id": "d1098e75-5a2c-4ec1-bafa-b29da6741b30"
-                }
-              ],
-              "true2": [
-                {
-                  "command": "EVENT_ACTOR_SET_STATE",
-                  "args": {
-                    "actorId": "0",
-                    "spriteStateId": "Enemy Left",
-                    "loopAnim": true,
-                    "__collapse": false,
-                    "__label": "Change to enemy left"
+                  "children": {
+                    "true0": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "Delete",
+                          "loopAnim": true,
+                          "__collapse": false,
+                          "__label": "Change to delete"
+                        },
+                        "id": "e0952132-a094-4239-972f-7d3c34d36d3f"
+                      }
+                    ],
+                    "true1": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "Enemy Right",
+                          "loopAnim": true,
+                          "__collapse": false,
+                          "__label": "Change to enemy right"
+                        },
+                        "id": "d1098e75-5a2c-4ec1-bafa-b29da6741b30"
+                      }
+                    ],
+                    "true2": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "Enemy Left",
+                          "loopAnim": true,
+                          "__collapse": false,
+                          "__label": "Change to enemy left"
+                        },
+                        "id": "50f2bc31-a6c3-458e-a66a-b96804263755"
+                      }
+                    ],
+                    "true3": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "New Platform",
+                          "loopAnim": true,
+                          "__collapse": false
+                        },
+                        "id": "05460bf4-e2f9-4b54-9690-f2098df463a4"
+                      }
+                    ],
+                    "true4": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "Player",
+                          "loopAnim": true,
+                          "__collapse": false,
+                          "__label": "Change to player"
+                        },
+                        "id": "b8c0fe8e-4eda-49e4-bc87-013d1b84a398"
+                      }
+                    ],
+                    "true5": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "Platform Left",
+                          "loopAnim": true,
+                          "__collapse": false
+                        },
+                        "id": "ee61ddf3-882e-47c0-b5da-b08b0de5bac3"
+                      }
+                    ],
+                    "true6": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "Platform Right",
+                          "loopAnim": true,
+                          "__collapse": false
+                        },
+                        "id": "cfc95b42-37ba-43cf-aa02-db1ec35b14b0"
+                      }
+                    ],
+                    "true7": [],
+                    "true8": [],
+                    "true9": [],
+                    "true10": [],
+                    "true11": [],
+                    "true12": [],
+                    "true13": [],
+                    "true14": [],
+                    "true15": [],
+                    "false": [
+                      {
+                        "command": "EVENT_ACTOR_SET_STATE",
+                        "args": {
+                          "actorId": "0",
+                          "spriteStateId": "",
+                          "loopAnim": true,
+                          "__collapse": false
+                        },
+                        "id": "0bda03fd-8ac9-4f85-a1f7-5e7c1402631c"
+                      }
+                    ]
                   },
-                  "id": "50f2bc31-a6c3-458e-a66a-b96804263755"
-                }
-              ],
-              "true3": [
-                {
-                  "command": "EVENT_ACTOR_SET_STATE",
-                  "args": {
-                    "actorId": "0",
-                    "spriteStateId": "New Platform",
-                    "loopAnim": true,
-                    "__collapse": false
-                  },
-                  "id": "05460bf4-e2f9-4b54-9690-f2098df463a4"
-                }
-              ],
-              "true4": [
-                {
-                  "command": "EVENT_ACTOR_SET_STATE",
-                  "args": {
-                    "actorId": "0",
-                    "spriteStateId": "Player",
-                    "loopAnim": true,
-                    "__collapse": false,
-                    "__label": "Change to player"
-                  },
-                  "id": "b8c0fe8e-4eda-49e4-bc87-013d1b84a398"
-                }
-              ],
-              "true5": [
-                {
-                  "command": "EVENT_ACTOR_SET_STATE",
-                  "args": {
-                    "actorId": "0",
-                    "spriteStateId": "Platform Left",
-                    "loopAnim": true,
-                    "__collapse": false
-                  },
-                  "id": "ee61ddf3-882e-47c0-b5da-b08b0de5bac3"
-                }
-              ],
-              "true6": [
-                {
-                  "command": "EVENT_ACTOR_SET_STATE",
-                  "args": {
-                    "actorId": "0",
-                    "spriteStateId": "Platform Right",
-                    "loopAnim": true,
-                    "__collapse": false
-                  },
-                  "id": "cfc95b42-37ba-43cf-aa02-db1ec35b14b0"
-                }
-              ],
-              "true7": [],
-              "true8": [],
-              "true9": [],
-              "true10": [],
-              "true11": [],
-              "true12": [],
-              "true13": [],
-              "true14": [],
-              "true15": [],
-              "false": [
-                {
-                  "command": "EVENT_ACTOR_SET_STATE",
-                  "args": {
-                    "actorId": "0",
-                    "spriteStateId": "",
-                    "loopAnim": true,
-                    "__collapse": false
-                  },
-                  "id": "0bda03fd-8ac9-4f85-a1f7-5e7c1402631c"
+                  "id": "1ca2f3e6-938f-4747-a62c-d942c4db53ed"
                 }
               ]
             },
-            "id": "1ca2f3e6-938f-4747-a62c-d942c4db53ed"
+            "id": "b9dc08ed-c6b3-4079-8e90-57d8e2518040"
           }
         ]
       },
@@ -849,7 +869,7 @@
         },
         "__collapseElse": false,
         "__label": "Test how to move selector",
-        "__collapse": true,
+        "__collapse": false,
         "__comment": false
       },
       "children": {

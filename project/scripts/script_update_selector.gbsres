@@ -1,0 +1,181 @@
+{
+  "_resourceType": "script",
+  "id": "f032a278-b946-4a11-850a-f5e6e1a1bf9c",
+  "name": "SCRIPT_UPDATE_SELECTOR",
+  "description": "",
+  "variables": {},
+  "actors": {
+    "0": {
+      "id": "0",
+      "name": "A_SELECTOR"
+    }
+  },
+  "symbol": "script_0",
+  "script": [
+    {
+      "command": "EVENT_GROUP",
+      "args": {
+        "__label": "Update selector"
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_GET_BRUSH_TILE",
+            "args": {
+              "x": {
+                "type": "variable",
+                "value": "3"
+              },
+              "y": {
+                "type": "variable",
+                "value": "4"
+              },
+              "output": "8",
+              "__comment": false,
+              "__collapse": false
+            },
+            "id": "453bdc7f-beb4-4bf8-b8c6-c8ab662305c3"
+          },
+          {
+            "command": "EVENT_SWITCH",
+            "args": {
+              "variable": "8",
+              "choices": 8,
+              "__collapseCase0": false,
+              "__collapseCase1": false,
+              "__collapseCase2": false,
+              "__collapseCase3": false,
+              "__collapseCase4": false,
+              "__collapseCase5": false,
+              "__collapseCase6": false,
+              "__collapseCase7": false,
+              "__collapseCase8": false,
+              "__collapseCase9": false,
+              "__collapseCase10": false,
+              "__collapseCase11": false,
+              "__collapseCase12": false,
+              "__collapseCase13": false,
+              "__collapseCase14": false,
+              "__collapseCase15": false,
+              "__collapseElse": false,
+              "__collapse": false
+            },
+            "children": {
+              "true0": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Delete",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to delete"
+                  },
+                  "id": "fba13069-331a-43c8-9c23-5a0a9fec2a4f"
+                }
+              ],
+              "true1": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Enemy Right",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to enemy right"
+                  },
+                  "id": "c5cfe1b2-f0b2-455e-936f-ff76308d756c"
+                }
+              ],
+              "true2": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Enemy Left",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to enemy left"
+                  },
+                  "id": "e9880dc1-47a0-4186-8a14-b3bc958fd768"
+                }
+              ],
+              "true3": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "New Platform",
+                    "loopAnim": true,
+                    "__collapse": false
+                  },
+                  "id": "f9db9046-e192-43dd-b6a4-464d95521b2f"
+                }
+              ],
+              "true4": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Player",
+                    "loopAnim": true,
+                    "__collapse": false,
+                    "__label": "Change to player"
+                  },
+                  "id": "a1ba9d62-7c72-4f71-b422-ca02f8f8e6d4"
+                }
+              ],
+              "true5": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Platform Left",
+                    "loopAnim": true,
+                    "__collapse": false
+                  },
+                  "id": "e058fe5e-0f74-489c-bca9-c7dbc9f6c0b8"
+                }
+              ],
+              "true6": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "Platform Right",
+                    "loopAnim": true,
+                    "__collapse": false
+                  },
+                  "id": "c5547c4f-7c51-4ca6-9417-eabdee3d7237"
+                }
+              ],
+              "true7": [],
+              "true8": [],
+              "true9": [],
+              "true10": [],
+              "true11": [],
+              "true12": [],
+              "true13": [],
+              "true14": [],
+              "true15": [],
+              "false": [
+                {
+                  "command": "EVENT_ACTOR_SET_STATE",
+                  "args": {
+                    "actorId": "0",
+                    "spriteStateId": "",
+                    "loopAnim": true,
+                    "__collapse": false
+                  },
+                  "id": "b8a369a1-4cfc-4b88-94d2-34ed3a3559e8"
+                }
+              ]
+            },
+            "id": "e2ab6599-28d1-42c9-8346-0a64af8ebc80"
+          }
+        ]
+      },
+      "id": "34b275a5-1b77-4009-8695-8aec16e36710"
+    }
+  ]
+}

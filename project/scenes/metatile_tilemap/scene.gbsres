@@ -517,7 +517,8 @@
                                         {
                                           "command": "EVENT_CALL_CUSTOM_EVENT",
                                           "args": {
-                                            "customEventId": "370f55b4-5f2c-490a-823c-cf177b64c995"
+                                            "customEventId": "370f55b4-5f2c-490a-823c-cf177b64c995",
+                                            "$actor[0]$": "d5043213-d1dc-4d02-b470-9d13dfa87721"
                                           },
                                           "id": "1a8d0998-80eb-4638-b02b-41a88fc2209a"
                                         }

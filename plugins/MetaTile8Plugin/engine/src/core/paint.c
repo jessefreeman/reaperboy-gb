@@ -302,12 +302,84 @@ void paint_player(UBYTE x, UBYTE y) BANKED
     replace_meta_tile(x, y, TILE_PLAYER, 1);
 }
 
+// Helper function to paint an enemy right tile
+void paint_enemy_right(UBYTE x, UBYTE y) BANKED
+{
+    if (!can_paint_enemy_right(x, y))
+        return;
+
+    // Place the enemy tile
+    replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
+}
+
+// Helper function to delete an enemy tile
+void delete_enemy(UBYTE x, UBYTE y) BANKED
+{
+    // Check if position is within bounds
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return;
+
+    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+
+    // Can delete any enemy type
+    if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
+    {
+        replace_meta_tile(x, y, TILE_EMPTY, 1);
+    }
+}
+
+// Helper function to paint an enemy left tile
+void paint_enemy_left(UBYTE x, UBYTE y) BANKED
+{
+    // Check if position is within bounds
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return;
+
+    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+
+    // Can paint left enemy over right enemy (switching direction)
+    if (current_tile_type == BRUSH_TILE_ENEMY_R)
+    {
+        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+        return;
+    }
+
+    // Can also paint on empty tiles if it would be a valid enemy position
+    if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
+    {
+        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+        return;
+    }
+}
+
 void paint(UBYTE x, UBYTE y) BANKED
 {
     // Handle player placement on row 11
     if (y == 11)
     {
         paint_player(x, y);
+        return;
+    }
+
+    // Check if we're over an existing enemy
+    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    if (current_tile_type == BRUSH_TILE_ENEMY_R)
+    {
+        // Right enemy -> switch to left
+        paint_enemy_left(x, y);
+        return;
+    }
+    else if (current_tile_type == BRUSH_TILE_ENEMY_L)
+    {
+        // Left enemy -> delete
+        delete_enemy(x, y);
+        return;
+    }
+
+    // Handle enemy placement (above platforms)
+    if (can_paint_enemy_right(x, y))
+    {
+        paint_enemy_right(x, y);
         return;
     }
 
@@ -319,8 +391,6 @@ void paint(UBYTE x, UBYTE y) BANKED
     // Check if this is a valid row for platform placement
     if (!is_valid_platform_row(y))
         return;
-
-    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
 
     // If there's already a platform here, delete it
     if (current_tile_type == BRUSH_TILE_PLATFORM)
@@ -430,6 +500,13 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
                 return SELECTOR_STATE_DEFAULT;
             }
         }
+
+        // Check if we can place an enemy here (above platforms)
+        if (can_paint_enemy_right(x, y))
+        {
+            return SELECTOR_STATE_ENEMY_RIGHT;
+        }
+
         // Check if we can place a platform here
         return get_platform_placement_type(x, y);
 
@@ -444,12 +521,13 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
             return SELECTOR_STATE_DEFAULT;
         }
         return SELECTOR_STATE_PLAYER;
-
     case BRUSH_TILE_ENEMY_L:
-        return SELECTOR_STATE_ENEMY_LEFT;
+        // When over a left enemy, show delete preview
+        return SELECTOR_STATE_DELETE;
 
     case BRUSH_TILE_ENEMY_R:
-        return SELECTOR_STATE_ENEMY_RIGHT;
+        // When over a right enemy, show left enemy preview for switching
+        return SELECTOR_STATE_ENEMY_LEFT;
 
     case BRUSH_TILE_EXIT:
         // Can't interact with exit tiles
@@ -467,4 +545,79 @@ void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED
     UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
     UBYTE result = get_brush_tile_state(x, y);
     script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = result;
+}
+
+// Helper function to check if there's an enemy nearby (for spacing)
+UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED
+{
+    // Check one tile to the left and right
+    if (x > PLATFORM_X_MIN)
+    {
+        UBYTE left_tile = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]);
+        if (left_tile == BRUSH_TILE_ENEMY_L || left_tile == BRUSH_TILE_ENEMY_R)
+            return 1;
+    }
+
+    if (x < PLATFORM_X_MAX)
+    {
+        UBYTE right_tile = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]);
+        if (right_tile == BRUSH_TILE_ENEMY_L || right_tile == BRUSH_TILE_ENEMY_R)
+            return 1;
+    }
+
+    return 0;
+}
+
+// Helper function to check if enemy can be painted at position
+UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
+{
+    // Check if position is within bounds
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return 0;
+
+    // Check if current tile is empty
+    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
+        return 0;
+
+    // Check if there's a platform directly below (enemy stands on platform)
+    if (y + 1 <= PLATFORM_Y_MAX && is_valid_platform_row(y + 1))
+    {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y + 1)]) == BRUSH_TILE_PLATFORM)
+        {
+            // Check if there's no enemy nearby (one tile spacing rule)
+            if (!has_enemy_nearby(x, y))
+            {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+// Helper function to check if enemy can be painted at position
+UBYTE can_paint_enemy_left(UBYTE x, UBYTE y) BANKED
+{
+    // Check if position is within bounds
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return 0;
+
+    // Check if current tile is empty
+    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
+        return 0;
+
+    // Check if there's a platform directly below (enemy stands on platform)
+    if (y + 1 <= PLATFORM_Y_MAX && is_valid_platform_row(y + 1))
+    {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y + 1)]) == BRUSH_TILE_PLATFORM)
+        {
+            // Check if there's no enemy nearby (one tile spacing rule)
+            if (!has_enemy_nearby(x, y))
+            {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
 }

@@ -7,8 +7,8 @@
 // Selector animation state constants
 #define SELECTOR_STATE_DEFAULT 0
 #define SELECTOR_STATE_DELETE 1
-#define SELECTOR_STATE_ENEMY_LEFT 2
-#define SELECTOR_STATE_ENEMY_RIGHT 3
+#define SELECTOR_STATE_ENEMY_RIGHT 2
+#define SELECTOR_STATE_ENEMY_LEFT 3
 #define SELECTOR_STATE_NEW_PLATFORM 4
 #define SELECTOR_STATE_PLAYER 5
 #define SELECTOR_STATE_PLATFORM_LEFT 6
@@ -22,6 +22,13 @@ UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED;
 void clear_existing_player_on_row_11(void) BANKED;
 void paint_player(UBYTE x, UBYTE y) BANKED;
+
+// Helper functions for enemy placement
+UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED;
+UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED;
+void delete_enemy(UBYTE x, UBYTE y) BANKED;
+void paint_enemy_left(UBYTE x, UBYTE y) BANKED;
+void paint_enemy_right(UBYTE x, UBYTE y) BANKED;
 
 void paint(UBYTE x, UBYTE y) BANKED;
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED;
