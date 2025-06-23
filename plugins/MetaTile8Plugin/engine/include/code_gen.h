@@ -4,7 +4,7 @@
 #include <gbdk/platform.h>
 #include "vm.h"
 
-extern UWORD current_code[20];
+extern UWORD current_code[16];
 
 UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
 UWORD match_platform_pattern(UWORD pattern) BANKED;

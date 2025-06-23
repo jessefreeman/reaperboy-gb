@@ -6,11 +6,11 @@
 #include "code_gen.h"
 #include "tile_utils.h"
 
-#define PLATFORM_Y_MIN 11
+#define PLATFORM_Y_MIN 12 // Changed from 11 to 12 to start at y=12
 #define TILE_0 48
-#define SEGMENTS_PER_ROW 4 // Changed from 3 to 4 (4 blocks horizontally)
-#define SEGMENT_WIDTH 5    // Changed from 6 to 5
-#define SEGMENT_HEIGHT 2
+#define SEGMENTS_PER_ROW 4 // 4 blocks horizontally
+#define SEGMENT_WIDTH 5    // 5 tiles wide per segment
+#define SEGMENT_HEIGHT 2   // 2 tiles high per segment
 #define TILE_HEX_DEBUG 96
 #define TILE_FLIP_OFFSET 32 // each flip variant lives 2 rows (16 tiles) down
 
@@ -22,7 +22,7 @@
 // Debug display settings
 #define DEBUG_START_X 5
 #define DEBUG_START_Y 5
-#define DEBUG_TILES_PER_ROW 13 // (18 - 5 = 13 tiles per row)
+#define DEBUG_TILES_PER_ROW 4 // Match the 4x4 chunk grid layout
 
 // 18 base patterns with unique IDs for each variation = 57 total unique patterns (0-56)
 const UWORD PLATFORM_PATTERNS[] = {
@@ -70,7 +70,7 @@ const UWORD PLATFORM_PATTERNS[] = {
     0b0000110000, // Index 41
     0b1000000001, // Index 42
     0b0001110000, // Index 43
-    0b1100000001, // Index 44 
+    0b1100000001, // Index 44
     0b1000000011, // Index 45
     0b0000111000, // Index 46
     0b0011110000, // Index 47
@@ -87,11 +87,11 @@ const UWORD PLATFORM_PATTERNS[] = {
 
 #define PLATFORM_PATTERN_COUNT (sizeof(PLATFORM_PATTERNS) / sizeof(PLATFORM_PATTERNS[0]))
 
-UWORD current_code[20] = { // 4x5 grid = 20 blocks total
-    0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0};
+UWORD current_code[16] = { // 4x4 grid = 16 blocks total
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0};
 
 UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED
 {
@@ -172,10 +172,10 @@ void vm_update_code(SCRIPT_CTX *THIS) BANKED
     // Suppress unused parameter warning
     (void)THIS;
 
-    for (UBYTE i = 0; i < 20; i++) // 4x5 grid = 20 blocks
+    for (UBYTE i = 0; i < 16; i++) // 4x4 grid = 16 blocks
     {
         UBYTE chunk_x = 2 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;               // Start at x=2, move by 5s
-        UBYTE chunk_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT; // Start at y=11, move by 2s
+        UBYTE chunk_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT; // Start at y=12, move by 2s
         update_code_at_chunk(chunk_x, chunk_y, i);
         display_code_tile(current_code[i], i);
     }
@@ -183,18 +183,16 @@ void vm_update_code(SCRIPT_CTX *THIS) BANKED
 
 void draw_segment_ids(void) BANKED
 {
-    // Update all 20 zones and display their debug codes at (5,5) area
-    for (UBYTE i = 0; i < 20; i++)
+    // Update all 16 zones and display their debug codes at (5,5) area
+    for (UBYTE i = 0; i < 16; i++)
     {
         UBYTE segment_x = 2 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;               // Start at x=2, move by 5s
-        UBYTE segment_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT; // Start at y=11, move by 2s
+        UBYTE segment_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT; // Start at y=12, move by 2s
 
         // Extract pattern and get pattern ID
         UBYTE row0, row1;
         UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
-        UWORD pattern_id = match_platform_pattern(pattern);
-
-        // Update the stored code
+        UWORD pattern_id = match_platform_pattern(pattern); // Update the stored code
         current_code[i] = pattern_id;
 
         // Display debug tile in the debug area
@@ -204,7 +202,7 @@ void draw_segment_ids(void) BANKED
 
 void update_zone_code(UBYTE zone_index) BANKED
 {
-    if (zone_index >= 20)
+    if (zone_index >= 16)
         return; // Safety check
 
     UBYTE segment_x = 2 + (zone_index % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;
@@ -262,11 +260,10 @@ void draw_debug_pattern(UBYTE pattern_index) BANKED
     // Now get the pattern and replace with platform tiles where needed
     UWORD pattern = PLATFORM_PATTERNS[pattern_index];
     for (UBYTE i = 0; i < 5; i++)
-    {
-        // Top row (bits 9-5)
+    { // Top row (bits 9-5)
         if ((pattern >> (9 - i)) & 1)
         {
-            uint8_t tile_type;
+            UBYTE tile_type;
             if (i == 0)
             {
                 tile_type = PLATFORM_TILE_1; // Left platform
@@ -285,7 +282,7 @@ void draw_debug_pattern(UBYTE pattern_index) BANKED
         // Bottom row (bits 4-0)
         if ((pattern >> (4 - i)) & 1)
         {
-            uint8_t tile_type;
+            UBYTE tile_type;
             if (i == 0)
             {
                 tile_type = PLATFORM_TILE_1; // Left platform

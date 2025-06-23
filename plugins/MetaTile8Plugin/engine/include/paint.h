@@ -15,6 +15,9 @@
 #define SELECTOR_STATE_PLATFORM_RIGHT 7
 #define SELECTOR_STATE_PLAYER 8
 
+// Helper function to validate platform row placement
+UBYTE is_valid_platform_row(UBYTE y) BANKED;
+
 void paint(UBYTE x, UBYTE y) BANKED;
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED;
 UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED;

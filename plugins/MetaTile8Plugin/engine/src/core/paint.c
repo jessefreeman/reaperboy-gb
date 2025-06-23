@@ -11,10 +11,17 @@
 // your existing #defines…
 #define PLATFORM_X_MIN 2
 #define PLATFORM_X_MAX 21
-#define PLATFORM_Y_MIN 11
-#define PLATFORM_Y_MAX 20
+#define PLATFORM_Y_MIN 12 // Changed from 11 to 12
+#define PLATFORM_Y_MAX 19 // Changed from 20 to 19
 #define PLATFORM_MIN_VERTICAL_GAP 1
 #define PLATFORM_MAX_LENGTH 8
+
+// Helper function to check if a Y coordinate is valid for platform placement
+// Only rows 13, 15, 17, and 19 are allowed
+UBYTE is_valid_platform_row(UBYTE y) BANKED
+{
+    return (y == 13 || y == 15 || y == 17 || y == 19);
+}
 
 // Selector animation state constants
 #define SELECTOR_STATE_DEFAULT 0
@@ -58,8 +65,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
 
     UBYTE ec = 0, playerPlaced = 0, exitPlaced = 0;
     UBYTE playerX = 0, playerRow = 0;
-
-    for (UBYTE yy = 10; yy < 20; ++yy)
+    for (UBYTE yy = 10; yy <= 19; ++yy) // Updated range to match new constraints
     {
         for (UBYTE xx = 2; xx < 22; ++xx)
         {
@@ -132,6 +138,10 @@ UBYTE can_place_platform(UBYTE x, UBYTE y) BANKED
         y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX)
         return 0;
 
+    // Check if this is a valid row for platform placement
+    if (!is_valid_platform_row(y))
+        return 0;
+
     // Must be empty tile
     if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
         return 0;
@@ -180,6 +190,9 @@ UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED
             continue;
         BYTE cy = y + dy;
         if (cy < PLATFORM_Y_MIN || cy > PLATFORM_Y_MAX)
+            continue;
+        // Only check conflicts on valid platform rows
+        if (!is_valid_platform_row(cy))
             continue;
         if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, cy)]) == BRUSH_TILE_PLATFORM)
             return 1;
@@ -257,6 +270,10 @@ void paint(UBYTE x, UBYTE y) BANKED
     // Check bounds
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX ||
         y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX)
+        return;
+
+    // Check if this is a valid row for platform placement
+    if (!is_valid_platform_row(y))
         return;
 
     UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
