@@ -667,3 +667,353 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
         }
     }
 }
+
+// Level code generation and parsing functions
+// Optimized packing: Player uses 5 bits, each enemy uses 9 bits (5+3+1)
+// Total: 5 + (6 * 9) = 59 bits = 8 bytes (7.375 bytes, rounded up)
+
+#define MAX_ENEMIES 6
+#define PLAYER_X_BITS 5
+#define ENEMY_X_BITS 5
+#define ENEMY_Y_BITS 3
+#define ENEMY_DIR_BITS 1
+#define ENEMY_TOTAL_BITS (ENEMY_X_BITS + ENEMY_Y_BITS + ENEMY_DIR_BITS) // 9 bits per enemy
+
+// Convert platform row to encoded value (13->0, 15->1, 17->2, 19->3, no enemy->7)
+UBYTE encode_enemy_y(UBYTE y) BANKED
+{
+    switch (y)
+    {
+    case 13:
+        return 0;
+    case 15:
+        return 1;
+    case 17:
+        return 2;
+    case 19:
+        return 3;
+    default:
+        return 7; // No enemy marker
+    }
+}
+
+// Convert encoded value back to platform row
+UBYTE decode_enemy_y(UBYTE encoded_y) BANKED
+{
+    switch (encoded_y)
+    {
+    case 0:
+        return 13;
+    case 1:
+        return 15;
+    case 2:
+        return 17;
+    case 3:
+        return 19;
+    default:
+        return 0; // Invalid/no enemy
+    }
+}
+
+// Generate level code from current map state
+void generate_level_code(UBYTE *code_buffer) BANKED
+{
+    // Clear the buffer
+    for (UBYTE i = 0; i < 8; i++)
+    {
+        code_buffer[i] = 0;
+    }
+
+    UBYTE bit_pos = 0;
+
+    // Find and encode player position (row 11 only)
+    UBYTE player_x = 0;
+    for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+    {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        {
+            player_x = x - PLATFORM_X_MIN; // Convert to 0-based index
+            break;
+        }
+    }
+
+    // Pack player X (5 bits)
+    for (UBYTE bit = 0; bit < PLAYER_X_BITS; bit++)
+    {
+        if (player_x & (1 << bit))
+        {
+            code_buffer[bit_pos / 8] |= (1 << (bit_pos % 8));
+        }
+        bit_pos++;
+    }
+
+    // Find and encode enemies
+    UBYTE enemy_count = 0;
+    for (UBYTE y = PLATFORM_Y_MIN; y <= PLATFORM_Y_MAX && enemy_count < MAX_ENEMIES; y++)
+    {
+        if (!is_valid_platform_row(y))
+            continue;
+
+        for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX && enemy_count < MAX_ENEMIES; x++)
+        {
+            UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+            if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+            {
+                // Pack enemy data (9 bits total: 5 bits X + 3 bits Y + 1 bit direction)
+                UBYTE enemy_x = x - PLATFORM_X_MIN;
+                UBYTE enemy_y = encode_enemy_y(y);
+                UBYTE enemy_dir = (tile_type == BRUSH_TILE_ENEMY_L) ? 1 : 0;
+
+                // Pack X (5 bits)
+                for (UBYTE bit = 0; bit < ENEMY_X_BITS; bit++)
+                {
+                    if (enemy_x & (1 << bit))
+                    {
+                        code_buffer[bit_pos / 8] |= (1 << (bit_pos % 8));
+                    }
+                    bit_pos++;
+                }
+
+                // Pack Y (3 bits)
+                for (UBYTE bit = 0; bit < ENEMY_Y_BITS; bit++)
+                {
+                    if (enemy_y & (1 << bit))
+                    {
+                        code_buffer[bit_pos / 8] |= (1 << (bit_pos % 8));
+                    }
+                    bit_pos++;
+                }
+
+                // Pack direction (1 bit)
+                if (enemy_dir)
+                {
+                    code_buffer[bit_pos / 8] |= (1 << (bit_pos % 8));
+                }
+                bit_pos++;
+
+                enemy_count++;
+            }
+        }
+    }
+
+    // Fill remaining enemy slots with "no enemy" marker (Y=7, X=0, DIR=0)
+    for (; enemy_count < MAX_ENEMIES; enemy_count++)
+    {
+        // Skip X bits (already 0)
+        bit_pos += ENEMY_X_BITS;
+
+        // Set Y to 7 (no enemy marker - 3 bits: 111)
+        for (UBYTE bit = 0; bit < ENEMY_Y_BITS; bit++)
+        {
+            code_buffer[bit_pos / 8] |= (1 << (bit_pos % 8));
+            bit_pos++;
+        }
+
+        // Skip direction bit (already 0)
+        bit_pos += ENEMY_DIR_BITS;
+    }
+}
+
+// Parse level code and apply to map
+void parse_level_code(UBYTE *code_buffer) BANKED
+{
+    UBYTE bit_pos = 0;
+
+    // Clear existing player on row 11
+    clear_existing_player_on_row_11();
+
+    // Clear existing enemies
+    for (UBYTE y = PLATFORM_Y_MIN; y <= PLATFORM_Y_MAX; y++)
+    {
+        for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+        {
+            UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+            if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+            {
+                replace_meta_tile(x, y, TILE_EMPTY, 1);
+            }
+        }
+    }
+
+    // Unpack player X (5 bits)
+    UBYTE player_x = 0;
+    for (UBYTE bit = 0; bit < PLAYER_X_BITS; bit++)
+    {
+        if (code_buffer[bit_pos / 8] & (1 << (bit_pos % 8)))
+        {
+            player_x |= (1 << bit);
+        }
+        bit_pos++;
+    }
+
+    // Place player if valid position
+    UBYTE player_map_x = player_x + PLATFORM_X_MIN;
+    if (player_map_x >= PLATFORM_X_MIN && player_map_x <= PLATFORM_X_MAX &&
+        has_platform_below(player_map_x, 11))
+    {
+        replace_meta_tile(player_map_x, 11, TILE_PLAYER, 1);
+    }
+
+    // Unpack enemies
+    for (UBYTE enemy_idx = 0; enemy_idx < MAX_ENEMIES; enemy_idx++)
+    {
+        // Unpack X (5 bits)
+        UBYTE enemy_x = 0;
+        for (UBYTE bit = 0; bit < ENEMY_X_BITS; bit++)
+        {
+            if (code_buffer[bit_pos / 8] & (1 << (bit_pos % 8)))
+            {
+                enemy_x |= (1 << bit);
+            }
+            bit_pos++;
+        }
+
+        // Unpack Y (3 bits)
+        UBYTE enemy_y_encoded = 0;
+        for (UBYTE bit = 0; bit < ENEMY_Y_BITS; bit++)
+        {
+            if (code_buffer[bit_pos / 8] & (1 << (bit_pos % 8)))
+            {
+                enemy_y_encoded |= (1 << bit);
+            }
+            bit_pos++;
+        }
+
+        // Unpack direction (1 bit)
+        UBYTE enemy_dir = 0;
+        if (code_buffer[bit_pos / 8] & (1 << (bit_pos % 8)))
+        {
+            enemy_dir = 1;
+        }
+        bit_pos++;
+
+        // Place enemy if valid (Y != 7 means enemy exists)
+        if (enemy_y_encoded != 7)
+        {
+            UBYTE enemy_map_x = enemy_x + PLATFORM_X_MIN;
+            UBYTE enemy_map_y = decode_enemy_y(enemy_y_encoded);
+
+            if (enemy_map_x >= PLATFORM_X_MIN && enemy_map_x <= PLATFORM_X_MAX &&
+                enemy_map_y >= PLATFORM_Y_MIN && enemy_map_y <= PLATFORM_Y_MAX &&
+                is_valid_platform_row(enemy_map_y))
+            {
+                UBYTE enemy_tile = enemy_dir ? TILE_LEFT_ENEMY : TILE_RIGHT_ENEMY;
+                replace_meta_tile(enemy_map_x, enemy_map_y, enemy_tile, 1);
+            }
+        }
+    }
+}
+
+// VM wrapper for generating level code
+void vm_generate_level_code(SCRIPT_CTX *THIS) BANKED
+{
+    // Get the variable ID where to store the level code
+    uint16_t varId = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
+
+    // Generate the 8-byte level code
+    UBYTE code_buffer[8];
+    generate_level_code(code_buffer);
+
+    // Store the 8 bytes in 8 consecutive variables
+    for (UBYTE i = 0; i < 8; i++)
+    {
+        script_memory[varId + i] = code_buffer[i];
+    }
+}
+
+// VM wrapper for parsing level code
+void vm_parse_level_code(SCRIPT_CTX *THIS) BANKED
+{
+    // Get the variable ID where the level code is stored
+    uint16_t varId = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
+
+    // Read the 8 bytes from 8 consecutive variables
+    UBYTE code_buffer[8];
+    for (UBYTE i = 0; i < 8; i++)
+    {
+        code_buffer[i] = (UBYTE)script_memory[varId + i];
+    }
+
+    // Parse and apply the level code to the map
+    parse_level_code(code_buffer);
+}
+
+// Helper function to check if the level has valid player/enemy setup
+UBYTE validate_level_setup(void) BANKED
+{
+    // Check if player exists on row 11
+    UBYTE has_player = 0;
+    for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+    {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        {
+            has_player = 1;
+            break;
+        }
+    }
+
+    // A valid level should have a player
+    return has_player;
+}
+
+// VM wrapper for level validation
+void vm_validate_level_setup(SCRIPT_CTX *THIS) BANKED
+{
+    // Get the variable ID where to store the validation result
+    uint16_t varId = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
+
+    // Validate and store result (1 = valid, 0 = invalid)
+    UBYTE is_valid = validate_level_setup();
+    script_memory[varId] = is_valid;
+}
+
+// Get level statistics (player X position and enemy count)
+void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED
+{
+    // Find player position
+    *player_x = 0;
+    for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+    {
+        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        {
+            *player_x = x;
+            break;
+        }
+    }
+
+    // Count enemies
+    *enemy_count = count_enemies_on_map();
+}
+
+// VM wrapper for level statistics
+void vm_get_level_stats(SCRIPT_CTX *THIS) BANKED
+{
+    // Get variable IDs for player_x and enemy_count
+    uint16_t player_x_var = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
+    uint16_t enemy_count_var = *(uint16_t *)VM_REF_TO_PTR(FN_ARG1);
+
+    UBYTE player_x, enemy_count;
+    get_level_stats(&player_x, &enemy_count);
+
+    script_memory[player_x_var] = player_x;
+    script_memory[enemy_count_var] = enemy_count;
+}
+
+// Test function to verify compilation
+void test_level_code_system(void) BANKED
+{
+    // Test generation
+    UBYTE test_buffer[8];
+    generate_level_code(test_buffer);
+
+    // Test parsing
+    parse_level_code(test_buffer);
+
+    // Test validation
+    UBYTE is_valid = validate_level_setup();
+    (void)is_valid; // Suppress unused warning
+
+    // Test stats
+    UBYTE player_x, enemy_count;
+    get_level_stats(&player_x, &enemy_count);
+}

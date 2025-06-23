@@ -5,6 +5,7 @@
 #include "meta_tiles.h"
 #include "code_gen.h"
 #include "tile_utils.h"
+#include "paint.h"
 
 #define PLATFORM_Y_MIN 12 // Changed from 11 to 12 to start at y=12
 #define TILE_0 48
@@ -13,6 +14,17 @@
 #define SEGMENT_HEIGHT 2   // 2 tiles high per segment
 #define TILE_HEX_DEBUG 96
 #define TILE_FLIP_OFFSET 32 // each flip variant lives 2 rows (16 tiles) down
+
+// Level code display settings
+#define LEVEL_CODE_START_X 5        // Starting X position for level code display
+#define LEVEL_CODE_START_Y 1        // Starting Y position for level code display (moved to avoid conflict)
+#define LEVEL_CODE_CHARS_PER_ROW 12 // 12 chars per row (3 blocks of 4 chars)
+#define LEVEL_CODE_BLOCK_SIZE 4     // 4 characters per block
+
+// Hex tile definitions - hex chars are at row 3 (y=3), columns 0-15 (x=0-15)
+#define HEX_TILE_ROW 3
+#define HEX_TILE_0 (HEX_TILE_ROW * 16 + 0)  // Tile at (0,3) = 48
+#define HEX_TILE_F (HEX_TILE_ROW * 16 + 15) // Tile at (15,3) = 63
 
 // Platform tile IDs
 #define PLATFORM_TILE_1 4
@@ -52,6 +64,32 @@ const UWORD PLATFORM_PATTERNS[] = {
 };
 
 #define PLATFORM_PATTERN_COUNT (sizeof(PLATFORM_PATTERNS) / sizeof(PLATFORM_PATTERNS[0]))
+
+// Tile mapping for each pattern ID - you can manually set each tile index here
+// This array maps pattern IDs (0-20) to their corresponding tile indices
+const UBYTE PATTERN_TILE_MAP[] = {
+    48, // Pattern 0  -> '0' at (0,3)
+    49, // Pattern 1  -> '1' at (1,3)
+    50, // Pattern 2  -> '2' at (2,3)
+    51, // Pattern 3  -> '3' at (3,3)
+    52, // Pattern 4  -> '4' at (4,3)
+    53, // Pattern 5  -> '5' at (5,3)
+    54, // Pattern 6  -> '6' at (6,3)
+    55, // Pattern 7  -> '7' at (7,3)
+    56, // Pattern 8  -> '8' at (8,3)
+    57, // Pattern 9  -> '9' at (9,3)
+    58, // Pattern 10 -> 'A' at (10,3)
+    59, // Pattern 11 -> 'B' at (11,3)
+    60, // Pattern 12 -> 'C' at (12,3)
+    61, // Pattern 13 -> 'D' at (13,3)
+    62, // Pattern 14 -> 'E' at (14,3)
+    63, // Pattern 15 -> 'F' at (15,3)
+    64, // Pattern 16 -> 'G' at (4,0) - CHANGE THIS TO CORRECT TILE INDEX
+    65, // Pattern 17 -> 'H' at (5,0) - CHANGE THIS TO CORRECT TILE INDEX
+    66, // Pattern 18 -> 'I' at (6,0) - CHANGE THIS TO CORRECT TILE INDEX
+    67, // Pattern 19 -> 'J' at (7,0) - CHANGE THIS TO CORRECT TILE INDEX
+    68  // Pattern 20 -> 'K' at (8,0) - CHANGE THIS TO CORRECT TILE INDEX
+};
 
 UWORD current_code[16] = { // 4x4 grid = 16 blocks total
     0, 0, 0, 0,
@@ -138,32 +176,17 @@ void vm_update_code(SCRIPT_CTX *THIS) BANKED
     // Suppress unused parameter warning
     (void)THIS;
 
-    for (UBYTE i = 0; i < 16; i++) // 4x4 grid = 16 blocks
-    {
-        UBYTE chunk_x = 2 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;               // Start at x=2, move by 5s
-        UBYTE chunk_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT; // Start at y=12, move by 2s
-        update_code_at_chunk(chunk_x, chunk_y, i);
-        display_code_tile(current_code[i], i);
-    }
+    // Use the formatted debug display system
+    display_debug_patterns_formatted();
 }
 
 void draw_segment_ids(void) BANKED
 {
-    // Update all 16 zones and display their debug codes at (5,5) area
-    for (UBYTE i = 0; i < 16; i++)
-    {
-        UBYTE segment_x = 2 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;               // Start at x=2, move by 5s
-        UBYTE segment_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT; // Start at y=12, move by 2s
+    // Display debug patterns in formatted layout (4-char blocks with spaces)
+    display_debug_patterns_formatted();
 
-        // Extract pattern and get pattern ID
-        UBYTE row0, row1;
-        UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
-        UWORD pattern_id = match_platform_pattern(pattern); // Update the stored code
-        current_code[i] = pattern_id;
-
-        // Display debug tile in the debug area
-        display_code_tile(pattern_id, i);
-    }
+    // Also display the level code at a different location (optional)
+    // generate_and_display_level_code();
 }
 
 void update_zone_code(UBYTE zone_index) BANKED
@@ -302,4 +325,251 @@ void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED
 
     debug_pattern_index = 0;
     draw_debug_pattern(debug_pattern_index);
+}
+
+// Helper function to display a pattern character using the mapping table
+void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED
+{
+    UBYTE tile_index;
+
+    if (value < PLATFORM_PATTERN_COUNT)
+    {
+        // Use the mapping table - you can edit PATTERN_TILE_MAP[] above to fix tile indices
+        tile_index = PATTERN_TILE_MAP[value];
+    }
+    else
+    {
+        // Fallback to '0' for invalid pattern IDs
+        tile_index = PATTERN_TILE_MAP[0];
+    }
+
+    replace_meta_tile(x, y, tile_index, 1);
+}
+
+// Legacy function for hex digit display (0-F only)
+void display_hex_digit(UBYTE value, UBYTE x, UBYTE y) BANKED
+{
+    // Clamp to 0-15 and use display_pattern_char
+    if (value > 15)
+        value = 0;
+    display_pattern_char(value, x, y);
+}
+
+// Generate and display complete level code (platforms + player + enemies)
+void generate_and_display_level_code(void) BANKED
+{
+    // Generate platform pattern codes (16 segments, each pattern ID 0-20)
+    UBYTE platform_patterns[16];
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        UBYTE segment_x = 2 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;
+        UBYTE segment_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT;
+
+        UBYTE row0, row1;
+        UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+        UWORD pattern_id = match_platform_pattern(pattern);
+
+        // Use full range 0-20 (supports 0-9, A-F, G-T)
+        if (pattern_id > 20)
+            pattern_id = 0;
+
+        platform_patterns[i] = (UBYTE)pattern_id;
+    }
+
+    // Clear the display area first
+    clear_level_code_display();
+
+    // Format: 4 digits per block, 3 blocks per row = 12 digits per row
+    // Row 1: 0000 0000 0000 (12 digits)
+    // Row 2: 0000 (4 remaining digits)
+
+    UBYTE display_x = LEVEL_CODE_START_X;
+    UBYTE display_y = LEVEL_CODE_START_Y;
+    UBYTE char_count = 0;
+
+    // Display all 16 platform patterns using extended character set
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        // Add space before each 4-char block (except the first)
+        if (char_count > 0 && char_count % LEVEL_CODE_BLOCK_SIZE == 0)
+        {
+            display_x++; // Skip one position for space
+        }
+
+        display_pattern_char(platform_patterns[i], display_x, display_y);
+        display_x += 1; // Move 1 position for single character
+        char_count += 1;
+
+        // Move to next row after 12 characters
+        if (char_count >= LEVEL_CODE_CHARS_PER_ROW)
+        {
+            display_x = LEVEL_CODE_START_X;
+            display_y++;
+            char_count = 0;
+        }
+    }
+}
+
+// VM wrapper for generating and displaying complete level code
+void vm_generate_and_display_level_code(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    generate_and_display_level_code();
+}
+
+// Helper function to clear the level code display area
+void clear_level_code_display(void) BANKED
+{
+    // Clear 2 rows starting at (5,1) for level code display - separate from debug tiles
+    for (UBYTE y = LEVEL_CODE_START_Y; y < LEVEL_CODE_START_Y + 2; y++)
+    {
+        for (UBYTE x = LEVEL_CODE_START_X; x < LEVEL_CODE_START_X + 15; x++) // 15 chars wide should be enough
+        {
+            replace_meta_tile(x, y, 0, 1); // Replace with empty tile
+        }
+    }
+}
+
+// Test function to display a sample level code pattern
+void test_level_code_display(void) BANKED
+{
+    // Clear the display area first
+    clear_level_code_display();
+
+    // Display test pattern using extended character set: 0123 456G ABCD
+    UBYTE test_values[] = {0, 1, 2, 3, 4, 5, 6, 16, 10, 11, 12, 13, 14, 15, 7, 8}; // G=16
+    UBYTE display_x = LEVEL_CODE_START_X;
+    UBYTE display_y = LEVEL_CODE_START_Y;
+    UBYTE char_count = 0;
+
+    // Display 16 test characters
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        // Add space before each 4-char block (except the first)
+        if (char_count > 0 && char_count % LEVEL_CODE_BLOCK_SIZE == 0)
+        {
+            display_x++; // Skip one position for space
+        }
+
+        display_pattern_char(test_values[i], display_x, display_y);
+        display_x += 1;
+        char_count += 1;
+
+        // Move to next row after 12 characters
+        if (char_count >= LEVEL_CODE_CHARS_PER_ROW)
+        {
+            display_x = LEVEL_CODE_START_X;
+            display_y++;
+            char_count = 0;
+        }
+    }
+}
+
+// VM wrapper for test function
+void vm_test_level_code_display(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    test_level_code_display();
+}
+
+// Debug function to test hex tile display
+void test_hex_tiles(void) BANKED
+{
+    // Display hex digits 0-F at position (5,0) to test tile mapping
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        display_hex_digit(i, 5 + i, 0);
+    }
+}
+
+// VM wrapper for hex tile test
+void vm_test_hex_tiles(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    test_hex_tiles();
+}
+
+// Display debug patterns in formatted layout (4-char blocks with spaces)
+void display_debug_patterns_formatted(void) BANKED
+{
+    // Clear the debug display area first
+    clear_debug_display();
+
+    // Generate pattern codes for all 16 segments
+    UBYTE platform_patterns[16];
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        UBYTE segment_x = 2 + (i % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;
+        UBYTE segment_y = PLATFORM_Y_MIN + (i / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT;
+
+        UBYTE row0, row1;
+        UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+        UWORD pattern_id = match_platform_pattern(pattern);
+
+        // Use full range 0-20 (supports 0-9, A-F, G-T)
+        if (pattern_id > 20)
+            pattern_id = 0;
+
+        platform_patterns[i] = (UBYTE)pattern_id;
+        current_code[i] = pattern_id; // Update stored code
+    }
+
+    // Display in formatted layout at debug position (5,5)
+    // Format: 4 digits + space + 4 digits + space + 4 digits = 12 chars per row
+    // Row 1: 0000 0000 0000 (12 digits)
+    // Row 2: 0000 (4 remaining digits)
+
+    UBYTE display_x = DEBUG_START_X;
+    UBYTE display_y = DEBUG_START_Y;
+    UBYTE char_count = 0;
+
+    // Display all 16 platform patterns using extended character set
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        // Add space before each 4-char block (except the first)
+        if (char_count > 0 && char_count % LEVEL_CODE_BLOCK_SIZE == 0)
+        {
+            display_x++; // Skip one position for space
+        }
+
+        display_pattern_char(platform_patterns[i], display_x, display_y);
+        display_x += 1; // Move 1 position for single character
+        char_count += 1;
+
+        // Move to next row after 12 characters
+        if (char_count >= LEVEL_CODE_CHARS_PER_ROW)
+        {
+            display_x = DEBUG_START_X;
+            display_y++;
+            char_count = 0;
+        }
+    }
+}
+
+// Helper function to clear the debug display area
+void clear_debug_display(void) BANKED
+{
+    // Clear 2 rows starting at debug position (5,5)
+    for (UBYTE y = DEBUG_START_Y; y < DEBUG_START_Y + 2; y++)
+    {
+        for (UBYTE x = DEBUG_START_X; x < DEBUG_START_X + 15; x++) // 15 chars wide should be enough
+        {
+            replace_meta_tile(x, y, 0, 1); // Replace with empty tile
+        }
+    }
+}
+
+// VM wrapper for formatted debug display
+void vm_display_debug_patterns_formatted(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    display_debug_patterns_formatted();
 }
