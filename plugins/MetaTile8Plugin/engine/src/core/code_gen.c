@@ -24,65 +24,31 @@
 #define DEBUG_START_Y 5
 #define DEBUG_TILES_PER_ROW 4 // Match the 4x4 chunk grid layout
 
-// 18 base patterns with unique IDs for each variation = 57 total unique patterns (0-56)
+// Platform patterns - 5x2 chunks with platforms on the 2nd row (bottom row)
+// Aligned with alternating platform paint logic for rows 13, 15, 17, 19
+// Each pattern corresponds to the UID values from your specification
 const UWORD PLATFORM_PATTERNS[] = {
-    0b0000000000, // Index 0
-    0b0000100000, // Index 1
-    0b1000000000, // Index 2
-    0b0000000001, // Index 3
-    0b0000010000, // Index 4
-    0b0001100000, // Index 5
-    0b1100000000, // Index 6
-    0b0000000011, // Index 7
-    0b0000011000, // Index 8
-    0b0011000000, // Index 9
-    0b0110000000, // Index 10
-    0b0000000110, // Index 11
-    0b0000001100, // Index 12
-    0b0011100000, // Index 13
-    0b1110000000, // Index 14
-    0b0000000111, // Index 15
-    0b0000011100, // Index 16
-    0b0110100000, // Index 17
-    0b1011000000, // Index 18
-    0b0000001101, // Index 19
-    0b0000010110, // Index 20
-    0b0111000000, // Index 21
-    0b0000001110, // Index 22
-    0b0111100000, // Index 23
-    0b1111000000, // Index 24
-    0b0000001111, // Index 25
-    0b0000011110, // Index 26
-    0b1000100000, // Index 27
-    0b0000010001, // Index 28
-    0b1001100000, // Index 29
-    0b1100100000, // Index 30
-    0b0000010011, // Index 31
-    0b0000011001, // Index 32
-    0b1011100000, // Index 33
-    0b1110100000, // Index 34
-    0b0000010111, // Index 35
-    0b0000011101, // Index 36
-    0b1101100000, // Index 37
-    0b0000011011, // Index 38
-    0b1111100000, // Index 39
-    0b0000011111, // Index 40
-    0b0000110000, // Index 41
-    0b1000000001, // Index 42
-    0b0001110000, // Index 43
-    0b1100000001, // Index 44
-    0b1000000011, // Index 45
-    0b0000111000, // Index 46
-    0b0011110000, // Index 47
-    0b1110000001, // Index 48
-    0b1000000111, // Index 49
-    0b0000111100, // Index 50
-    0b0011010000, // Index 51
-    0b0110000001, // Index 52
-    0b1000000110, // Index 53
-    0b0000101100, // Index 54
-    0b0001111000, // Index 55
-    0b1100000011  // Index 56
+    0b0000000000, // UID 0: Pattern 0 - Empty
+    0b0000000001, // UID 1: Pattern 1.0 - Single platform at position 4
+    0b0000010000, // UID 2: Pattern 1.1 - Single platform at position 3
+    0b0000000011, // UID 3: Pattern 2.0 - Two platforms at positions 3-4
+    0b0000011000, // UID 4: Pattern 2.1 - Two platforms at positions 2-3
+    0b0000000110, // UID 5: Pattern 3.0 - Two platforms at positions 2-3
+    0b0000001100, // UID 6: Pattern 3.1 - Two platforms at positions 1-2
+    0b0000000111, // UID 7: Pattern 4.0 - Three platforms at positions 2-4
+    0b0000011100, // UID 8: Pattern 4.1 - Three platforms at positions 1-3
+    0b0000001101, // UID 9: Pattern 5.0 - Gapped platforms at positions 1-2,4
+    0b0000010110, // UID 10: Pattern 5.1 - Gapped platforms at positions 1,3-4
+    0b0000001110, // UID 11: Pattern 6.0 & 6.1 - Three platforms at positions 1-3
+    0b0000001111, // UID 12: Pattern 7.0 - Four platforms at positions 1-4
+    0b0000011110, // UID 13: Pattern 7.1 - Four platforms at positions 1-4
+    0b0000010001, // UID 14: Pattern 8.0 & 8.1 - Two isolated platforms at positions 0,4
+    0b0000010011, // UID 15: Pattern 9.0 - Three platforms at positions 0,3-4
+    0b0000011001, // UID 16: Pattern 9.1 - Three platforms at positions 0,2-3
+    0b0000010111, // UID 17: Pattern 10.0 - Four platforms at positions 0,2-4
+    0b0000011101, // UID 18: Pattern 10.1 - Four platforms at positions 0-2,4
+    0b0000011011, // UID 19: Pattern 11.0 & 11.1 - Four platforms at positions 0-1,3-4
+    0b0000011111  // UID 20: Pattern 12.0 & 12.1 - Full platform coverage
 };
 
 #define PLATFORM_PATTERN_COUNT (sizeof(PLATFORM_PATTERNS) / sizeof(PLATFORM_PATTERNS[0]))
@@ -128,7 +94,7 @@ UWORD match_platform_pattern(UWORD pattern) BANKED
     {
         if (PLATFORM_PATTERNS[i] == pattern)
         {
-            return i; // Return the unique pattern ID (0-56)
+            return i; // Return the unique pattern ID (0-20)
         }
     }
     return 0; // fallback to pattern 0
@@ -140,15 +106,15 @@ void update_code_at_chunk(UBYTE chunk_x, UBYTE chunk_y, UBYTE chunk_index) BANKE
     UWORD pattern = extract_chunk_pattern(chunk_x, chunk_y, &row0, &row1);
     UWORD pattern_id = match_platform_pattern(pattern);
 
-    current_code[chunk_index] = pattern_id; // Store unique pattern ID (0-56)
+    current_code[chunk_index] = pattern_id; // Store unique pattern ID (0-20)
 }
 
 void display_code_tile(UWORD pattern_id, UBYTE i) BANKED
-{ // pattern_id is now a unique ID from 0-56
+{ // pattern_id is now a unique ID from 0-20
     // Debug tiles are numbered 0-79 starting at (0,6) ending at (15,10)
 
-    // Safety check - only use IDs 0-56, but we have debug tiles 0-79 available
-    if (pattern_id > 56)
+    // Safety check - only use IDs 0-20, but we have debug tiles 0-79 available
+    if (pattern_id > 20)
     {
         pattern_id = 0;
     }
