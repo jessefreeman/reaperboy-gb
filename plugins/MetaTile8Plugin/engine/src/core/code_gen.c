@@ -352,112 +352,35 @@ UBYTE encode_enemy_directions(void) BANKED
     return current_level_code.enemy_directions & 0x3F; // Mask to 6 bits
 }
 
-// Generate and display complete enhanced level code
-void generate_enhanced_level_code(void) BANKED
+// NEW: Encode enemy positions as a compact bitmask (which columns have enemies)
+UBYTE encode_enemy_bitmask(void) BANKED
 {
-    // Update all level data
-    update_complete_level_code();
+    // Strategy: Instead of storing exact positions, encode which of the 20 columns have enemies
+    // Use a compact encoding that fits in 0-34 range (single character)
 
-    // Clear display area
-    clear_level_code_display();
+    UBYTE bitmask = 0;
+    UBYTE enemy_count = 0;
 
-    // Build complete encoded string first
-    UBYTE encoded_string[25]; // 24 chars + null terminator (reduced for better fit)
-    UBYTE string_index = 0;
-
-    // Add platform patterns (20 characters)
-    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
+    // Count enemies and create a simple hash/index based on positions
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
-        encoded_string[string_index++] = get_pattern_display_char(current_level_code.platform_patterns[i]);
-    }
-
-    // Add most important enemy data (3 characters total)
-    // Enemy 1 position + direction (if any)
-    if (current_level_code.enemy_positions[0] != 255)
-    {
-        encoded_string[string_index++] = get_extended_display_char(current_level_code.enemy_positions[0]);
-    }
-    else
-    {
-        encoded_string[string_index++] = get_extended_display_char(35); // 'Z' for no enemy
-    }
-
-    // Enemy directions (packed for first 6 enemies)
-    encoded_string[string_index++] = get_extended_display_char(encode_enemy_directions());
-
-    // Player column
-    encoded_string[string_index++] = get_extended_display_char(current_level_code.player_column);
-
-    // Reserved for checksum or version
-    encoded_string[string_index++] = get_extended_display_char(0);
-
-    // Null terminate
-    encoded_string[string_index] = '\0';
-
-    // Display as groups of 4 characters with proper spacing
-    // Starting at (5,6), max width = 13 characters per row (to stay within bounds)
-    // Format: XXXX XXXX XXXX (12 chars + 2 spaces = 14 positions)
-    //         XXXX XXXX XXXX (next 12 chars)
-
-    UBYTE display_x = 5; // Start at column 5
-    UBYTE display_y = 6; // Start at row 6
-    UBYTE char_index = 0;
-
-    // Display all characters in groups of 4
-    while (char_index < string_index)
-    {
-        // Display one group of 4 characters
-        for (UBYTE i = 0; i < 4 && char_index < string_index; i++)
+        if (current_level_code.enemy_positions[i] != 255)
         {
-            display_char_at_position(encoded_string[char_index], display_x, display_y);
-            display_x++;
-            char_index++;
-        }
-
-        // Add space after each group (except at end of line)
-        if (char_index < string_index)
-        {
-            display_x++; // Add space after group
-        }
-
-        // Wrap to next line after 3 groups (12 chars + 2 spaces = 14 positions)
-        if (display_x >= 18)
-        {
-            display_x = 5; // Reset to start column
-            display_y++;   // Move to next row
+            enemy_count++;
+            // Create a simple hash by XORing position values
+            bitmask ^= (current_level_code.enemy_positions[i] + 1);
         }
     }
-}
 
-void display_code_tile(UWORD pattern_id, UBYTE i) BANKED
-{
-    // Safety check - only use IDs 0-20, but we have debug tiles 0-79 available
-    if (pattern_id > 20)
-    {
-        pattern_id = 0;
-    }
+    // Combine enemy count (0-6) with position hash
+    // Format: [count:3bits][hash:3bits] = 6 bits total (0-63 range)
+    UBYTE result = ((enemy_count & 0x07) << 3) | (bitmask & 0x07);
 
-    // Calculate debug tile position: starting at (0,6), 16 tiles per row
-    // Debug tiles go from (0,6) to (15,10) = 5 rows × 16 columns = 80 tiles (0-79)
-    UBYTE debug_tile_col = pattern_id % 16;
-    UBYTE debug_tile_row = 6 + (pattern_id / 16);
+    // Ensure it's in valid display range (0-34)
+    if (result > 34)
+        result = result % 35;
 
-    UBYTE meta_tile_index = debug_tile_col + (debug_tile_row * 16);
-
-    // Calculate debug display position: starting at (5,5), 13 tiles per row
-    UBYTE debug_x = DEBUG_START_X + (i % DEBUG_TILES_PER_ROW);
-    UBYTE debug_y = DEBUG_START_Y + (i / DEBUG_TILES_PER_ROW);
-
-    replace_meta_tile(debug_x, debug_y, meta_tile_index, 1);
-}
-
-void vm_update_code(SCRIPT_CTX *THIS) BANKED
-{
-    // Suppress unused parameter warning
-    (void)THIS;
-
-    // Use the formatted debug display system
-    display_debug_patterns_formatted();
+    return result;
 }
 
 // ============================================================================
@@ -483,9 +406,9 @@ void display_complete_level_code(void) BANKED
     // Clear the display area once
     clear_level_code_display();
 
-    // Simple approach: Display all 24 characters in a clean 4x6 grid format
-    // Format: XXXX XXXX XXXX XXXX XXXX XXXX (6 groups of 4)
-    //         Starting at (5,6)
+    // Format: Exactly 24 characters total
+    // XXXX XXXX XXXX XXXX XXXX XXXX (6 groups of 4)
+    // Starting at (5,6)
 
     UBYTE display_x = 5; // Start at column 5
     UBYTE display_y = 6; // Start at row 6
@@ -512,29 +435,23 @@ void display_complete_level_code(void) BANKED
         total_chars++;
     }
 
-    // Add enemy and player data (4 more characters: enemy_pos, enemy_dir, player_pos, reserved)
+    // Add COMPACT enemy data (exactly 3 characters total)
 
-    // Character 21: First enemy position
-    if (total_chars % 4 == 0)
+    // Character 21: Enemy bitmask (which positions have enemies)
+    if (total_chars > 0 && total_chars % 4 == 0)
         display_x++; // Space before new group
     if (display_x >= 19)
     {
         display_x = 5;
         display_y++;
     }
-
-    if (current_level_code.enemy_positions[0] != 255)
-    {
-        display_char_at_position(get_extended_display_char(current_level_code.enemy_positions[0]), display_x, display_y);
-    }
-    else
-    {
-        display_char_at_position('Z', display_x, display_y); // 'Z' for no enemy
-    }
+    display_char_at_position(get_extended_display_char(encode_enemy_bitmask()), display_x, display_y);
     display_x++;
     total_chars++;
 
-    // Character 22: Enemy directions
+    // Character 22: Enemy directions (packed direction bits for all enemies)
+    if (total_chars > 0 && total_chars % 4 == 0)
+        display_x++; // Space before new group
     if (display_x >= 19)
     {
         display_x = 5;
@@ -545,6 +462,8 @@ void display_complete_level_code(void) BANKED
     total_chars++;
 
     // Character 23: Player column
+    if (total_chars > 0 && total_chars % 4 == 0)
+        display_x++; // Space before new group
     if (display_x >= 19)
     {
         display_x = 5;
@@ -554,7 +473,9 @@ void display_complete_level_code(void) BANKED
     display_x++;
     total_chars++;
 
-    // Character 24: Reserved
+    // Character 24: Reserved/checksum
+    if (total_chars > 0 && total_chars % 4 == 0)
+        display_x++; // Space before new group
     if (display_x >= 19)
     {
         display_x = 5;
@@ -595,6 +516,37 @@ void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED
     (void)THIS;
 
     draw_segment_ids();
+}
+
+void display_code_tile(UWORD pattern_id, UBYTE i) BANKED
+{
+    // Safety check - only use IDs 0-20, but we have debug tiles 0-79 available
+    if (pattern_id > 20)
+    {
+        pattern_id = 0;
+    }
+
+    // Calculate debug tile position: starting at (0,6), 16 tiles per row
+    // Debug tiles go from (0,6) to (15,10) = 5 rows × 16 columns = 80 tiles (0-79)
+    UBYTE debug_tile_col = pattern_id % 16;
+    UBYTE debug_tile_row = 6 + (pattern_id / 16);
+
+    UBYTE meta_tile_index = debug_tile_col + (debug_tile_row * 16);
+
+    // Calculate debug display position: starting at (5,5), 13 tiles per row
+    UBYTE debug_x = DEBUG_START_X + (i % DEBUG_TILES_PER_ROW);
+    UBYTE debug_y = DEBUG_START_Y + (i / DEBUG_TILES_PER_ROW);
+
+    replace_meta_tile(debug_x, debug_y, meta_tile_index, 1);
+}
+
+void vm_update_code(SCRIPT_CTX *THIS) BANKED
+{
+    // Suppress unused parameter warning
+    (void)THIS;
+
+    // Use the formatted debug display system
+    display_debug_patterns_formatted();
 }
 
 void draw_debug_pattern(UBYTE pattern_index) BANKED
@@ -942,7 +894,53 @@ void test_enemy_encoding(void) BANKED
     current_level_code.player_column = 3;
 
     // Display the encoded result
-    generate_enhanced_level_code();
+    display_complete_level_code();
+}
+
+// Debug function to display current enemy data for troubleshooting
+void debug_display_enemy_data(void) BANKED
+{
+    // Display at position (5,3) to avoid conflicts with level code display at (5,6)
+    UBYTE debug_x = 5;
+    UBYTE debug_y = 3;
+
+    // Clear debug area first
+    for (UBYTE x = 5; x < 20; x++)
+    {
+        replace_meta_tile(x, debug_y, 0, 1); // Clear with empty tile
+    }
+
+    // Display "E:" prefix to indicate enemy data
+    display_char_at_position('E', debug_x, debug_y);
+    debug_x++;
+    display_char_at_position(':', debug_x, debug_y);
+    debug_x++;
+
+    // Display compact enemy encoding (bitmask + directions)
+    display_char_at_position(get_extended_display_char(encode_enemy_bitmask()), debug_x, debug_y);
+    debug_x++;
+    display_char_at_position(get_extended_display_char(encode_enemy_directions()), debug_x, debug_y);
+    debug_x++;
+
+    // Show enemy count for reference
+    UBYTE enemy_count = 0;
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        if (current_level_code.enemy_positions[i] != 255)
+        {
+            enemy_count++;
+        }
+    }
+    display_char_at_position(get_extended_display_char(enemy_count), debug_x, debug_y);
+}
+
+void vm_debug_display_enemy_data(SCRIPT_CTX *THIS) BANKED
+{
+    (void)THIS;
+
+    // Extract current enemy data and display it
+    extract_enemy_data();
+    debug_display_enemy_data();
 }
 
 // VM wrapper functions
@@ -952,14 +950,6 @@ void vm_generate_and_display_level_code(SCRIPT_CTX *THIS) BANKED
     (void)THIS;
 
     generate_and_display_level_code();
-}
-
-void vm_generate_enhanced_level_code(SCRIPT_CTX *THIS) BANKED
-{
-    // Suppress unused parameter warning
-    (void)THIS;
-
-    generate_enhanced_level_code();
 }
 
 void vm_init_level_code(SCRIPT_CTX *THIS) BANKED
@@ -996,7 +986,8 @@ void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED
 
 void vm_display_debug_patterns_formatted(SCRIPT_CTX *THIS) BANKED
 {
-    // Suppress unused parameter warning    (void)THIS;
+    // Suppress unused parameter warning
+    (void)THIS;
     display_debug_patterns_formatted();
 }
 
@@ -1014,5 +1005,7 @@ UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED
 
     // Ensure we're within the 5x4 grid
     if (segment_x >= SEGMENTS_PER_ROW || segment_y >= 4)
-        return 255; // Invalid zone    return segment_y * SEGMENTS_PER_ROW + segment_x;
+        return 255; // Invalid zone
+
+    return segment_y * SEGMENTS_PER_ROW + segment_x;
 }

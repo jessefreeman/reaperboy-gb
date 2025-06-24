@@ -43,4 +43,23 @@ void vm_debug_next_pattern(SCRIPT_CTX *THIS) BANKED;
 void vm_debug_prev_pattern(SCRIPT_CTX *THIS) BANKED;
 void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED;
 
+// Debug enemy data extraction
+void debug_display_enemy_data(void) BANKED;
+void vm_debug_display_enemy_data(SCRIPT_CTX *THIS) BANKED;
+
+// Encoding functions
+UBYTE encode_enemy_directions(void) BANKED;
+UBYTE encode_enemy_bitmask(void) BANKED;
+
+// Test functions
+void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED;
+void vm_init_level_code(SCRIPT_CTX *THIS) BANKED;
+void vm_debug_display_enemy_data(SCRIPT_CTX *THIS) BANKED;
+
+// Encode enemy directions into a single character (6 bits + padding)
+UBYTE encode_enemy_directions(void) BANKED;
+
+// NEW: Encode enemy positions as a compact bitmask
+UBYTE encode_enemy_bitmask(void) BANKED;
+
 #endif
