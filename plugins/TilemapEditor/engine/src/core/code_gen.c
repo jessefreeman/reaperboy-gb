@@ -13,10 +13,10 @@
 
 #define PLATFORM_Y_MIN 12
 #define PLATFORM_Y_MAX 19
-#define SEGMENTS_PER_ROW 5
+#define SEGMENTS_PER_ROW 4
 #define SEGMENT_WIDTH 5
 #define SEGMENT_HEIGHT 2
-#define TOTAL_BLOCKS 20
+#define TOTAL_BLOCKS 16
 #define MAX_ENEMIES 6
 
 // Level code display settings - 24 character display system
@@ -35,9 +35,7 @@
 #define VAR_LEVEL_CODE_PART_3 2 // Platform patterns 6-8   (3×5 bits = 15 bits)
 #define VAR_LEVEL_CODE_PART_4 3 // Platform patterns 9-11  (3×5 bits = 15 bits)
 #define VAR_LEVEL_CODE_PART_5 4 // Platform patterns 12-14 (3×5 bits = 15 bits)
-#define VAR_LEVEL_CODE_PART_6 5 // Platform patterns 15-17 (3×5 bits = 15 bits)
-#define VAR_LEVEL_CODE_PART_7 6 // Platform patterns 18-19 + player column (2×5 + 5 bits = 15 bits)
-#define VAR_LEVEL_CODE_PART_8 7 // Enemy data (all compressed enemy info)
+#define VAR_LEVEL_CODE_PART_6 5 // Platform pattern 15 (1×5 bits = 5 bits)
 
 // ============================================================================
 // PLATFORM PATTERN DATA - Core pattern matching system
@@ -159,29 +157,23 @@ void get_display_position(UBYTE char_index, UBYTE *x, UBYTE *y) BANKED
     UBYTE display_x = LEVEL_CODE_START_X;
     UBYTE display_y = LEVEL_CODE_START_Y;
 
-    for (UBYTE i = 0; i < char_index; i++)
+    // Layout: 6 characters per row, 4 rows total
+    // Row 0: 0000 0000 0000 (platform patterns 0-11)
+    // Row 1: 0000 0000 0000 (platform patterns 12-15, enemy data 16-19)
+    // Row 2: 0000 0000 0000 (enemy data 20-23)
+    // Row 3: [empty for future use]
+
+    UBYTE row = char_index / 6;
+    UBYTE col = char_index % 6;
+
+    display_x += col;
+    // Add spacing every 4 characters for readability
+    if (col >= 4)
     {
-        if (i > 0 && i % 4 == 0)
-        {
-            display_x++; // Space between groups
-        }
-        if (display_x >= 19)
-        {
-            display_x = 5;
-            display_y++;
-        }
-        display_x++;
+        display_x += 1; // Extra space before last 2 chars
     }
 
-    if (char_index > 0 && char_index % 4 == 0)
-    {
-        display_x++; // Space between groups
-    }
-    if (display_x >= 19)
-    {
-        display_x = 5;
-        display_y++;
-    }
+    display_y += row;
 
     *x = display_x;
     *y = display_y;
@@ -198,10 +190,10 @@ void detect_level_code_changes(void) BANKED
             mark_display_position_for_update(i);
         }
 
-        // Cache initial encoded values
+        // Cache initial encoded enemy values
         current_encoded_enemy_data[0] = encode_enemy_positions();
         current_encoded_enemy_data[1] = encode_enemy_details_1();
-        current_encoded_enemy_data[2] = encode_enemy_directions();
+        current_encoded_enemy_data[2] = encode_enemy_details_2();
         current_encoded_enemy_data[3] = current_level_code.player_column;
 
         // Copy to previous cache
@@ -214,7 +206,7 @@ void detect_level_code_changes(void) BANKED
     }
     else
     {
-        // Check platform patterns (positions 0-19)
+        // Check platform patterns (positions 0-15)
         for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
         {
             if (current_level_code.platform_patterns[i] != previous_level_code.platform_patterns[i])
@@ -226,16 +218,31 @@ void detect_level_code_changes(void) BANKED
         // Update current encoded enemy data
         current_encoded_enemy_data[0] = encode_enemy_positions();
         current_encoded_enemy_data[1] = encode_enemy_details_1();
-        current_encoded_enemy_data[2] = encode_enemy_directions();
+        current_encoded_enemy_data[2] = encode_enemy_details_2();
         current_encoded_enemy_data[3] = current_level_code.player_column;
 
-        // Compare with previous encoded values
+        // Compare with previous encoded values (positions 16-19)
         for (UBYTE i = 0; i < 4; i++)
         {
             if (current_encoded_enemy_data[i] != previous_encoded_enemy_data[i])
             {
                 mark_display_position_for_update(TOTAL_BLOCKS + i);
             }
+        }
+
+        // Check individual enemy positions for positions 20-22
+        for (UBYTE i = 3; i < 6; i++)
+        {
+            if (current_level_code.enemy_positions[i] != previous_level_code.enemy_positions[i])
+            {
+                mark_display_position_for_update(TOTAL_BLOCKS + 4 + (i - 3)); // Positions 20-22
+            }
+        }
+
+        // Check enemy directions for position 23
+        if (current_level_code.enemy_directions != previous_level_code.enemy_directions)
+        {
+            mark_display_position_for_update(23);
         }
 
         // Update previous cache
@@ -260,29 +267,39 @@ void display_selective_level_code(void) BANKED
 
     // Only update characters that have changed
     UBYTE display_x, display_y;
-    UBYTE total_chars = 0;
 
-    // Display 20 platform patterns
+    // Display 16 platform patterns (positions 0-15)
     for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
-        if (display_position_needs_update(total_chars))
+        if (display_position_needs_update(i))
         {
-            get_display_position(total_chars, &display_x, &display_y);
+            get_display_position(i, &display_x, &display_y);
             display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
         }
-        total_chars++;
     }
 
-    // Use cached encoded enemy data (already calculated in detect_level_code_changes)
-    for (UBYTE i = 0; i < 4; i++)
+    // Display 8 characters of enemy/player data (positions 16-23)
+    UBYTE enemy_data[] = {
+        encode_enemy_positions(),         // Position 16: Enemy count + position checksum
+        encode_enemy_details_1(),         // Position 17: Compressed positions for first 3 enemies
+        encode_enemy_details_2(),         // Position 18: Enemy directions + type bits
+        current_level_code.player_column, // Position 19: Player starting column
+        // Additional encoded data for positions 20-23
+        (current_level_code.enemy_positions[3] != 255) ? current_level_code.enemy_positions[3] : 0, // Position 20
+        (current_level_code.enemy_positions[4] != 255) ? current_level_code.enemy_positions[4] : 0, // Position 21
+        (current_level_code.enemy_positions[5] != 255) ? current_level_code.enemy_positions[5] : 0, // Position 22
+        (current_level_code.enemy_directions >> 3) & 0x07                                           // Position 23: Remaining direction bits
+    };
+
+    for (UBYTE i = 0; i < 8; i++)
     {
-        if (display_position_needs_update(total_chars))
+        UBYTE pos = TOTAL_BLOCKS + i; // Positions 16-23
+        if (display_position_needs_update(pos))
         {
-            get_display_position(total_chars, &display_x, &display_y);
-            UBYTE display_char = get_extended_display_char(current_encoded_enemy_data[i]);
+            get_display_position(pos, &display_x, &display_y);
+            UBYTE display_char = get_extended_display_char(enemy_data[i]);
             display_char_at_position(display_char, display_x, display_y);
         }
-        total_chars++;
     }
 
     // Clear update flags after updating
@@ -297,29 +314,39 @@ void display_selective_level_code_fast(void) BANKED
 
     // Only update characters that have changed
     UBYTE display_x, display_y;
-    UBYTE total_chars = 0;
 
-    // Display 20 platform patterns
+    // Display 16 platform patterns (positions 0-15)
     for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
-        if (display_position_needs_update(total_chars))
+        if (display_position_needs_update(i))
         {
-            get_display_position(total_chars, &display_x, &display_y);
+            get_display_position(i, &display_x, &display_y);
             display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
         }
-        total_chars++;
     }
 
-    // Use cached encoded enemy data (already calculated in detect_level_code_changes)
-    for (UBYTE i = 0; i < 4; i++)
+    // Display 8 characters of enemy/player data (positions 16-23)
+    UBYTE enemy_data[] = {
+        encode_enemy_positions(),         // Position 16: Enemy count + position checksum
+        encode_enemy_details_1(),         // Position 17: Compressed positions for first 3 enemies
+        encode_enemy_details_2(),         // Position 18: Enemy directions + type bits
+        current_level_code.player_column, // Position 19: Player starting column
+        // Additional encoded data for positions 20-23
+        (current_level_code.enemy_positions[3] != 255) ? current_level_code.enemy_positions[3] : 0, // Position 20
+        (current_level_code.enemy_positions[4] != 255) ? current_level_code.enemy_positions[4] : 0, // Position 21
+        (current_level_code.enemy_positions[5] != 255) ? current_level_code.enemy_positions[5] : 0, // Position 22
+        (current_level_code.enemy_directions >> 3) & 0x07                                           // Position 23: Remaining direction bits
+    };
+
+    for (UBYTE i = 0; i < 8; i++)
     {
-        if (display_position_needs_update(total_chars))
+        UBYTE pos = TOTAL_BLOCKS + i; // Positions 16-23
+        if (display_position_needs_update(pos))
         {
-            get_display_position(total_chars, &display_x, &display_y);
-            UBYTE display_char = get_extended_display_char(current_encoded_enemy_data[i]);
+            get_display_position(pos, &display_x, &display_y);
+            UBYTE display_char = get_extended_display_char(enemy_data[i]);
             display_char_at_position(display_char, display_x, display_y);
         }
-        total_chars++;
     }
 
     // Clear update flags after updating
@@ -332,49 +359,34 @@ void force_complete_level_code_display(void) BANKED
     update_complete_level_code();
     clear_level_code_display();
 
-    UBYTE display_x = LEVEL_CODE_START_X;
-    UBYTE display_y = LEVEL_CODE_START_Y;
-    UBYTE total_chars = 0;
-
-    // Display 20 platform patterns
+    // Display 16 platform patterns (positions 0-15)
     for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
-        if (total_chars > 0 && total_chars % 4 == 0)
-        {
-            display_x++; // Space between groups
-        }
-        if (display_x >= 19)
-        {
-            display_x = 5;
-            display_y++;
-        }
-
+        UBYTE display_x, display_y;
+        get_display_position(i, &display_x, &display_y);
         display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
-        display_x++;
-        total_chars++;
     }
 
-    // Add comprehensive enemy data (4 characters total)
+    // Display 8 characters of enemy/player data (positions 16-23)
     UBYTE enemy_data[] = {
-        encode_enemy_positions(),        // Enemy count + position checksum
-        encode_enemy_details_1(),        // Compressed positions for first 3 enemies
-        encode_enemy_directions(),       // Direction + type bits
-        current_level_code.player_column // Player starting position
+        encode_enemy_positions(),         // Position 16: Enemy count + position checksum
+        encode_enemy_details_1(),         // Position 17: Compressed positions for first 3 enemies
+        encode_enemy_details_2(),         // Position 18: Enemy directions + type bits
+        current_level_code.player_column, // Position 19: Player starting column
+        // Additional encoded data for positions 20-23
+        (current_level_code.enemy_positions[3] != 255) ? current_level_code.enemy_positions[3] : 0, // Position 20
+        (current_level_code.enemy_positions[4] != 255) ? current_level_code.enemy_positions[4] : 0, // Position 21
+        (current_level_code.enemy_positions[5] != 255) ? current_level_code.enemy_positions[5] : 0, // Position 22
+        (current_level_code.enemy_directions >> 3) & 0x07                                           // Position 23: Remaining direction bits
     };
 
-    for (UBYTE i = 0; i < 4; i++)
+    for (UBYTE i = 0; i < 8; i++)
     {
-        if (total_chars > 0 && total_chars % 4 == 0)
-            display_x++;
-        if (display_x >= 19)
-        {
-            display_x = 5;
-            display_y++;
-        }
+        UBYTE pos = TOTAL_BLOCKS + i; // Positions 16-23
+        UBYTE display_x, display_y;
+        get_display_position(pos, &display_x, &display_y);
         UBYTE display_char = get_extended_display_char(enemy_data[i]);
         display_char_at_position(display_char, display_x, display_y);
-        display_x++;
-        total_chars++;
     }
 
     // Initialize the cache after complete redraw
@@ -470,9 +482,9 @@ void extract_platform_data(void) BANKED
 {
     for (UBYTE block_y = 0; block_y < 4; block_y++)
     {
-        for (UBYTE block_x = 0; block_x < 5; block_x++)
+        for (UBYTE block_x = 0; block_x < 4; block_x++)
         {
-            UBYTE block_index = block_y * 5 + block_x;
+            UBYTE block_index = block_y * 4 + block_x;
             UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
             UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
@@ -678,7 +690,7 @@ void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED
 
 void clear_level_code_display(void) BANKED
 {
-    for (UBYTE y = 6; y < 8; y++)
+    for (UBYTE y = 6; y < 10; y++) // Expanded to 4 rows
     {
         for (UBYTE x = 5; x < 20; x++)
         {
@@ -781,7 +793,7 @@ void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED
 {
     // Check if any variables contain non-zero data
     UBYTE has_data = 0;
-    for (UBYTE i = VAR_LEVEL_CODE_PART_1; i <= VAR_LEVEL_CODE_PART_8; i++)
+    for (UBYTE i = VAR_LEVEL_CODE_PART_1; i <= VAR_LEVEL_CODE_PART_6; i++)
     {
         if (script_memory[i] != 0)
         {
@@ -1044,22 +1056,8 @@ void save_level_code_to_variables(void) BANKED
     // Part 5: Platform patterns 12-14
     UWORD part5 = (current_level_code.platform_patterns[12] << 10) |
                   (current_level_code.platform_patterns[13] << 5) |
-                  current_level_code.platform_patterns[14];
-
-    // Part 6: Platform patterns 15-17
-    UWORD part6 = (current_level_code.platform_patterns[15] << 10) |
-                  (current_level_code.platform_patterns[16] << 5) |
-                  current_level_code.platform_patterns[17];
-
-    // Part 7: Platform patterns 18-19 + player column (2×5 + 5 = 15 bits)
-    UWORD part7 = (current_level_code.platform_patterns[18] << 10) |
-                  (current_level_code.platform_patterns[19] << 5) |
-                  current_level_code.player_column;
-
-    // Part 8: Enemy data (pack multiple values)
-    // Use the existing compact encoding functions to fit enemy data in 16 bits
-    UWORD part8 = (encode_enemy_positions() << 8) |
-                  (encode_enemy_directions() & 0xFF);
+                  current_level_code.platform_patterns[14]; // Part 6: Platform pattern 15 (only 1 pattern, stored in lower 5 bits)
+    UWORD part6 = current_level_code.platform_patterns[15];
 
     // Store to variables
     script_memory[VAR_LEVEL_CODE_PART_1] = part1;
@@ -1068,8 +1066,6 @@ void save_level_code_to_variables(void) BANKED
     script_memory[VAR_LEVEL_CODE_PART_4] = part4;
     script_memory[VAR_LEVEL_CODE_PART_5] = part5;
     script_memory[VAR_LEVEL_CODE_PART_6] = part6;
-    script_memory[VAR_LEVEL_CODE_PART_7] = part7;
-    script_memory[VAR_LEVEL_CODE_PART_8] = part8;
 }
 
 // Load level code from GB Studio variables (COMPLETE - No data loss!)
@@ -1084,8 +1080,6 @@ void load_level_code_from_variables(void) BANKED
     UWORD part4 = script_memory[VAR_LEVEL_CODE_PART_4];
     UWORD part5 = script_memory[VAR_LEVEL_CODE_PART_5];
     UWORD part6 = script_memory[VAR_LEVEL_CODE_PART_6];
-    UWORD part7 = script_memory[VAR_LEVEL_CODE_PART_7];
-    UWORD part8 = script_memory[VAR_LEVEL_CODE_PART_8];
 
     // Unpack all platform patterns (each uses 5 bits, mask with 0x1F = 31)
     current_level_code.platform_patterns[0] = (part1 >> 10) & 0x1F;
@@ -1108,17 +1102,7 @@ void load_level_code_from_variables(void) BANKED
     current_level_code.platform_patterns[13] = (part5 >> 5) & 0x1F;
     current_level_code.platform_patterns[14] = part5 & 0x1F;
 
-    current_level_code.platform_patterns[15] = (part6 >> 10) & 0x1F;
-    current_level_code.platform_patterns[16] = (part6 >> 5) & 0x1F;
-    current_level_code.platform_patterns[17] = part6 & 0x1F;
-
-    current_level_code.platform_patterns[18] = (part7 >> 10) & 0x1F;
-    current_level_code.platform_patterns[19] = (part7 >> 5) & 0x1F;
-    current_level_code.player_column = part7 & 0x1F;
-
-    // Enemy data is stored compressed - this preserves the encoding
-    // but you'd need decode functions for full enemy position restoration
-    // The SRAM version preserves full enemy precision
+    current_level_code.platform_patterns[15] = part6 & 0x1F;
 }
 
 // ============================================================================

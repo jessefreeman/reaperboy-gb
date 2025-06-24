@@ -710,20 +710,23 @@ void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED
 
 // Update level code based on what was painted at a specific position
 void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
-{ // For player painting (row 11), only update enemy/player data
+{
+    // For player painting (row 11), update enemy/player data
     if (y == 11)
     {
         // Extract player data
         extract_player_data();
 
-        // Mark enemy data positions for update (positions 20-23)
-        for (UBYTE i = 20; i < 24; i++)
+        // Mark enemy/player data positions for update (positions 16-23)
+        for (UBYTE i = 16; i < 24; i++)
         {
             mark_display_position_for_update(i);
         }
         display_selective_level_code_fast();
         return;
-    } // For enemy operations, only update enemy data
+    }
+
+    // For enemy operations, update enemy data
     UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
     if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R ||
         // Check if this was an enemy operation by looking at context
@@ -733,14 +736,16 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         extract_enemy_data();
         extract_player_data(); // Player data might have changed too
 
-        // Mark enemy data positions for update (positions 20-23)
-        for (UBYTE i = 20; i < 24; i++)
+        // Mark enemy/player data positions for update (positions 16-23)
+        for (UBYTE i = 16; i < 24; i++)
         {
             mark_display_position_for_update(i);
         }
         display_selective_level_code_fast();
         return;
-    } // For platform operations, update affected zones
+    }
+
+    // For platform operations, update affected zones
     if (y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX &&
         x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
         is_valid_platform_row(y))

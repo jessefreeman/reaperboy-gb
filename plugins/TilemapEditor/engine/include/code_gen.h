@@ -8,13 +8,13 @@
 // CORE CONSTANTS AND TYPE DEFINITIONS
 // ============================================================================
 
-#define TOTAL_BLOCKS 20
+#define TOTAL_BLOCKS 16
 #define MAX_ENEMIES 6
 
 // Level code structure - Single source of truth
 typedef struct
 {
-    UBYTE platform_patterns[TOTAL_BLOCKS]; // 20 platform patterns
+    UBYTE platform_patterns[TOTAL_BLOCKS]; // 16 platform patterns
     UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255=empty)
     UBYTE enemy_directions;                // Packed direction bits (6 bits)
     UBYTE enemy_types;                     // Packed enemy type bits (6 bits: 0=walker, 1=jumper)
