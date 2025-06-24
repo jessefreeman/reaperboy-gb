@@ -1,0 +1,60 @@
+{
+	"version": "4.2.0-e7",
+	"fields": [
+		{
+			"key": "PLATFORM_MAX_LENGTH",
+			"label": "Maximum Platform Length (tiles)",
+			"group": "TilemapEditor",
+			"type": "slider",
+			"cType": "define",
+			"defaultValue": 8,
+			"min": 2,
+			"max": 20,
+			"description": "Maximum length for platform segments in tiles"
+		},
+		{
+			"key": "MAX_ENEMIES",
+			"label": "Maximum Enemies Per Level",
+			"group": "TilemapEditor",
+			"type": "slider",
+			"cType": "define",
+			"defaultValue": 6,
+			"min": 1,
+			"max": 10,
+			"description": "Maximum number of enemies that can be placed in a level"
+		},
+		{
+			"key": "LEVEL_CODE_DISPLAY_LENGTH",
+			"label": "Level Code Display Length",
+			"group": "TilemapEditor",
+			"type": "slider",
+			"cType": "define",
+			"defaultValue": 24,
+			"min": 16,
+			"max": 32,
+			"description": "Number of characters to display in the level code"
+		},
+		{
+			"key": "PLATFORM_Y_MIN",
+			"label": "Platform Y Start Row",
+			"group": "TilemapEditor",
+			"type": "slider",
+			"cType": "define",
+			"defaultValue": 12,
+			"min": 8,
+			"max": 20,
+			"description": "Starting Y coordinate for platform placement area"
+		},
+		{
+			"key": "PLATFORM_Y_MAX",
+			"label": "Platform Y End Row",
+			"group": "TilemapEditor",
+			"type": "slider",
+			"cType": "define",
+			"defaultValue": 19,
+			"min": 12,
+			"max": 24,
+			"description": "Ending Y coordinate for platform placement area"
+		}
+	]
+}

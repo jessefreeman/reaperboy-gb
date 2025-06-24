@@ -1,6 +1,6 @@
 export const id = "EVENT_DELETE_META_TILE";
 export const name = "Delete tile";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = () => {
   return `Delete tile`;

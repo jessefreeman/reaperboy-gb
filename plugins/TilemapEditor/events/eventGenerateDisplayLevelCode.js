@@ -1,6 +1,6 @@
 export const id = "EVENT_GENERATE_DISPLAY_LEVEL_CODE";
 export const name = "Generate & Display Level Code";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = () => {
   return `Generate & Display Level Code`;

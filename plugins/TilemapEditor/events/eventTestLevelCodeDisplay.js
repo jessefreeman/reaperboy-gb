@@ -1,6 +1,6 @@
 export const id = "EVENT_TEST_LEVEL_CODE_DISPLAY";
 export const name = "Test Level Code Display";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = () => {
   return `Test Level Code Display`;

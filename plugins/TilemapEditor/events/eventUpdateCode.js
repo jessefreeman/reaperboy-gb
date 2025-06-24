@@ -1,6 +1,6 @@
 export const id = "EVENT_UPDATE_CODE";
 export const name = "Update Code Display";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const fields = [];
 

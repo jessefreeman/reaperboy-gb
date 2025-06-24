@@ -1,6 +1,6 @@
 export const id = "EVENT_GET_BRUSH_PREVIEW_TILE";
 export const name = "Get Brush Preview Tile";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = (fetchArg) => {
   return `Get brush preview tile`;

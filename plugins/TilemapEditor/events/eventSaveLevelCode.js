@@ -1,6 +1,6 @@
 export const id = "EVENT_SAVE_LEVEL_CODE";
 export const name = "Save Level Code";
-export const groups = ["MetaTile8Plugin"];
+export const groups = ["TilemapEditor"];
 
 export const fields = [
   {

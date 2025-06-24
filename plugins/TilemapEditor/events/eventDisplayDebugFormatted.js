@@ -1,6 +1,6 @@
 export const id = "EVENT_DISPLAY_DEBUG_FORMATTED";
 export const name = "Display Debug Patterns (Formatted)";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = () => {
   return `Display Debug Patterns (Formatted)`;

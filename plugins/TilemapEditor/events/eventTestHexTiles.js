@@ -1,6 +1,6 @@
 export const id = "EVENT_TEST_HEX_TILES";
 export const name = "Test Hex Tiles";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = () => {
   return `Test Hex Tiles`;

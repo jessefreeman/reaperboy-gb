@@ -1,6 +1,6 @@
 export const id = "EVENT_SETUP_MAP";
 export const name = "Setup Map Actors";
-export const groups = ["Map"];
+export const groups = ["TilemapEditor"];
 
 export const fields = [
   {

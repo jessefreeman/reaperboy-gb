@@ -1,6 +1,6 @@
 export const id = "EVENT_DRAW_SEGMENTS";
 export const name = "Draw Segment IDs";
-export const groups = ["Tile Editor"];
+export const groups = ["TilemapEditor"];
 
 export const autoLabel = () => {
   return `Draw Segments`;

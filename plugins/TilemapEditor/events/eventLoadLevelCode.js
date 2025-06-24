@@ -1,6 +1,6 @@
 export const id = "EVENT_LOAD_LEVEL_CODE";
 export const name = "Load Level Code";
-export const groups = ["MetaTile8Plugin"];
+export const groups = ["TilemapEditor"];
 
 export const fields = [
   {
