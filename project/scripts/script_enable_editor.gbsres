@@ -33,10 +33,18 @@
             "id": "cd840797-7b68-42bb-8e1e-743c3e406657"
           },
           {
+            "command": "EVENT_ENABLE_EDITOR",
+            "args": {
+              "__collapse": true
+            },
+            "id": "a6ca7bb2-55d8-443c-aa74-27dce52018eb"
+          },
+          {
             "command": "EVENT_ACTOR_DEACTIVATE",
             "args": {
               "actorId": "$self$",
-              "__collapse": false
+              "__collapse": false,
+              "__comment": true
             },
             "id": "e6e8c584-80d3-4da0-bad4-5426c6744fa3"
           },

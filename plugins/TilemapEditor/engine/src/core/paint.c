@@ -18,8 +18,11 @@ void display_selective_level_code_fast(void) BANKED;
 
 // actor_t is already defined in gbs_types.h (included via meta_tiles.h)
 
-#define DIR_RIGHT 0
-#define DIR_LEFT 1
+// Use GB Studio standard direction constants
+#define DIRECTION_DOWN 0
+#define DIRECTION_RIGHT 1
+#define DIRECTION_UP 2
+#define DIRECTION_LEFT 3
 
 // External actor array from GB Studio engine
 extern actor_t actors[];
@@ -48,6 +51,15 @@ void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 
 // Convert subpixels
 #define TO_FP(n) ((INT16)((n) << 4))
+
+// ============================================================================
+// PAINT ACTOR STORAGE - Global actor IDs for paint operations
+// ============================================================================
+
+UBYTE paint_player_id = 0;
+UBYTE paint_exit_id = 1;
+UBYTE paint_enemy_ids[6] = {2, 3, 4, 5, 6, 7};
+UBYTE paint_enemy_slots_used[6] = {0, 0, 0, 0, 0, 0}; // Track which slots are in use
 
 // ============================================================================
 // VALIDATION HELPERS - Streamlined logic
@@ -364,6 +376,26 @@ void rebuild_platform_row(UBYTE y) BANKED
 // ENTITY MANAGEMENT - Clear and consistent
 // ============================================================================
 
+void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED
+{
+    actor_t *actor = &actors[actor_id];
+    actor->pos.x = TO_FP(x * 8);
+    actor->pos.y = TO_FP(y * 8);
+    activate_actor(actor);
+}
+
+UBYTE find_next_available_enemy_slot(void) BANKED
+{
+    for (UBYTE i = 0; i < 6; i++)
+    {
+        if (!paint_enemy_slots_used[i])
+        {
+            return i;
+        }
+    }
+    return 255; // No slots available
+}
+
 void clear_existing_player_on_row_11(void) BANKED
 {
     for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
@@ -383,6 +415,25 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
         if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
         {
             replace_meta_tile(x, check_y, TILE_EMPTY, 1);
+
+            // Also deactivate the corresponding actor
+            for (UBYTE i = 0; i < 6; i++)
+            {
+                if (paint_enemy_slots_used[i])
+                {
+                    actor_t *enemy = &actors[paint_enemy_ids[i]];
+                    // Convert actor position from fixed point to tile coordinates
+                    UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+                    UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+                    if (actor_tile_x == x && actor_tile_y == check_y)
+                    {
+                        deactivate_actor(enemy);
+                        paint_enemy_slots_used[i] = 0; // Mark slot as available
+                        break;
+                    }
+                }
+            }
         }
     }
 }
@@ -398,6 +449,10 @@ void paint_player(UBYTE x, UBYTE y) BANKED
 
     clear_existing_player_on_row_11();
     replace_meta_tile(x, y, TILE_PLAYER, 1);
+
+    // Move player actor to this position
+    move_actor_to_tile(paint_player_id, x, y);
+
     update_level_code_for_paint(x, y); // Smart update
 }
 
@@ -407,6 +462,16 @@ void paint_enemy_right(UBYTE x, UBYTE y) BANKED
         return;
 
     replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
+
+    // Find available enemy slot and move actor to this position
+    UBYTE enemy_slot = find_next_available_enemy_slot();
+    if (enemy_slot != 255)
+    {
+        move_actor_to_tile(paint_enemy_ids[enemy_slot], x, y);
+        actor_set_dir(&actors[paint_enemy_ids[enemy_slot]], DIRECTION_RIGHT, TRUE);
+        paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
+    }
+
     update_level_code_for_paint(x, y); // Smart update
 }
 
@@ -419,12 +484,37 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
 
     if (current_tile_type == BRUSH_TILE_ENEMY_R)
     {
-        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1); // Find the enemy actor at this position and change direction
+        for (UBYTE i = 0; i < 6; i++)
+        {
+            if (paint_enemy_slots_used[i])
+            {
+                actor_t *enemy = &actors[paint_enemy_ids[i]];
+                // Convert actor position from fixed point to tile coordinates
+                UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+                UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+                if (actor_tile_x == x && actor_tile_y == y)
+                {
+                    actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
+                    break;
+                }
+            }
+        }
+
         update_level_code_for_paint(x, y);
     }
     else if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
     {
-        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1); // Find available enemy slot and move actor to this position
+        UBYTE enemy_slot = find_next_available_enemy_slot();
+        if (enemy_slot != 255)
+        {
+            move_actor_to_tile(paint_enemy_ids[enemy_slot], x, y);
+            actor_set_dir(&actors[paint_enemy_ids[enemy_slot]], DIRECTION_LEFT, TRUE);
+            paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
+        }
+
         update_level_code_for_paint(x, y);
     }
 }
@@ -438,7 +528,25 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
 
     if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
     {
-        replace_meta_tile(x, y, TILE_EMPTY, 1);
+        replace_meta_tile(x, y, TILE_EMPTY, 1); // Find and deactivate the enemy actor at this position
+        for (UBYTE i = 0; i < 6; i++)
+        {
+            if (paint_enemy_slots_used[i])
+            {
+                actor_t *enemy = &actors[paint_enemy_ids[i]];
+                // Convert actor position from fixed point to tile coordinates
+                UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+                UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+                if (actor_tile_x == x && actor_tile_y == y)
+                {
+                    deactivate_actor(enemy);
+                    paint_enemy_slots_used[i] = 0; // Mark slot as available
+                    break;
+                }
+            }
+        }
+
         update_level_code_for_paint(x, y); // Smart update
     }
 }
@@ -634,7 +742,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
                 INT16 fx = (tt == BRUSH_TILE_ENEMY_L) ? (xx * 8 - 8) : (xx * 8);
                 e->pos.x = TO_FP(fx);
                 e->pos.y = TO_FP(yy * 8);
-                actor_set_dir(e, tt == BRUSH_TILE_ENEMY_R ? DIR_RIGHT : DIR_LEFT, TRUE);
+                actor_set_dir(e, tt == BRUSH_TILE_ENEMY_R ? DIRECTION_RIGHT : DIRECTION_LEFT, TRUE);
                 activate_actor(e);
                 replace_meta_tile(xx, yy, TILE_EMPTY, 1);
                 enemy_count++;
@@ -655,6 +763,24 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
 // VM WRAPPER FUNCTIONS - Essential only
 // ============================================================================
 
+void vm_setup_paint_actors(SCRIPT_CTX *THIS) BANKED
+{
+    paint_player_id = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    paint_exit_id = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+    paint_enemy_ids[0] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG2);
+    paint_enemy_ids[1] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG3);
+    paint_enemy_ids[2] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG4);
+    paint_enemy_ids[3] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG5);
+    paint_enemy_ids[4] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG6);
+    paint_enemy_ids[5] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG7);
+
+    // Reset slot tracking
+    for (UBYTE i = 0; i < 6; i++)
+    {
+        paint_enemy_slots_used[i] = 0;
+    }
+}
+
 void vm_paint(SCRIPT_CTX *THIS) BANKED
 {
     UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
@@ -667,6 +793,30 @@ void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED
     UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
     UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
     script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = get_brush_tile_state(x, y);
+}
+
+void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
+{
+    // Only deactivate the specific actors that the tilemap editor will be using
+    // This prevents disrupting other actors in the scene
+
+    // Deactivate player actor
+    deactivate_actor(&actors[paint_player_id]);
+
+    // Deactivate exit actor
+    deactivate_actor(&actors[paint_exit_id]);
+
+    // Deactivate enemy actors
+    for (UBYTE i = 0; i < 6; i++)
+    {
+        deactivate_actor(&actors[paint_enemy_ids[i]]);
+    }
+
+    // Reset paint actor slot tracking
+    for (UBYTE i = 0; i < 6; i++)
+    {
+        paint_enemy_slots_used[i] = 0;
+    }
 }
 
 // ============================================================================

@@ -43,6 +43,8 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED;
 // ENTITY MANAGEMENT
 // ============================================================================
 
+void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
+UBYTE find_next_available_enemy_slot(void) BANKED;
 void paint_player(UBYTE x, UBYTE y) BANKED;
 void paint_enemy_right(UBYTE x, UBYTE y) BANKED;
 void paint_enemy_left(UBYTE x, UBYTE y) BANKED;
@@ -75,6 +77,8 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED;
 // VM WRAPPER FUNCTIONS
 // ============================================================================
 
+void vm_setup_paint_actors(SCRIPT_CTX *THIS) BANKED;
+void vm_enable_editor(SCRIPT_CTX *THIS) BANKED;
 void vm_paint(SCRIPT_CTX *THIS) BANKED;
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED;
 void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED;

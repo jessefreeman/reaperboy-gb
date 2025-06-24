@@ -176,7 +176,7 @@
               "actorId": "d5043213-d1dc-4d02-b470-9d13dfa87721",
               "vectorX": "3",
               "vectorY": "4",
-              "__collapse": true,
+              "__collapse": false,
               "__label": "Setup selector x,y position"
             },
             "id": "cc3bd092-dd9a-4df5-b16c-b592ab981036"
@@ -864,10 +864,24 @@
       "command": "EVENT_GROUP",
       "args": {
         "__label": "Setup Level",
-        "__collapse": true
+        "__collapse": false
       },
       "children": {
         "true": [
+          {
+            "command": "EVENT_SETUP_PAINT_ACTORS",
+            "args": {
+              "player": "0",
+              "exit": "43c0c526-187a-4690-a9d2-cb7f3fc63a36",
+              "e1": "4a0c3d10-9943-4a88-9535-c249a0654694",
+              "e2": "c59ebace-c2f4-40b7-ac6d-a2a07bd4b9b7",
+              "e3": "2bcab10e-5f93-49ab-b30a-d0d4b933bffe",
+              "e4": "fd69d58d-0d55-4ad8-b70f-7ea48d2d538c",
+              "e5": "f366f87d-bfcb-43e9-8e5f-46641d48470d",
+              "e6": "c05fa5da-0af0-4902-a27b-48e1bed96229"
+            },
+            "id": "1f5035c8-f261-41cb-99d9-ab5f8b7e5d0c"
+          },
           {
             "command": "EVENT_SETUP_MAP",
             "args": {
@@ -880,7 +894,7 @@
               "e5": "f366f87d-bfcb-43e9-8e5f-46641d48470d",
               "e6": "c05fa5da-0af0-4902-a27b-48e1bed96229",
               "__comment": false,
-              "__collapse": true,
+              "__collapse": false,
               "countVar": "12",
               "output": "12"
             },
@@ -890,7 +904,7 @@
             "command": "EVENT_GROUP",
             "args": {
               "__label": "Star Setup",
-              "__collapse": false
+              "__collapse": true
             },
             "children": {
               "true": [
