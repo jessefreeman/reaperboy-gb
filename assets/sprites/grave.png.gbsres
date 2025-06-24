@@ -1,0 +1,100 @@
+{
+  "_resourceType": "sprite",
+  "id": "163bf5c0-5d1a-4b37-b1aa-79a8db38591b",
+  "name": "grave",
+  "symbol": "sprite_grave",
+  "states": [
+    {
+      "id": "ee96fd5e-58f4-4148-8fca-ed28f2dfafd4",
+      "name": "",
+      "animationType": "fixed",
+      "flipLeft": false,
+      "animations": [
+        {
+          "id": "e40c4434-b723-47ef-a721-069094d72a7b",
+          "frames": [
+            {
+              "id": "8f2ab08d-3d5c-4519-a8e0-30ac6deb455b",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "a6c3a101-5098-49dc-bb8e-be24d51a20b1",
+          "frames": [
+            {
+              "id": "ad88c422-521b-4d46-a52f-52d1ff3eda0d",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "417c68a7-dbbe-4712-b47e-0b1f3fce2919",
+          "frames": [
+            {
+              "id": "53a84218-6680-481a-9a4c-69ac8f9c7bff",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "b57df4eb-1ed1-4af0-8f5d-643c4b6c02b6",
+          "frames": [
+            {
+              "id": "75931c60-2e94-4715-8854-d2e14c9e7387",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "19026295-86cc-4b87-b8d3-5c164422d40a",
+          "frames": [
+            {
+              "id": "1074b1d0-3db6-4ba5-a6cc-b39c7e72cdf1",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "66cca86f-8cda-429c-84f4-f1b06bc6eeee",
+          "frames": [
+            {
+              "id": "3079ca41-d317-482b-88bc-f96103146def",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "f8e0ce21-2b87-4ab4-8846-ac7ba985cad3",
+          "frames": [
+            {
+              "id": "163d8f83-e678-4307-a742-9717c54efa00",
+              "tiles": []
+            }
+          ]
+        },
+        {
+          "id": "cabe4e3d-1dc4-4156-9539-52c9e2e2d29e",
+          "frames": [
+            {
+              "id": "3eaf5d2c-674f-4876-b0bd-a718a80bd119",
+              "tiles": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "numTiles": 0,
+  "canvasWidth": 16,
+  "canvasHeight": 16,
+  "boundsX": 0,
+  "boundsY": 0,
+  "boundsWidth": 16,
+  "boundsHeight": 16,
+  "animSpeed": 15,
+  "filename": "grave.png",
+  "width": 8,
+  "height": 16,
+  "checksum": "26f38f06278b0f6310b88f6b27367b3573ff16a4"
+}

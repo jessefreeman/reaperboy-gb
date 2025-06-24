@@ -157,22 +157,19 @@ void get_display_position(UBYTE char_index, UBYTE *x, UBYTE *y) BANKED
     UBYTE display_x = LEVEL_CODE_START_X;
     UBYTE display_y = LEVEL_CODE_START_Y;
 
-    // Layout: 6 characters per row, 4 rows total
-    // Row 0: 0000 0000 0000 (platform patterns 0-11)
-    // Row 1: 0000 0000 0000 (platform patterns 12-15, enemy data 16-19)
-    // Row 2: 0000 0000 0000 (enemy data 20-23)
-    // Row 3: [empty for future use]
+    // Layout: 3 blocks of 4 characters per row, with spaces between blocks
+    // Row 0: 0000 0000 0000 (characters 0-11)
+    // Row 1: 0000 0000 0000 (characters 12-23)
+    // Display format: "0000 0000 0000" per row
 
-    UBYTE row = char_index / 6;
-    UBYTE col = char_index % 6;
+    UBYTE row = char_index / 12; // 12 characters per row
+    UBYTE col = char_index % 12; // Position within row
 
-    display_x += col;
-    // Add spacing every 4 characters for readability
-    if (col >= 4)
-    {
-        display_x += 1; // Extra space before last 2 chars
-    }
+    // Calculate column position with spaces between blocks
+    UBYTE block = col / 4;        // Which block (0, 1, or 2)
+    UBYTE pos_in_block = col % 4; // Position within block (0-3)
 
+    display_x += block * 5 + pos_in_block; // 5 = 4 chars + 1 space
     display_y += row;
 
     *x = display_x;
@@ -690,12 +687,12 @@ void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED
 
 void clear_level_code_display(void) BANKED
 {
-    for (UBYTE y = 6; y < 10; y++) // Expanded to 4 rows
+    // Only clear the actual level code character positions, not the spaces/background
+    for (UBYTE i = 0; i < LEVEL_CODE_CHARS_TOTAL; i++)
     {
-        for (UBYTE x = 5; x < 20; x++)
-        {
-            replace_meta_tile(x, y, 0, 1);
-        }
+        UBYTE display_x, display_y;
+        get_display_position(i, &display_x, &display_y);
+        replace_meta_tile(display_x, display_y, 0, 1);
     }
 }
 

@@ -252,7 +252,7 @@
   "boundsHeight": 8,
   "animSpeed": 15,
   "filename": "enemy_walker.png",
-  "width": 32,
+  "width": 64,
   "height": 16,
-  "checksum": "8264b1b251a43745a3e638ffb72b9ea65c710da7"
+  "checksum": "60e917add992f4bde3307f3442130c7cac7ac315"
 }
