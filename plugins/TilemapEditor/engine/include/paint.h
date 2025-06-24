@@ -32,6 +32,7 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED;
 UBYTE is_valid_platform_row(UBYTE y) BANKED;
 UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED;
 UBYTE can_place_platform(UBYTE x, UBYTE y) BANKED;
+UBYTE has_enemy_below_player(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED;
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED;
@@ -43,6 +44,7 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED;
 // ENTITY MANAGEMENT
 // ============================================================================
 
+void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
 void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
 UBYTE find_next_available_enemy_slot(void) BANKED;
 void paint_player(UBYTE x, UBYTE y) BANKED;

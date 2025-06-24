@@ -140,6 +140,20 @@ UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED
     return 0;
 }
 
+UBYTE has_enemy_below_player(UBYTE x, UBYTE y) BANKED
+{
+    // Check all rows below the player position for enemies
+    for (UBYTE check_y = y + 1; check_y <= PLATFORM_Y_MAX; check_y++)
+    {
+        UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, check_y)]);
+        if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 // ============================================================================
 // PLACEMENT VALIDATION - Consolidated logic
 // ============================================================================
@@ -158,6 +172,7 @@ UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
     return (y == 11 &&
             x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
             has_platform_below(x, y) &&
+            !has_enemy_below_player(x, y) && // Can't place player above enemies
             get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) == BRUSH_TILE_EMPTY);
 }
 
@@ -384,6 +399,15 @@ void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED
     activate_actor(actor);
 }
 
+void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED
+{
+    actor_t *actor = &actors[actor_id];
+    // Center the player in the column by offsetting -4 pixels horizontally
+    actor->pos.x = TO_FP(x * 8 - 4);
+    actor->pos.y = TO_FP(y * 8);
+    activate_actor(actor);
+}
+
 UBYTE find_next_available_enemy_slot(void) BANKED
 {
     for (UBYTE i = 0; i < 6; i++)
@@ -448,10 +472,8 @@ void paint_player(UBYTE x, UBYTE y) BANKED
         return;
 
     clear_existing_player_on_row_11();
-    replace_meta_tile(x, y, TILE_PLAYER, 1);
-
-    // Move player actor to this position
-    move_actor_to_tile(paint_player_id, x, y);
+    replace_meta_tile(x, y, TILE_PLAYER, 1); // Move player actor to this position with centering offset
+    move_player_actor_to_tile(paint_player_id, x, y);
 
     update_level_code_for_paint(x, y); // Smart update
 }
