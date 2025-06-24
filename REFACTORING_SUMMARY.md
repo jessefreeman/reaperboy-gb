@@ -221,6 +221,34 @@ make clean && make
 4. **Player Placement**: Test row 11 placement with platform validation
 5. **State Detection**: Verify brush preview states are accurate
 6. **Integration**: Ensure paint operations update level code display
+7. **Platform Length Limits**: Verify 8-tile platform limit is enforced
+
+## Critical Bug Fixes Applied
+
+### Platform Paint Logic Fix (PLATFORM_PAINT_FIX.md)
+
+**Problem**: Users could create visually connected platforms that exceeded the 8-tile limit, causing inconsistency between visual appearance and logical treatment.
+
+**Solution**: Added platform length validation to prevent connections that would exceed the 8-tile maximum:
+
+- **Added Function**: `count_connected_platform_length()` - Calculates total platform length if a tile is placed
+- **Updated Logic**: Platform placement now checks length before allowing connections
+- **Updated Selector**: Preview states now reflect platform length constraints
+
+**Impact**:
+
+- Eliminates visual-logical disconnects
+- Ensures accurate level code generation
+- Provides predictable, user-friendly behavior
+- Maintains perfect consistency between display and internal representation
+
+**Files Modified**:
+
+- `paint.c`: Added length validation logic
+- `paint.h`: Added function declaration
+- `PLATFORM_PAINT_FIX.md`: Detailed documentation
+
+This fix resolves the last major inconsistency in the platform system and ensures robust, lossless level code generation.
 
 ## Conclusion
 
@@ -231,5 +259,8 @@ The refactoring successfully achieved all goals:
 - ✅ Preserved all current features and behavior
 - ✅ Improved performance and reduced memory usage
 - ✅ Created a solid foundation for future development
+- ✅ **Fixed critical platform paint logic bug**
+- ✅ **Ensured visual-logical consistency in platform system**
+- ✅ **Guaranteed lossless level code generation**
 
-The codebase is now modern, efficient, and maintainable while preserving the exact functionality that users expect.
+The codebase is now modern, efficient, and maintainable while preserving the exact functionality that users expect. Most importantly, the platform system now behaves predictably and consistently, with no visual-logical disconnects that could confuse users or corrupt level data.

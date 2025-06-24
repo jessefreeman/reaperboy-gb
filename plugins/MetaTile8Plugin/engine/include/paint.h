@@ -36,6 +36,8 @@ UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED;
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED;
 UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED;
+UBYTE count_connected_platform_length(UBYTE x, UBYTE y) BANKED;
+UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED;
 
 // ============================================================================
 // ENTITY MANAGEMENT

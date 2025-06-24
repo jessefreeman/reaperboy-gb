@@ -51,4 +51,23 @@ void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED;
 void test_enemy_encoding(void) BANKED;
 void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED;
 
+// ============================================================================
+// PERSISTENT STORAGE FUNCTIONS
+// ============================================================================
+
+// Variable-based storage (recommended for simple persistence)
+void save_level_code_to_variables(void) BANKED;
+void load_level_code_from_variables(void) BANKED;
+void vm_save_level_code(SCRIPT_CTX *THIS) BANKED;
+void vm_load_level_code(SCRIPT_CTX *THIS) BANKED;
+void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED;
+
+// SRAM-based storage (for more complex persistence)
+void save_level_code_to_sram(void) BANKED;
+UBYTE load_level_code_from_sram(void) BANKED;
+void vm_save_level_code_sram(SCRIPT_CTX *THIS) BANKED;
+void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED;
+
+// ============================================================================
+
 #endif // CODE_GEN_H
