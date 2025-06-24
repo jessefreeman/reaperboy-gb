@@ -84,19 +84,304 @@ const UBYTE EXTENDED_PATTERN_TILE_MAP[] = {
 };
 
 // ============================================================================
-// LEVEL CODE STRUCTURE - Single source of truth
+// FORWARD DECLARATIONS - Functions used in selective update system
 // ============================================================================
 
-typedef struct
-{
-    UBYTE platform_patterns[TOTAL_BLOCKS]; // 20 platform patterns
-    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255=empty)
-    UBYTE enemy_directions;                // Packed direction bits (6 bits)
-    UBYTE enemy_types;                     // Packed enemy type bits (6 bits: 0=walker, 1=jumper)
-    UBYTE player_column;                   // Player starting column
-} level_code_t;
+UBYTE encode_enemy_positions(void) BANKED;
+UBYTE encode_enemy_details_1(void) BANKED;
+UBYTE encode_enemy_details_2(void) BANKED;
+UBYTE encode_enemy_directions(void) BANKED;
+UBYTE get_extended_display_char(UBYTE value) BANKED;
+void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED;
+void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED;
+void clear_level_code_display(void) BANKED;
+void update_complete_level_code(void) BANKED;
 
+// ============================================================================
+// GLOBAL VARIABLE DEFINITIONS
+// ============================================================================
+
+// Main level code data structure instance
 level_code_t current_level_code;
+
+// ============================================================================
+// SELECTIVE UPDATE SYSTEM - Prevents flicker by only updating changed chars
+// ============================================================================
+
+level_code_t previous_level_code;
+UBYTE level_code_initialized = 0;
+
+// Cache for encoded values to avoid recalculation
+UBYTE previous_encoded_enemy_data[4];
+UBYTE current_encoded_enemy_data[4];
+
+// Bitmask to track which display positions need updating (24 bits max)
+UWORD display_update_mask_low = 0;  // Bits 0-15
+UBYTE display_update_mask_high = 0; // Bits 16-23
+
+// Mark a display position for update
+void mark_display_position_for_update(UBYTE position) BANKED
+{
+    if (position < 16)
+    {
+        display_update_mask_low |= (1 << position);
+    }
+    else if (position < 24)
+    {
+        display_update_mask_high |= (1 << (position - 16));
+    }
+}
+
+// Check if a display position needs updating
+UBYTE display_position_needs_update(UBYTE position) BANKED
+{
+    if (position < 16)
+    {
+        return (display_update_mask_low & (1 << position)) != 0;
+    }
+    else if (position < 24)
+    {
+        return (display_update_mask_high & (1 << (position - 16))) != 0;
+    }
+    return 0;
+}
+
+// Clear all update flags
+void clear_display_update_flags(void) BANKED
+{
+    display_update_mask_low = 0;
+    display_update_mask_high = 0;
+}
+
+// Calculate display position for a given character index
+void get_display_position(UBYTE char_index, UBYTE *x, UBYTE *y) BANKED
+{
+    UBYTE display_x = LEVEL_CODE_START_X;
+    UBYTE display_y = LEVEL_CODE_START_Y;
+
+    for (UBYTE i = 0; i < char_index; i++)
+    {
+        if (i > 0 && i % 4 == 0)
+        {
+            display_x++; // Space between groups
+        }
+        if (display_x >= 19)
+        {
+            display_x = 5;
+            display_y++;
+        }
+        display_x++;
+    }
+
+    if (char_index > 0 && char_index % 4 == 0)
+    {
+        display_x++; // Space between groups
+    }
+    if (display_x >= 19)
+    {
+        display_x = 5;
+        display_y++;
+    }
+
+    *x = display_x;
+    *y = display_y;
+}
+
+// Compare current level code with previous and mark changes
+void detect_level_code_changes(void) BANKED
+{
+    if (!level_code_initialized)
+    {
+        // First time - mark everything for update
+        for (UBYTE i = 0; i < LEVEL_CODE_CHARS_TOTAL; i++)
+        {
+            mark_display_position_for_update(i);
+        }
+
+        // Cache initial encoded values
+        current_encoded_enemy_data[0] = encode_enemy_positions();
+        current_encoded_enemy_data[1] = encode_enemy_details_1();
+        current_encoded_enemy_data[2] = encode_enemy_directions();
+        current_encoded_enemy_data[3] = current_level_code.player_column;
+
+        // Copy to previous cache
+        for (UBYTE i = 0; i < 4; i++)
+        {
+            previous_encoded_enemy_data[i] = current_encoded_enemy_data[i];
+        }
+
+        level_code_initialized = 1;
+    }
+    else
+    {
+        // Check platform patterns (positions 0-19)
+        for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
+        {
+            if (current_level_code.platform_patterns[i] != previous_level_code.platform_patterns[i])
+            {
+                mark_display_position_for_update(i);
+            }
+        }
+
+        // Update current encoded enemy data
+        current_encoded_enemy_data[0] = encode_enemy_positions();
+        current_encoded_enemy_data[1] = encode_enemy_details_1();
+        current_encoded_enemy_data[2] = encode_enemy_directions();
+        current_encoded_enemy_data[3] = current_level_code.player_column;
+
+        // Compare with previous encoded values
+        for (UBYTE i = 0; i < 4; i++)
+        {
+            if (current_encoded_enemy_data[i] != previous_encoded_enemy_data[i])
+            {
+                mark_display_position_for_update(TOTAL_BLOCKS + i);
+            }
+        }
+
+        // Update previous cache
+        for (UBYTE i = 0; i < 4; i++)
+        {
+            previous_encoded_enemy_data[i] = current_encoded_enemy_data[i];
+        }
+    }
+
+    // Update the cache
+    previous_level_code = current_level_code;
+}
+
+// ============================================================================
+// SELECTIVE LEVEL CODE DISPLAY - Prevents flicker by only updating changed chars
+// ============================================================================
+
+void display_selective_level_code(void) BANKED
+{
+    update_complete_level_code();
+    detect_level_code_changes();
+
+    // Only update characters that have changed
+    UBYTE display_x, display_y;
+    UBYTE total_chars = 0;
+
+    // Display 20 platform patterns
+    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
+    {
+        if (display_position_needs_update(total_chars))
+        {
+            get_display_position(total_chars, &display_x, &display_y);
+            display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
+        }
+        total_chars++;
+    }
+
+    // Use cached encoded enemy data (already calculated in detect_level_code_changes)
+    for (UBYTE i = 0; i < 4; i++)
+    {
+        if (display_position_needs_update(total_chars))
+        {
+            get_display_position(total_chars, &display_x, &display_y);
+            UBYTE display_char = get_extended_display_char(current_encoded_enemy_data[i]);
+            display_char_at_position(display_char, display_x, display_y);
+        }
+        total_chars++;
+    }
+
+    // Clear update flags after updating
+    clear_display_update_flags();
+}
+
+// Fast selective update that doesn't re-extract all data
+void display_selective_level_code_fast(void) BANKED
+{
+    // DON'T call update_complete_level_code() - assume data is already correct
+    detect_level_code_changes();
+
+    // Only update characters that have changed
+    UBYTE display_x, display_y;
+    UBYTE total_chars = 0;
+
+    // Display 20 platform patterns
+    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
+    {
+        if (display_position_needs_update(total_chars))
+        {
+            get_display_position(total_chars, &display_x, &display_y);
+            display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
+        }
+        total_chars++;
+    }
+
+    // Use cached encoded enemy data (already calculated in detect_level_code_changes)
+    for (UBYTE i = 0; i < 4; i++)
+    {
+        if (display_position_needs_update(total_chars))
+        {
+            get_display_position(total_chars, &display_x, &display_y);
+            UBYTE display_char = get_extended_display_char(current_encoded_enemy_data[i]);
+            display_char_at_position(display_char, display_x, display_y);
+        }
+        total_chars++;
+    }
+
+    // Clear update flags after updating
+    clear_display_update_flags();
+}
+
+// Force a complete redraw (useful for initialization)
+void force_complete_level_code_display(void) BANKED
+{
+    update_complete_level_code();
+    clear_level_code_display();
+
+    UBYTE display_x = LEVEL_CODE_START_X;
+    UBYTE display_y = LEVEL_CODE_START_Y;
+    UBYTE total_chars = 0;
+
+    // Display 20 platform patterns
+    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
+    {
+        if (total_chars > 0 && total_chars % 4 == 0)
+        {
+            display_x++; // Space between groups
+        }
+        if (display_x >= 19)
+        {
+            display_x = 5;
+            display_y++;
+        }
+
+        display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
+        display_x++;
+        total_chars++;
+    }
+
+    // Add comprehensive enemy data (4 characters total)
+    UBYTE enemy_data[] = {
+        encode_enemy_positions(),        // Enemy count + position checksum
+        encode_enemy_details_1(),        // Compressed positions for first 3 enemies
+        encode_enemy_directions(),       // Direction + type bits
+        current_level_code.player_column // Player starting position
+    };
+
+    for (UBYTE i = 0; i < 4; i++)
+    {
+        if (total_chars > 0 && total_chars % 4 == 0)
+            display_x++;
+        if (display_x >= 19)
+        {
+            display_x = 5;
+            display_y++;
+        }
+        UBYTE display_char = get_extended_display_char(enemy_data[i]);
+        display_char_at_position(display_char, display_x, display_y);
+        display_x++;
+        total_chars++;
+    }
+
+    // Initialize the cache after complete redraw
+    previous_level_code = current_level_code;
+    level_code_initialized = 1;
+    clear_display_update_flags();
+}
 
 // ============================================================================
 // CORE PATTERN EXTRACTION AND MATCHING
@@ -408,50 +693,8 @@ void clear_level_code_display(void) BANKED
 
 void display_complete_level_code(void) BANKED
 {
-    update_complete_level_code();
-    clear_level_code_display();
-
-    UBYTE display_x = LEVEL_CODE_START_X;
-    UBYTE display_y = LEVEL_CODE_START_Y;
-    UBYTE total_chars = 0;
-
-    // Display 20 platform patterns
-    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
-    {
-        if (total_chars > 0 && total_chars % 4 == 0)
-        {
-            display_x++; // Space between groups
-        }
-        if (display_x >= 19)
-        {
-            display_x = 5;
-            display_y++;
-        }
-
-        display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
-        display_x++;
-        total_chars++;
-    } // Add comprehensive enemy data (4 characters total)
-    UBYTE enemy_data[] = {
-        encode_enemy_positions(),        // Enemy count + position checksum
-        encode_enemy_details_1(),        // Compressed positions for first 3 enemies
-        encode_enemy_directions(),       // Direction + type bits
-        current_level_code.player_column // Player starting position
-    };
-
-    for (UBYTE i = 0; i < 4; i++)
-    {
-        if (total_chars > 0 && total_chars % 4 == 0)
-            display_x++;
-        if (display_x >= 19)
-        {
-            display_x = 5;
-            display_y++;
-        }
-        display_char_at_position(get_extended_display_char(enemy_data[i]), display_x, display_y);
-        display_x++;
-        total_chars++;
-    }
+    // Use selective update to prevent flicker
+    display_selective_level_code();
 }
 
 // ============================================================================
@@ -460,7 +703,8 @@ void display_complete_level_code(void) BANKED
 
 void draw_segment_ids(void) BANKED
 {
-    display_complete_level_code();
+    // Force complete display for initial draw
+    force_complete_level_code_display();
 }
 
 void update_zone_code(UBYTE zone_index) BANKED
@@ -477,8 +721,11 @@ void update_zone_code(UBYTE zone_index) BANKED
 
     current_level_code.platform_patterns[zone_index] = (UBYTE)pattern_id;
 
-    // Update display immediately
-    display_complete_level_code();
+    // Mark only the specific zone position for update
+    mark_display_position_for_update(zone_index);
+
+    // Use fast selective update instead of complete redraw
+    display_selective_level_code_fast();
 }
 
 UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED
@@ -526,7 +773,7 @@ void vm_load_level_code(SCRIPT_CTX *THIS) BANKED
 {
     (void)THIS;
     load_level_code_from_variables();
-    display_complete_level_code(); // Update display after loading
+    force_complete_level_code_display(); // Force complete redraw after loading
 }
 
 // Check if saved level code exists
@@ -631,11 +878,9 @@ void test_enemy_encoding(void) BANKED
     current_level_code.enemy_directions = 0b010110; // Enemies 1,2,4 face left
 
     // Test enemy types (walker=0, jumper=1)
-    current_level_code.enemy_types = 0b001100; // Enemies 2,3 are jumpers
+    current_level_code.enemy_types = 0b001100; // Enemies 2,3 are jumpers    current_level_code.player_column = 3;
 
-    current_level_code.player_column = 3;
-
-    display_complete_level_code();
+    force_complete_level_code_display();
 }
 
 void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED
@@ -999,11 +1244,8 @@ void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED
 {
     UBYTE success = load_level_code_from_sram();
     *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = success;
-
     if (success)
     {
-        display_complete_level_code(); // Update display after loading
+        force_complete_level_code_display(); // Force complete redraw after loading
     }
 }
-
-// ============================================================================

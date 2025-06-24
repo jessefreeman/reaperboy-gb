@@ -5,6 +5,26 @@
 #include "vm.h"
 
 // ============================================================================
+// CORE CONSTANTS AND TYPE DEFINITIONS
+// ============================================================================
+
+#define TOTAL_BLOCKS 20
+#define MAX_ENEMIES 6
+
+// Level code structure - Single source of truth
+typedef struct
+{
+    UBYTE platform_patterns[TOTAL_BLOCKS]; // 20 platform patterns
+    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255=empty)
+    UBYTE enemy_directions;                // Packed direction bits (6 bits)
+    UBYTE enemy_types;                     // Packed enemy type bits (6 bits: 0=walker, 1=jumper)
+    UBYTE player_column;                   // Player starting column
+} level_code_t;
+
+// External reference to main level code structure
+extern level_code_t current_level_code;
+
+// ============================================================================
 // CORE PATTERN EXTRACTION AND MATCHING
 // ============================================================================
 
@@ -17,8 +37,18 @@ UWORD match_platform_pattern(UWORD pattern) BANKED;
 
 // Main level code functions
 void display_complete_level_code(void) BANKED;
+void force_complete_level_code_display(void) BANKED;
 void init_level_code(void) BANKED;
 void update_complete_level_code(void) BANKED;
+
+// Selective update system
+void mark_display_position_for_update(UBYTE position) BANKED;
+void detect_level_code_changes(void) BANKED;
+void clear_display_update_flags(void) BANKED;
+void display_selective_level_code(void) BANKED;
+void display_selective_level_code_fast(void) BANKED;
+void get_display_position(UBYTE char_index, UBYTE *x, UBYTE *y) BANKED;
+UBYTE display_position_needs_update(UBYTE position) BANKED;
 
 // Zone management
 void draw_segment_ids(void) BANKED;

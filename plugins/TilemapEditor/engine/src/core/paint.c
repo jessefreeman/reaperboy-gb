@@ -7,6 +7,11 @@
 #include "tile_utils.h"
 #include "code_gen.h"
 
+// Forward declarations for level code functions
+void extract_enemy_data(void) BANKED;
+void extract_player_data(void) BANKED;
+void display_selective_level_code_fast(void) BANKED;
+
 // ============================================================================
 // ACTOR SYSTEM DECLARATIONS - For GB Studio Engine Compatibility
 // ============================================================================
@@ -35,6 +40,11 @@ void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 #define PLATFORM_MIN_VERTICAL_GAP 1
 #define PLATFORM_MAX_LENGTH 8
 #define MAX_ENEMIES 6
+
+// Segment layout constants for level code display
+#define SEGMENTS_PER_ROW 5
+#define SEGMENT_WIDTH 5
+#define SEGMENT_HEIGHT 2
 
 // Convert subpixels
 #define TO_FP(n) ((INT16)((n) << 4))
@@ -388,7 +398,7 @@ void paint_player(UBYTE x, UBYTE y) BANKED
 
     clear_existing_player_on_row_11();
     replace_meta_tile(x, y, TILE_PLAYER, 1);
-    display_complete_level_code(); // Update level code display
+    update_level_code_for_paint(x, y); // Smart update
 }
 
 void paint_enemy_right(UBYTE x, UBYTE y) BANKED
@@ -397,7 +407,7 @@ void paint_enemy_right(UBYTE x, UBYTE y) BANKED
         return;
 
     replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
-    display_complete_level_code(); // Update level code display
+    update_level_code_for_paint(x, y); // Smart update
 }
 
 void paint_enemy_left(UBYTE x, UBYTE y) BANKED
@@ -410,12 +420,12 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
     if (current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
-        display_complete_level_code();
+        update_level_code_for_paint(x, y);
     }
     else if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
     {
         replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
-        display_complete_level_code();
+        update_level_code_for_paint(x, y);
     }
 }
 
@@ -429,7 +439,7 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
     if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         replace_meta_tile(x, y, TILE_EMPTY, 1);
-        display_complete_level_code(); // Update level code display
+        update_level_code_for_paint(x, y); // Smart update
     }
 }
 
@@ -473,15 +483,13 @@ void paint(UBYTE x, UBYTE y) BANKED
         !is_valid_platform_row(y))
     {
         return;
-    }
-
-    // Platform deletion
+    } // Platform deletion
     if (current_tile_type == BRUSH_TILE_PLATFORM)
     {
         remove_enemies_above_platform(x, y);
         replace_meta_tile(x, y, TILE_EMPTY, 1);
         rebuild_platform_row(y);
-        display_complete_level_code(); // Update level code display
+        update_level_code_for_paint(x, y); // Smart update
         return;
     } // Platform placement
     if (current_tile_type != BRUSH_TILE_EMPTY ||
@@ -522,9 +530,8 @@ void paint(UBYTE x, UBYTE y) BANKED
     {
         return; // Can't place platform
     }
-
     rebuild_platform_row(y);
-    display_complete_level_code(); // Update level code display
+    update_level_code_for_paint(x, y); // Smart update
 }
 
 // ============================================================================
@@ -606,21 +613,21 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
             }
 
             // Place exit (after player is placed)
-            if (playerPlaced && !exitPlaced && xx == playerX && yy > playerRow && tt == BRUSH_TILE_PLATFORM)
-            {
-                UBYTE placeX = (tid == TILE_PLATFORM_RIGHT) ? xx - 1 : xx;
-                actor_t *ex = &actors[exitId];
-                ex->pos.x = TO_FP(placeX * 8);
-                ex->pos.y = TO_FP((yy - 1) * 8);
-                activate_actor(ex);
+            // if (playerPlaced && !exitPlaced && xx == playerX && yy > playerRow && tt == BRUSH_TILE_PLATFORM)
+            // {
+            //     UBYTE placeX = (tid == TILE_PLATFORM_RIGHT) ? xx - 1 : xx;
+            //     actor_t *ex = &actors[exitId];
+            //     ex->pos.x = TO_FP(placeX * 8);
+            //     ex->pos.y = TO_FP((yy - 1) * 8);
+            //     activate_actor(ex);
 
-                // Place exit tiles
-                replace_meta_tile(placeX, yy - 1, TILE_EXIT_BOTTOM_LEFT, 1);
-                replace_meta_tile(placeX + 1, yy - 1, TILE_EXIT_BOTTOM_RIGHT, 1);
-                replace_meta_tile(placeX, yy - 2, TILE_EXIT_TOP_LEFT, 1);
-                replace_meta_tile(placeX + 1, yy - 2, TILE_EXIT_TOP_RIGHT, 1);
-                exitPlaced = 1;
-            } // Place enemies
+            //     // Place exit tiles
+            //     replace_meta_tile(placeX, yy - 1, TILE_EXIT_BOTTOM_LEFT, 1);
+            //     replace_meta_tile(placeX + 1, yy - 1, TILE_EXIT_BOTTOM_RIGHT, 1);
+            //     replace_meta_tile(placeX, yy - 2, TILE_EXIT_TOP_LEFT, 1);
+            //     replace_meta_tile(placeX + 1, yy - 2, TILE_EXIT_TOP_RIGHT, 1);
+            //     exitPlaced = 1;
+            // } // Place enemies
             if (enemy_count < 6 && (tt == BRUSH_TILE_ENEMY_R || tt == BRUSH_TILE_ENEMY_L))
             {
                 actor_t *e = &actors[enemies[enemy_count]];
@@ -695,4 +702,72 @@ void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED
         }
     }
     *enemy_count = count_enemies_on_map();
+}
+
+// ============================================================================
+// SMART UPDATE FUNCTIONS - Only update affected zones
+// ============================================================================
+
+// Update level code based on what was painted at a specific position
+void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
+{ // For player painting (row 11), only update enemy/player data
+    if (y == 11)
+    {
+        // Extract player data
+        extract_player_data();
+
+        // Mark enemy data positions for update (positions 20-23)
+        for (UBYTE i = 20; i < 24; i++)
+        {
+            mark_display_position_for_update(i);
+        }
+        display_selective_level_code_fast();
+        return;
+    } // For enemy operations, only update enemy data
+    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R ||
+        // Check if this was an enemy operation by looking at context
+        (y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX && y != 11))
+    {
+        // For any enemy-related operation, extract enemy data and update display
+        extract_enemy_data();
+        extract_player_data(); // Player data might have changed too
+
+        // Mark enemy data positions for update (positions 20-23)
+        for (UBYTE i = 20; i < 24; i++)
+        {
+            mark_display_position_for_update(i);
+        }
+        display_selective_level_code_fast();
+        return;
+    } // For platform operations, update affected zones
+    if (y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX &&
+        x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
+        is_valid_platform_row(y))
+    {
+        // Get the zone index for this position
+        UBYTE zone_index = get_zone_index_from_tile(x, y);
+        if (zone_index != 255)
+        {
+            // Mark only the specific zone position for update
+            mark_display_position_for_update(zone_index);
+
+            // Also need to extract platform data for this zone and update the display
+            UBYTE segment_x = 2 + (zone_index % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;
+            UBYTE segment_y = PLATFORM_Y_MIN + (zone_index / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT;
+
+            UBYTE row0, row1;
+            UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+            UWORD pattern_id = match_platform_pattern(pattern);
+
+            current_level_code.platform_patterns[zone_index] = (UBYTE)pattern_id;
+
+            // Use fast selective update that doesn't re-extract everything
+            display_selective_level_code_fast();
+            return;
+        }
+    }
+
+    // Fallback to complete update for other cases
+    display_complete_level_code();
 }

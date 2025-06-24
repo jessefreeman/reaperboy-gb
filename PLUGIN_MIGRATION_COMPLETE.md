@@ -104,10 +104,12 @@ plugins/MetaTile8Plugin/
 5. **Optional** - Update build scripts if they reference the old paths
 
 ### Files NOT Migrated (Generic MetaTile Operations)
+
 The following files were intentionally NOT migrated as they are generic metatile utilities not specific to the tilemap editor:
+
 - `eventSubmapMetaTiles.js` - Generic submap operations
 - `eventReplaceMetaTile.js` - Generic tile replacement
-- `eventReplaceCollision.js` - Generic collision replacement  
+- `eventReplaceCollision.js` - Generic collision replacement
 - `eventLoadMetaTiles.js` - Generic tile loading
 - `eventGetMetaTileAtPos.js` - Generic tile reading
 

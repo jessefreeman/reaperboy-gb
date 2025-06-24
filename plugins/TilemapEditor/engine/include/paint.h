@@ -66,6 +66,12 @@ UBYTE validate_level_setup(void) BANKED;
 void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED;
 
 // ============================================================================
+// SMART UPDATE FUNCTIONS
+// ============================================================================
+
+void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED;
+
+// ============================================================================
 // VM WRAPPER FUNCTIONS
 // ============================================================================
 
