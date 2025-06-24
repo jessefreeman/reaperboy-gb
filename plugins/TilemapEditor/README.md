@@ -30,10 +30,11 @@ Use this event to configure which actors should be moved when painting entities 
 
 **Usage:**
 
-1. Call this event before using the paint tool
-2. When painting a player, the specified player actor will be moved to that position
-3. When painting enemies, available enemy actors will be moved to those positions
-4. When deleting enemies, the corresponding actors will be deactivated
+1. Call this event at scene start to configure actor assignments
+2. Automatically disables all assigned actors to provide a clean state
+3. Ready for "Load Level Code" event to populate the level
+4. When painting, the specified actors will be moved to painted positions
+5. When deleting, the corresponding actors will be deactivated
 
 ### Setup Map Actors
 
@@ -45,9 +46,12 @@ Sets up actors based on tiles already placed in the tilemap.
 
 For best results when using the tilemap editor, follow this sequence:
 
-1. **Setup Actors**: Call "Setup Paint Actors" with your desired actor IDs (do this once at scene start)
-2. **Enter Editor Mode**: Call "Enable Editor" when toggling into editor mode - this clears the scene
-3. **Start Painting**: Use the paint tool - actors will move to painted positions in real-time
-4. **Exit Editor**: Optionally call "Setup Map Actors" to finalize actor positions based on the final tilemap
+1. **Initialize System**: Call "Setup Paint Actors" with your desired actor IDs (at scene start)
+   - This configures which actors to use AND disables them for clean initialization
+2. **Load Level** (Optional): Call "Load Level Code" to populate a saved level
+3. **Enter Editor Mode**: Call "Enable Editor" when toggling into editor mode
+   - This clears only the assigned actors (redundant after setup, but safe for re-entry)
+4. **Start Painting**: Use the paint tool - actors will move to painted positions in real-time
+5. **Exit Editor**: Optionally call "Setup Map Actors" to finalize actor positions
 
-This workflow separates the one-time actor configuration from the editor state management, giving you clean control over when actors are cleared and when they're configured.
+The "Setup Paint Actors" event now provides complete initialization, automatically disabling assigned actors so the level starts clean and ready for either manual painting or level code loading.

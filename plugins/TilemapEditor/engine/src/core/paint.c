@@ -801,6 +801,16 @@ void vm_setup_paint_actors(SCRIPT_CTX *THIS) BANKED
     {
         paint_enemy_slots_used[i] = 0;
     }
+
+    // Disable all assigned actors to prepare for level loading
+    deactivate_actor(&actors[paint_player_id]);
+    deactivate_actor(&actors[paint_exit_id]);
+
+    // Deactivate enemy actors
+    for (UBYTE i = 0; i < 6; i++)
+    {
+        deactivate_actor(&actors[paint_enemy_ids[i]]);
+    }
 }
 
 void vm_paint(SCRIPT_CTX *THIS) BANKED

@@ -883,6 +883,15 @@
             "id": "1f5035c8-f261-41cb-99d9-ab5f8b7e5d0c"
           },
           {
+            "command": "EVENT_COMMENT",
+            "args": {
+              "text": "Need to remove the setup map actors script and have the setup paint actors handle this.",
+              "__collapse": false,
+              "__label": "TODO"
+            },
+            "id": "841898a0-0b01-476f-a655-146df58bdfc2"
+          },
+          {
             "command": "EVENT_SETUP_MAP",
             "args": {
               "player": "0",
@@ -893,7 +902,7 @@
               "e4": "fd69d58d-0d55-4ad8-b70f-7ea48d2d538c",
               "e5": "f366f87d-bfcb-43e9-8e5f-46641d48470d",
               "e6": "c05fa5da-0af0-4902-a27b-48e1bed96229",
-              "__comment": false,
+              "__comment": true,
               "__collapse": false,
               "countVar": "12",
               "output": "12"
