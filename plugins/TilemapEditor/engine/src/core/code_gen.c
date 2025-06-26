@@ -1311,24 +1311,193 @@ void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED
         }
     }
 
-    // Apply the pattern
-    for (UBYTE i = 0; i < 5; i++)
+    // Apply the pattern with proper end cap logic
+    apply_pattern_with_endcaps(segment_x, segment_y, pattern, block_index);
+}
+
+// Helper function to check if there's a platform in adjacent segment
+UBYTE has_adjacent_platform(UBYTE block_index, BYTE direction) BANKED
+{
+    // direction: -1 for left, +1 for right
+    BYTE adjacent_block = block_index + direction;
+
+    // Check bounds
+    if (adjacent_block < 0 || adjacent_block >= TOTAL_BLOCKS)
+        return 0;
+
+    // Check if we're crossing row boundaries inappropriately
+    UBYTE current_row = block_index / SEGMENTS_PER_ROW;
+    UBYTE adjacent_row = adjacent_block / SEGMENTS_PER_ROW;
+    if (current_row != adjacent_row)
+        return 0;
+
+    // Check if adjacent block has any platforms
+    UWORD adjacent_pattern = PLATFORM_PATTERNS[current_level_code.platform_patterns[adjacent_block]];
+    return (adjacent_pattern != 0);
+}
+
+// Apply pattern with proper end cap logic considering neighboring segments
+void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UWORD pattern, UBYTE block_index) BANKED
+{
+    // Check neighboring segments for connectivity
+    UBYTE has_left_neighbor = has_adjacent_platform(block_index, -1);
+    UBYTE has_right_neighbor = has_adjacent_platform(block_index, 1);
+
+    // Apply pattern for both rows
+    for (UBYTE row = 0; row < 2; row++)
     {
-        UBYTE tile_type = (i == 0) ? PLATFORM_TILE_1 : (i == 4) ? PLATFORM_TILE_3
-                                                                : PLATFORM_TILE_2;
+        // Extract row pattern (top row: bits 9-5, bottom row: bits 4-0)
+        UBYTE row_pattern = (row == 0) ? ((pattern >> 5) & 0x1F) : (pattern & 0x1F);
 
-        // Top row (bits 9-5)
-        if ((pattern >> (9 - i)) & 1)
+        if (row_pattern == 0)
+            continue; // Skip empty rows
+
+        // Find platform runs in this row
+        apply_row_platforms(segment_x, segment_y + row, row_pattern, has_left_neighbor, has_right_neighbor);
+    }
+}
+
+// Apply platforms for a single row with proper end cap logic
+void apply_row_platforms(UBYTE base_x, UBYTE y, UBYTE row_pattern, UBYTE has_left_neighbor, UBYTE has_right_neighbor) BANKED
+{
+    UBYTE run_start = 255;
+    UBYTE run_length = 0;
+
+    // Process each position in the 5-tile segment
+    for (UBYTE i = 0; i <= 5; i++) // Go one beyond to finalize last run
+    {
+        UBYTE has_platform = (i < 5) && ((row_pattern >> (4 - i)) & 1);
+
+        if (has_platform)
         {
-            replace_meta_tile(segment_x + i, segment_y, tile_type, 1);
+            if (run_start == 255)
+            {
+                run_start = i;
+                run_length = 1;
+            }
+            else
+            {
+                run_length++;
+            }
         }
-
-        // Bottom row (bits 4-0)
-        if ((pattern >> (4 - i)) & 1)
+        else if (run_start != 255)
         {
-            replace_meta_tile(segment_x + i, segment_y + 1, tile_type, 1);
+            // End of run - place platforms with proper end caps
+            place_platform_run(base_x + run_start, y, run_length,
+                               (run_start == 0) && has_left_neighbor,                // Connected to left
+                               (run_start + run_length == 5) && has_right_neighbor); // Connected to right
+
+            run_start = 255;
+            run_length = 0;
         }
     }
+}
+
+// Place a run of platforms with proper end cap logic
+void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_left, UBYTE connected_right) BANKED
+{
+    // Validate run length - don't place single platforms at edges unless connected
+    if (length == 1)
+    {
+        UBYTE is_at_left_edge = (start_x == 2);
+        UBYTE is_at_right_edge = (start_x == 21);
+
+        if ((is_at_left_edge && !connected_left) || (is_at_right_edge && !connected_right))
+        {
+            // Don't place isolated single platforms at edges
+            return;
+        }
+    }
+
+    for (UBYTE i = 0; i < length; i++)
+    {
+        UBYTE tile_type;
+
+        if (length == 1)
+        {
+            // Single platform - use middle tile (no end caps for isolated platforms)
+            tile_type = TILE_PLATFORM_MIDDLE;
+        }
+        else
+        {
+            // Multi-platform run
+            if (i == 0)
+            {
+                // First platform - use left cap unless connected to left neighbor
+                tile_type = connected_left ? TILE_PLATFORM_MIDDLE : TILE_PLATFORM_LEFT;
+            }
+            else if (i == length - 1)
+            {
+                // Last platform - use right cap unless connected to right neighbor
+                tile_type = connected_right ? TILE_PLATFORM_MIDDLE : TILE_PLATFORM_RIGHT;
+            }
+            else
+            {
+                // Middle platform
+                tile_type = TILE_PLATFORM_MIDDLE;
+            }
+        }
+
+        replace_meta_tile(start_x + i, y, tile_type, 1);
+    }
+}
+
+// Validate if a pattern is acceptable for placement at given block index
+UBYTE is_pattern_valid(UBYTE block_index, UBYTE pattern_id) BANKED
+{
+    if (pattern_id >= PLATFORM_PATTERN_COUNT)
+        return 0;
+
+    UWORD pattern = PLATFORM_PATTERNS[pattern_id];
+
+    // Empty pattern is always valid
+    if (pattern == 0)
+        return 1;
+
+    // Check for problematic single platforms at segment edges
+    UBYTE has_left_neighbor = has_adjacent_platform(block_index, -1);
+    UBYTE has_right_neighbor = has_adjacent_platform(block_index, 1);
+
+    // Check both rows of the pattern
+    for (UBYTE row = 0; row < 2; row++)
+    {
+        UBYTE row_pattern = (row == 0) ? ((pattern >> 5) & 0x1F) : (pattern & 0x1F);
+
+        if (row_pattern == 0)
+            continue;
+
+        // Check for isolated single platforms at edges
+        if (row_pattern == 0b10000) // Single platform at leftmost position (bit 4)
+        {
+            if (!has_left_neighbor)
+                return 0; // Isolated single at left edge
+        }
+
+        if (row_pattern == 0b00001) // Single platform at rightmost position (bit 0)
+        {
+            if (!has_right_neighbor)
+                return 0; // Isolated single at right edge
+        }
+    }
+
+    return 1; // Pattern is valid
+}
+
+// Find the next valid pattern starting from requested value
+UBYTE find_valid_pattern(UBYTE block_index, UBYTE start_value) BANKED
+{
+    // Try patterns starting from start_value, wrapping around
+    for (UBYTE attempt = 0; attempt < PLATFORM_PATTERN_COUNT; attempt++)
+    {
+        UBYTE test_pattern = (start_value + attempt) % PLATFORM_PATTERN_COUNT;
+
+        if (is_pattern_valid(block_index, test_pattern))
+        {
+            return test_pattern;
+        }
+    }
+
+    return 255; // No valid pattern found
 }
 
 // Update level code data based on character position and new value
@@ -1344,8 +1513,15 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
         // Platform pattern positions (0-15)
         if (new_value < PLATFORM_PATTERN_COUNT)
         {
-            current_level_code.platform_patterns[char_index] = new_value;
-            apply_pattern_to_tilemap(char_index, new_value);
+            // Find the next valid pattern starting from new_value
+            UBYTE valid_pattern = find_valid_pattern(char_index, new_value);
+
+            if (valid_pattern != 255)
+            {
+                current_level_code.platform_patterns[char_index] = valid_pattern;
+                apply_pattern_to_tilemap(char_index, valid_pattern);
+            }
+            // If no valid pattern found, keep the current pattern unchanged
         }
     }
     else if (char_index == 16)
