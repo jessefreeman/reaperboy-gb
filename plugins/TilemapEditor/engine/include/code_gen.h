@@ -98,6 +98,7 @@ UBYTE load_level_code_from_sram(void) BANKED;
 void vm_save_level_code_sram(SCRIPT_CTX *THIS) BANKED;
 void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED;
 
+void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED;
 // ============================================================================
 
 #endif // CODE_GEN_H

@@ -59,38 +59,6 @@
         ],
         "false": [
           {
-            "command": "EVENT_COMMENT",
-            "args": {
-              "text": "TODO Need a check for reverse add to B or just add entire logic to B instead of here."
-            },
-            "id": "a50e7149-1780-4a0b-9baa-8ccbb1036e25"
-          },
-          {
-            "command": "EVENT_TEXT",
-            "args": {
-              "text": [
-                "Code Edit"
-              ],
-              "__section": "text",
-              "avatarId": "",
-              "minHeight": 4,
-              "maxHeight": 7,
-              "textX": 1,
-              "textY": 1,
-              "textHeight": 5,
-              "position": "bottom",
-              "clearPrevious": true,
-              "showFrame": "true",
-              "speedIn": -1,
-              "speedOut": -1,
-              "closeWhen": "key",
-              "closeButton": "a",
-              "closeDelayTime": 0.5,
-              "closeDelayFrames": 30
-            },
-            "id": "d9b716e0-21a7-4e69-858e-846656d895c6"
-          },
-          {
             "command": "EVENT_CYCLE_CHARACTER",
             "args": {
               "x": {
@@ -101,67 +69,9 @@
                 "type": "variable",
                 "value": "4"
               },
-              "reverse": false,
-              "debug": "28"
+              "debug_var": "27"
             },
-            "id": "97c84375-4bd1-46dc-967b-551003224ae5"
-          },
-          {
-            "command": "EVENT_IF_INPUT",
-            "args": {
-              "input": [
-                "b"
-              ],
-              "__collapseElse": true,
-              "__comment": true
-            },
-            "children": {
-              "true": [
-                {
-                  "command": "EVENT_TEXT",
-                  "args": {
-                    "text": [
-                      "Reverse"
-                    ],
-                    "__section": "text",
-                    "avatarId": "",
-                    "minHeight": 4,
-                    "maxHeight": 7,
-                    "textX": 1,
-                    "textY": 1,
-                    "textHeight": 5,
-                    "position": "bottom",
-                    "clearPrevious": true,
-                    "showFrame": "true",
-                    "speedIn": -1,
-                    "speedOut": -1,
-                    "closeWhen": "key",
-                    "closeButton": "a",
-                    "closeDelayTime": 0.5,
-                    "closeDelayFrames": 30
-                  },
-                  "id": "47469f1d-7b96-45c2-8113-fdb1ca7b1929"
-                },
-                {
-                  "command": "EVENT_CYCLE_CHARACTER",
-                  "args": {
-                    "x": {
-                      "type": "variable",
-                      "value": "3"
-                    },
-                    "y": {
-                      "type": "variable",
-                      "value": "4"
-                    },
-                    "reverse": false,
-                    "debug": "28"
-                  },
-                  "id": "38c67676-41b7-4a6f-934b-472a8a66bcea"
-                }
-              ],
-              "false": []
-            },
-            "id": "58721b65-8039-48ea-b852-c2952c86306b"
+            "id": "023b80d1-44f5-44a3-8a7f-d44d6a58efbb"
           }
         ]
       },

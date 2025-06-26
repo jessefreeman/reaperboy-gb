@@ -1230,3 +1230,30 @@ void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED
         force_complete_level_code_display(); // Force complete redraw after loading
     }
 }
+
+void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
+{
+	UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+	UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+
+	// Get current tile at position
+	UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
+	UBYTE new_tile = current_tile;
+
+	// Check if current tile is in the character range (TILE_CHAR_FIRST to TILE_CHAR_LAST)
+	if (current_tile >= TILE_CHAR_FIRST && current_tile <= TILE_CHAR_LAST)
+	{
+		// Going forward - increment the character
+		if (current_tile == TILE_CHAR_LAST) // If at 'Z' (83), wrap to '0' (48)
+		{
+			new_tile = TILE_CHAR_FIRST;
+		}
+		else
+		{
+			new_tile = current_tile + 1;
+		}
+
+		// Set the new tile using replace_meta_tile to update both map data and visual display
+		replace_meta_tile(x, y, new_tile, 1);
+	}
+}

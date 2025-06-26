@@ -12,6 +12,13 @@
 #include "data/game_globals.h"
 #include "data_manager.h"
 #include "data/states_defines.h"
+#include "tile_utils.h"
+
+// Character tile range constants for cycling (in case tile_utils.h is not found)
+#ifndef TILE_CHAR_FIRST
+#define TILE_CHAR_FIRST 48 // '0' at (0,3)
+#define TILE_CHAR_LAST 83  // 'Z' at (3,5)
+#endif
 
 uint8_t __at(SRAM_COLLISION_DATA_PTR) sram_collision_data[256];	  // sram_map_data Address 0xA500 - 0x0100(256)
 uint8_t __at(SRAM_MAP_DATA_PTR) sram_map_data[MAX_MAP_DATA_SIZE]; // 0xA000 + (0x2000 (8k SRAM max size) - 0x1B00 (MAX_MAP_DATA_SIZE))
@@ -146,3 +153,4 @@ void replace_meta_tile(UBYTE x, UBYTE y, UBYTE tile_id, UBYTE commit) BANKED
 		set_bkg_tile_xy(x, y, ReadBankedUBYTE(metatile_ptr + tile_id, metatile_bank));
 	}
 }
+

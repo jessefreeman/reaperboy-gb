@@ -17,6 +17,10 @@
 #define TILE_EXIT_BOTTOM_RIGHT 33
 #define TILE_0 48
 
+// Character tile range constants for cycling
+#define TILE_CHAR_FIRST 48 // '0' at (0,3)
+#define TILE_CHAR_LAST 83  // 'Z' at (3,5)
+
 // Brush tile type constants
 #define BRUSH_TILE_EMPTY 0
 #define BRUSH_TILE_PLATFORM 1
