@@ -1369,26 +1369,48 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
         // Position 19: Player starting column (0-19)
         if (new_value < 20)
         {
-            current_level_code.player_column = new_value;
+            // Find the next valid player position starting from new_value
+            UBYTE valid_column = 255; // Initialize as invalid
 
-            // Update player position in tilemap
-            // First, clear existing player
-            for (UBYTE col = 2; col < 22; col++)
+            // Check positions starting from new_value and wrapping around
+            for (UBYTE attempt = 0; attempt < 20; attempt++)
             {
-                UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
-                UBYTE tile_type = get_tile_type(tile);
-                if (tile_type == BRUSH_TILE_PLAYER)
+                UBYTE test_column = (new_value + attempt) % 20;
+                UBYTE test_x = 2 + test_column;
+
+                // Use the same validation logic as paint system
+                if (can_paint_player(test_x, 11))
                 {
-                    replace_meta_tile(col, 11, 0, 1);
+                    valid_column = test_column;
+                    break;
                 }
             }
 
-            // Place player at new position
-            UBYTE new_x = 2 + new_value;
-            replace_meta_tile(new_x, 11, TILE_PLAYER, 1);
+            // If we found a valid position, place the player there
+            if (valid_column != 255)
+            {
+                current_level_code.player_column = valid_column;
 
-            // Also move the player actor to the new position
-            move_player_actor_to_tile(paint_player_id, new_x, 11);
+                // Update player position in tilemap
+                // First, clear existing player
+                for (UBYTE col = 2; col < 22; col++)
+                {
+                    UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
+                    UBYTE tile_type = get_tile_type(tile);
+                    if (tile_type == BRUSH_TILE_PLAYER)
+                    {
+                        replace_meta_tile(col, 11, 0, 1);
+                    }
+                }
+
+                // Place player at valid position
+                UBYTE new_x = 2 + valid_column;
+                replace_meta_tile(new_x, 11, TILE_PLAYER, 1);
+
+                // Also move the player actor to the new position
+                move_player_actor_to_tile(paint_player_id, new_x, 11);
+            }
+            // If no valid position found, don't place the player anywhere
         }
     }
     else if (char_index >= 20 && char_index <= 22)
