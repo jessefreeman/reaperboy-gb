@@ -71,13 +71,6 @@ void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED;
 void vm_init_level_code(SCRIPT_CTX *THIS) BANKED;
 
 // ============================================================================
-// DEBUG FUNCTIONS
-// ============================================================================
-
-void test_enemy_encoding(void) BANKED;
-void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED;
-
-// ============================================================================
 // PERSISTENT STORAGE FUNCTIONS
 // ============================================================================
 

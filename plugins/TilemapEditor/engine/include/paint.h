@@ -69,6 +69,10 @@ UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED;
 UBYTE validate_level_setup(void) BANKED;
 void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED;
 
+// Optimized utility functions
+UBYTE is_within_platform_bounds(UBYTE x, UBYTE y) BANKED;
+UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED;
+
 // ============================================================================
 // SMART UPDATE FUNCTIONS
 // ============================================================================
@@ -83,6 +87,7 @@ void vm_setup_paint_actors(SCRIPT_CTX *THIS) BANKED;
 void vm_enable_editor(SCRIPT_CTX *THIS) BANKED;
 void vm_paint(SCRIPT_CTX *THIS) BANKED;
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED;
+void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED;
 void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED;
 
 #endif // PAINT_H

@@ -49,6 +49,23 @@ void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 #define SEGMENT_WIDTH 5
 #define SEGMENT_HEIGHT 2
 
+// ============================================================================
+// OPTIMIZED UTILITY FUNCTIONS
+// ============================================================================
+
+// Inline utility for repeated boundary checks
+UBYTE is_within_platform_bounds(UBYTE x, UBYTE y) BANKED
+{
+    return (x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
+            y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX);
+}
+
+// Cached tile access to reduce repeated lookups
+UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED
+{
+    return get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+}
+
 // Convert subpixels
 #define TO_FP(n) ((INT16)((n) << 4))
 
@@ -76,7 +93,7 @@ UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED
     {
         if (is_valid_platform_row(check_y))
         {
-            if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, check_y)]) == BRUSH_TILE_PLATFORM)
+            if (get_current_tile_type(x, check_y) == BRUSH_TILE_PLATFORM)
             {
                 return 1;
             }
@@ -98,7 +115,7 @@ UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED
         if (!is_valid_platform_row(cy))
             continue;
 
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, cy)]) == BRUSH_TILE_PLATFORM)
+        if (get_current_tile_type(x, cy) == BRUSH_TILE_PLATFORM)
         {
             return 1;
         }
@@ -113,7 +130,7 @@ UBYTE count_enemies_on_map(void) BANKED
     {
         for (UBYTE xx = PLATFORM_X_MIN; xx <= PLATFORM_X_MAX; xx++)
         {
-            UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(xx, yy)]);
+            UBYTE tile_type = get_current_tile_type(xx, yy);
             if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
             {
                 enemy_count++;
@@ -127,13 +144,13 @@ UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED
 {
     if (x > PLATFORM_X_MIN)
     {
-        UBYTE left_tile = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]);
+        UBYTE left_tile = get_current_tile_type(x - 1, y);
         if (left_tile == BRUSH_TILE_ENEMY_L || left_tile == BRUSH_TILE_ENEMY_R)
             return 1;
     }
     if (x < PLATFORM_X_MAX)
     {
-        UBYTE right_tile = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]);
+        UBYTE right_tile = get_current_tile_type(x + 1, y);
         if (right_tile == BRUSH_TILE_ENEMY_L || right_tile == BRUSH_TILE_ENEMY_R)
             return 1;
     }
@@ -145,7 +162,7 @@ UBYTE has_enemy_below_player(UBYTE x, UBYTE y) BANKED
     // Check all rows below the player position for enemies
     for (UBYTE check_y = y + 1; check_y <= PLATFORM_Y_MAX; check_y++)
     {
-        UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, check_y)]);
+        UBYTE tile_type = get_current_tile_type(x, check_y);
         if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
         {
             return 1;
@@ -154,33 +171,28 @@ UBYTE has_enemy_below_player(UBYTE x, UBYTE y) BANKED
     return 0;
 }
 
-// ============================================================================
-// PLACEMENT VALIDATION - Consolidated logic
-// ============================================================================
-
 UBYTE can_place_platform(UBYTE x, UBYTE y) BANKED
 {
-    return (x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
-            y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX &&
+    return (is_within_platform_bounds(x, y) &&
             is_valid_platform_row(y) &&
-            get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) == BRUSH_TILE_EMPTY &&
+            get_current_tile_type(x, y) == BRUSH_TILE_EMPTY &&
             !check_platform_vertical_conflict(x, y));
 }
 
 UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
 {
     return (y == 11 &&
-            x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
+            is_within_platform_bounds(x, y) &&
             has_platform_below(x, y) &&
             !has_enemy_below_player(x, y) && // Can't place player above enemies
-            get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) == BRUSH_TILE_EMPTY);
+            get_current_tile_type(x, y) == BRUSH_TILE_EMPTY);
 }
 
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 {
-    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+    if (!is_within_platform_bounds(x, y))
         return 0;
-    if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]) != BRUSH_TILE_EMPTY)
+    if (get_current_tile_type(x, y) != BRUSH_TILE_EMPTY)
         return 0;
     if (count_enemies_on_map() >= MAX_ENEMIES)
         return 0;
@@ -190,7 +202,7 @@ UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
     // Check for platform directly below
     if (y + 1 <= PLATFORM_Y_MAX && is_valid_platform_row(y + 1))
     {
-        return get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y + 1)]) == BRUSH_TILE_PLATFORM;
+        return get_current_tile_type(x, y + 1) == BRUSH_TILE_PLATFORM;
     }
     return 0;
 }
@@ -198,17 +210,18 @@ UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED
 {
     if (!can_place_platform(x, y))
-        return 0;
+        return SELECTOR_STATE_DEFAULT;
 
-    UBYTE left = (x > PLATFORM_X_MIN) ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]) : BRUSH_TILE_EMPTY;
-    UBYTE right = (x < PLATFORM_X_MAX) ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) : BRUSH_TILE_EMPTY;
+    // Cache adjacent tile types
+    UBYTE left = (x > PLATFORM_X_MIN) ? get_current_tile_type(x - 1, y) : BRUSH_TILE_EMPTY;
+    UBYTE right = (x < PLATFORM_X_MAX) ? get_current_tile_type(x + 1, y) : BRUSH_TILE_EMPTY;
     if (left == BRUSH_TILE_PLATFORM)
     {
         // Check if connecting would exceed 8-tile limit
         UBYTE platform_length = count_connected_platform_length(x, y);
         if (platform_length > PLATFORM_MAX_LENGTH)
         {
-            return 0; // Cannot place - would exceed platform limit
+            return SELECTOR_STATE_DEFAULT; // Cannot place - would exceed platform limit
         }
         return SELECTOR_STATE_PLATFORM_RIGHT;
     }
@@ -218,7 +231,7 @@ UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED
         UBYTE platform_length = count_connected_platform_length(x, y);
         if (platform_length > PLATFORM_MAX_LENGTH)
         {
-            return 0; // Cannot place - would exceed platform limit
+            return SELECTOR_STATE_DEFAULT; // Cannot place - would exceed platform limit
         }
         return SELECTOR_STATE_PLATFORM_LEFT;
     }
@@ -228,12 +241,12 @@ UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED
         // Check if creating a 2-tile platform would exceed limits after auto-merge
         if (would_2tile_platform_exceed_limit(x, y))
         {
-            return 0; // Cannot create - would exceed limit after merge
+            return SELECTOR_STATE_DEFAULT; // Cannot create - would exceed limit after merge
         }
         return SELECTOR_STATE_NEW_PLATFORM;
     }
 
-    return 0;
+    return SELECTOR_STATE_DEFAULT;
 }
 
 // ============================================================================
@@ -249,7 +262,7 @@ UBYTE count_connected_platform_length(UBYTE x, UBYTE y) BANKED
     while (left_x > PLATFORM_X_MIN)
     {
         left_x--;
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(left_x, y)]) == BRUSH_TILE_PLATFORM)
+        if (get_current_tile_type(left_x, y) == BRUSH_TILE_PLATFORM)
         {
             length++;
         }
@@ -262,7 +275,7 @@ UBYTE count_connected_platform_length(UBYTE x, UBYTE y) BANKED
     // Count platforms to the right
     for (UBYTE right_x = x + 1; right_x <= PLATFORM_X_MAX; right_x++)
     {
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(right_x, y)]) == BRUSH_TILE_PLATFORM)
+        if (get_current_tile_type(right_x, y) == BRUSH_TILE_PLATFORM)
         {
             length++;
         }
@@ -280,11 +293,11 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED
 {
     // Check if there's a platform to the left that would merge
     UBYTE left_length = 0;
-    if (x > PLATFORM_X_MIN && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]) == BRUSH_TILE_PLATFORM)
+    if (x > PLATFORM_X_MIN && get_current_tile_type(x - 1, y) == BRUSH_TILE_PLATFORM)
     {
         // Count platforms to the left
         UBYTE left_x = x - 1;
-        while (left_x >= PLATFORM_X_MIN && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(left_x, y)]) == BRUSH_TILE_PLATFORM)
+        while (left_x >= PLATFORM_X_MIN && get_current_tile_type(left_x, y) == BRUSH_TILE_PLATFORM)
         {
             left_length++;
             if (left_x == PLATFORM_X_MIN)
@@ -295,12 +308,12 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED
 
     // Check if there's a platform to the right that would merge
     UBYTE right_length = 0;
-    if (x + 2 <= PLATFORM_X_MAX && get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 2, y)]) == BRUSH_TILE_PLATFORM)
+    if (x + 2 <= PLATFORM_X_MAX && get_current_tile_type(x + 2, y) == BRUSH_TILE_PLATFORM)
     {
         // Count platforms to the right
         for (UBYTE right_x = x + 2; right_x <= PLATFORM_X_MAX; right_x++)
         {
-            if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(right_x, y)]) == BRUSH_TILE_PLATFORM)
+            if (get_current_tile_type(right_x, y) == BRUSH_TILE_PLATFORM)
             {
                 right_length++;
             }
@@ -327,7 +340,7 @@ void rebuild_platform_row(UBYTE y) BANKED
     for (UBYTE i = PLATFORM_X_MIN; i <= PLATFORM_X_MAX + 1; ++i)
     {
         UBYTE is_plat = (i <= PLATFORM_X_MAX) &&
-                        get_tile_type(sram_map_data[METATILE_MAP_OFFSET(i, y)]) == BRUSH_TILE_PLATFORM;
+                        get_current_tile_type(i, y) == BRUSH_TILE_PLATFORM;
 
         if (is_plat)
         {
@@ -424,7 +437,7 @@ void clear_existing_player_on_row_11(void) BANKED
 {
     for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
     {
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        if (get_current_tile_type(x, 11) == BRUSH_TILE_PLAYER)
         {
             replace_meta_tile(x, 11, TILE_EMPTY, 1);
         }
@@ -435,7 +448,7 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
 {
     for (UBYTE check_y = PLATFORM_Y_MIN; check_y < y; check_y++)
     {
-        UBYTE tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, check_y)]);
+        UBYTE tile_type = get_current_tile_type(x, check_y);
         if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
         {
             replace_meta_tile(x, check_y, TILE_EMPTY, 1);
@@ -502,7 +515,7 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
         return;
 
-    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    UBYTE current_tile_type = get_current_tile_type(x, y);
 
     if (current_tile_type == BRUSH_TILE_ENEMY_R)
     {
@@ -546,11 +559,12 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
         return;
 
-    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    UBYTE current_tile_type = get_current_tile_type(x, y);
 
     if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
     {
-        replace_meta_tile(x, y, TILE_EMPTY, 1); // Find and deactivate the enemy actor at this position
+        replace_meta_tile(x, y, TILE_EMPTY, 1);
+        // Find and deactivate the enemy actor at this position
         for (UBYTE i = 0; i < 6; i++)
         {
             if (paint_enemy_slots_used[i])
@@ -569,7 +583,7 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
             }
         }
 
-        update_level_code_for_paint(x, y); // Smart update
+        update_level_code_for_paint(x, y);
     }
 }
 
@@ -586,7 +600,8 @@ void paint(UBYTE x, UBYTE y) BANKED
         return;
     }
 
-    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    // Cache current tile type to avoid repeated lookups
+    UBYTE current_tile_type = get_current_tile_type(x, y);
 
     // Enemy state transitions: right -> left -> delete
     if (current_tile_type == BRUSH_TILE_ENEMY_R)
@@ -607,13 +622,13 @@ void paint(UBYTE x, UBYTE y) BANKED
         return;
     }
 
-    // Platform bounds check
-    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX ||
-        y < PLATFORM_Y_MIN || y > PLATFORM_Y_MAX ||
-        !is_valid_platform_row(y))
+    // Early exit for invalid platform areas
+    if (!is_within_platform_bounds(x, y) || !is_valid_platform_row(y))
     {
         return;
-    } // Platform deletion
+    }
+
+    // Platform deletion
     if (current_tile_type == BRUSH_TILE_PLATFORM)
     {
         remove_enemies_above_platform(x, y);
@@ -621,15 +636,18 @@ void paint(UBYTE x, UBYTE y) BANKED
         rebuild_platform_row(y);
         update_level_code_for_paint(x, y); // Smart update
         return;
-    } // Platform placement
+    }
+
+    // Platform placement - early exit conditions
     if (current_tile_type != BRUSH_TILE_EMPTY ||
         check_platform_vertical_conflict(x, y))
     {
         return;
     }
 
-    UBYTE left = (x > PLATFORM_X_MIN) ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x - 1, y)]) : BRUSH_TILE_EMPTY;
-    UBYTE right = (x < PLATFORM_X_MAX) ? get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x + 1, y)]) : BRUSH_TILE_EMPTY;
+    // Cache adjacent tile types
+    UBYTE left = (x > PLATFORM_X_MIN) ? get_current_tile_type(x - 1, y) : BRUSH_TILE_EMPTY;
+    UBYTE right = (x < PLATFORM_X_MAX) ? get_current_tile_type(x + 1, y) : BRUSH_TILE_EMPTY;
 
     if (left == BRUSH_TILE_PLATFORM || right == BRUSH_TILE_PLATFORM)
     {
@@ -670,7 +688,8 @@ void paint(UBYTE x, UBYTE y) BANKED
 
 UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
 {
-    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    // Cache current tile type to avoid repeated lookups
+    UBYTE current_tile_type = get_current_tile_type(x, y);
 
     switch (current_tile_type)
     {
@@ -827,8 +846,17 @@ void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED
     script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = get_brush_tile_state(x, y);
 }
 
+void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED
+{
+    UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+    script_memory[*(int16_t *)VM_REF_TO_PTR(FN_ARG2)] = get_brush_tile_state(x, y);
+}
+
 void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
 {
+    (void)THIS;
+
     // Only deactivate the specific actors that the tilemap editor will be using
     // This prevents disrupting other actors in the scene
 
@@ -857,14 +885,14 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
 
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED
 {
-    return get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    return get_current_tile_type(x, y);
 }
 
 UBYTE validate_level_setup(void) BANKED
 {
     for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
     {
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        if (get_current_tile_type(x, 11) == BRUSH_TILE_PLAYER)
         {
             return 1;
         }
@@ -877,7 +905,7 @@ void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED
     *player_x = 0;
     for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
     {
-        if (get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, 11)]) == BRUSH_TILE_PLAYER)
+        if (get_current_tile_type(x, 11) == BRUSH_TILE_PLAYER)
         {
             *player_x = x;
             break;
@@ -909,7 +937,7 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
     }
 
     // For enemy operations, update enemy data
-    UBYTE current_tile_type = get_tile_type(sram_map_data[METATILE_MAP_OFFSET(x, y)]);
+    UBYTE current_tile_type = get_current_tile_type(x, y);
     if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R ||
         // Check if this was an enemy operation by looking at context
         (y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX && y != 11))
