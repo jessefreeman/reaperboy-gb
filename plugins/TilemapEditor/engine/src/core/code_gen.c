@@ -810,69 +810,6 @@ void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED
 // ============================================================================
 
 #ifdef DEBUG_BUILD
-// Debug pattern index for testing
-UBYTE debug_pattern_index = 0;
-
-void draw_debug_pattern(UBYTE pattern_index) BANKED
-{
-    if (pattern_index >= PLATFORM_PATTERN_COUNT)
-    {
-        pattern_index = 0;
-    }
-
-    // Display pattern index as decimal
-    UBYTE dec_tens = pattern_index / 10;
-    UBYTE dec_ones = pattern_index % 10;
-    replace_meta_tile(0, 2, 48 + dec_tens, 1);
-    replace_meta_tile(1, 2, 48 + dec_ones, 1);
-
-    // Clear drawing area
-    for (UBYTE x = 2; x < 7; x++)
-    {
-        for (UBYTE y = 11; y < 13; y++)
-        {
-            replace_meta_tile(x, y, 0, 1);
-        }
-    }
-
-    // Draw pattern
-    UWORD pattern = PLATFORM_PATTERNS[pattern_index];
-    for (UBYTE i = 0; i < 5; i++)
-    {
-        UBYTE tile_type = (i == 0) ? PLATFORM_TILE_1 : (i == 4) ? PLATFORM_TILE_3
-                                                                : PLATFORM_TILE_2;
-
-        if ((pattern >> (9 - i)) & 1)
-        {
-            replace_meta_tile(2 + i, 11, tile_type, 1);
-        }
-        if ((pattern >> (4 - i)) & 1)
-        {
-            replace_meta_tile(2 + i, 12, tile_type, 1);
-        }
-    }
-}
-
-void vm_debug_next_pattern(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    debug_pattern_index = (debug_pattern_index + 1) % PLATFORM_PATTERN_COUNT;
-    draw_debug_pattern(debug_pattern_index);
-}
-
-void vm_debug_prev_pattern(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    debug_pattern_index = (debug_pattern_index == 0) ? PLATFORM_PATTERN_COUNT - 1 : debug_pattern_index - 1;
-    draw_debug_pattern(debug_pattern_index);
-}
-
-void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    debug_pattern_index = 0;
-    draw_debug_pattern(debug_pattern_index);
-}
 
 void test_enemy_encoding(void) BANKED
 {
@@ -925,30 +862,6 @@ void vm_get_enemy_info(SCRIPT_CTX *THIS) BANKED
 
 #else
 // Release mode stub implementations
-void draw_debug_pattern(UBYTE pattern_index) BANKED
-{
-    (void)pattern_index;
-    // No-op in release mode
-}
-
-void vm_debug_next_pattern(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    // No-op in release mode
-}
-
-void vm_debug_prev_pattern(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    // No-op in release mode
-}
-
-void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    // No-op in release mode
-}
-
 void test_enemy_encoding(void) BANKED
 {
     // No-op in release mode

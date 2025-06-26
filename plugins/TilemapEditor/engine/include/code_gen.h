@@ -74,10 +74,6 @@ void vm_init_level_code(SCRIPT_CTX *THIS) BANKED;
 // DEBUG FUNCTIONS
 // ============================================================================
 
-void draw_debug_pattern(UBYTE pattern_index) BANKED;
-void vm_debug_next_pattern(SCRIPT_CTX *THIS) BANKED;
-void vm_debug_prev_pattern(SCRIPT_CTX *THIS) BANKED;
-void vm_debug_reset_pattern(SCRIPT_CTX *THIS) BANKED;
 void test_enemy_encoding(void) BANKED;
 void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED;
 
