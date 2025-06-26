@@ -425,37 +425,11 @@
                     ],
                     "override": true,
                     "__scriptTabs": "press",
-                    "__collapse": false
+                    "__collapse": false,
+                    "__comment": true
                   },
                   "children": {
-                    "true": [
-                      {
-                        "command": "EVENT_IF_INPUT",
-                        "args": {
-                          "input": [
-                            "select"
-                          ],
-                          "__collapseElse": false
-                        },
-                        "children": {
-                          "true": [
-                            {
-                              "command": "DEBUG_PREV_PATTERN",
-                              "args": {},
-                              "id": "41f61ed5-3bf1-47a2-bd91-7ab69722380b"
-                            }
-                          ],
-                          "false": [
-                            {
-                              "command": "DEBUG_NEXT_PATTERN",
-                              "args": {},
-                              "id": "1677b331-1cff-4fe9-86a9-de4ba6470a4d"
-                            }
-                          ]
-                        },
-                        "id": "3ad48432-d02e-446e-8aa8-f08137ce64f9"
-                      }
-                    ]
+                    "true": []
                   },
                   "id": "836fd0b6-f437-4595-be1d-bd38d958e2e2"
                 },
