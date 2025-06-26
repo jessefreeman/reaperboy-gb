@@ -182,8 +182,8 @@ UBYTE can_place_platform(UBYTE x, UBYTE y) BANKED
 UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
 {
     return (y == 11 &&
-            is_within_platform_bounds(x, y) &&
-            has_platform_below(x, y) &&
+            x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
+            has_platform_below(x, y) &&      // Must have platform below
             !has_enemy_below_player(x, y) && // Can't place player above enemies
             get_current_tile_type(x, y) == BRUSH_TILE_EMPTY);
 }
