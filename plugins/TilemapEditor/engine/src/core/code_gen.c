@@ -94,6 +94,9 @@ void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED;
 void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED;
 void clear_level_code_display(void) BANKED;
 void update_complete_level_code(void) BANKED;
+UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED;
+void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED;
+void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
 // ============================================================================
 // GLOBAL VARIABLE DEFINITIONS
@@ -1010,13 +1013,13 @@ void validate_enemy_encoding(void) BANKED
 // Convert display character back to numeric value
 UBYTE char_to_value(UBYTE display_char) BANKED
 {
-    if (display_char >= '0' && display_char <= '9')
+    if (display_char >= 48 && display_char <= 57) // '0'-'9' (tiles 48-57)
     {
-        return display_char - '0';
+        return display_char - 48;
     }
-    else if (display_char >= 'A' && display_char <= 'Y')
+    else if (display_char >= 58 && display_char <= 83) // 'A'-'Z' (tiles 58-83)
     {
-        return (display_char - 'A') + 10;
+        return (display_char - 58) + 10;
     }
     return 0; // Default for invalid characters
 }
@@ -1233,27 +1236,295 @@ void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED
 
 void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
 {
-	UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
-	UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+    UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
 
-	// Get current tile at position
-	UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
-	UBYTE new_tile = current_tile;
+    // First, check if this position is within the level code display area
+    UBYTE char_index = get_char_index_from_display_position(x, y);
 
-	// Check if current tile is in the character range (TILE_CHAR_FIRST to TILE_CHAR_LAST)
-	if (current_tile >= TILE_CHAR_FIRST && current_tile <= TILE_CHAR_LAST)
-	{
-		// Going forward - increment the character
-		if (current_tile == TILE_CHAR_LAST) // If at 'Z' (83), wrap to '0' (48)
-		{
-			new_tile = TILE_CHAR_FIRST;
-		}
-		else
-		{
-			new_tile = current_tile + 1;
-		}
+    if (char_index != 255)
+    {
+        // This is a level code character position
+        UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
+        UBYTE current_value = char_to_value(current_tile);
+        UBYTE new_value;
 
-		// Set the new tile using replace_meta_tile to update both map data and visual display
-		replace_meta_tile(x, y, new_tile, 1);
-	}
+        // Determine the maximum value for this position
+        UBYTE max_value;
+        if (char_index < TOTAL_BLOCKS)
+        {
+            // Platform patterns: 0 to PLATFORM_PATTERN_COUNT-1
+            max_value = PLATFORM_PATTERN_COUNT - 1;
+        }
+        else if (char_index == 19)
+        {
+            // Player column: 0-19
+            max_value = 19;
+        }
+        else if (char_index >= 20 && char_index <= 22)
+        {
+            // Enemy positions: 0-19 (0 means no enemy)
+            max_value = 19;
+        }
+        else
+        {
+            // Other encoded values: 0-34
+            max_value = 34;
+        }
+
+        // Cycle to next value
+        if (current_value >= max_value)
+        {
+            new_value = 0; // Wrap to 0
+        }
+        else
+        {
+            new_value = current_value + 1;
+        }
+
+        // Update the level code data and tilemap
+        update_level_code_from_character_edit(char_index, new_value);
+
+        // Update the display character
+        UBYTE display_char = get_extended_display_char(new_value);
+        display_char_at_position(display_char, x, y);
+
+        // Mark this position as updated to prevent flicker
+        mark_display_position_for_update(char_index);
+    }
+    else
+    {
+        // This is not a level code position, use original character cycling logic
+        UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
+        UBYTE new_tile = current_tile;
+
+        // Check if current tile is in the character range (TILE_CHAR_FIRST to TILE_CHAR_LAST)
+        if (current_tile >= TILE_CHAR_FIRST && current_tile <= TILE_CHAR_LAST)
+        {
+            // Going forward - increment the character
+            if (current_tile == TILE_CHAR_LAST) // If at 'Z' (83), wrap to '0' (48)
+            {
+                new_tile = TILE_CHAR_FIRST;
+            }
+            else
+            {
+                new_tile = current_tile + 1;
+            }
+
+            // Set the new tile using replace_meta_tile to update both map data and visual display
+            replace_meta_tile(x, y, new_tile, 1);
+        }
+    }
+}
+
+// ============================================================================
+// REVERSE MAPPING - Convert display position to character index
+// ============================================================================
+
+// Convert display position (x,y) to character index (0-23)
+UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED
+{
+    // Check if position is within the level code display area
+    if (x < LEVEL_CODE_START_X || y < LEVEL_CODE_START_Y || y >= LEVEL_CODE_START_Y + 2)
+    {
+        return 255; // Invalid position
+    }
+
+    UBYTE rel_x = x - LEVEL_CODE_START_X;
+    UBYTE rel_y = y - LEVEL_CODE_START_Y;
+
+    // Layout: 3 blocks of 4 characters per row, with spaces between blocks
+    // Row format: "0000 0000 0000" (positions 0,1,2,3, 5,6,7,8, 10,11,12,13)
+
+    // Check if we're on a space (positions 4, 9, 14)
+    if (rel_x == 4 || rel_x == 9 || rel_x == 14)
+    {
+        return 255; // Space position, not a character
+    }
+
+    // Calculate which block (0, 1, or 2)
+    UBYTE block;
+    UBYTE pos_in_block;
+
+    if (rel_x < 4)
+    {
+        block = 0;
+        pos_in_block = rel_x;
+    }
+    else if (rel_x < 9)
+    {
+        block = 1;
+        pos_in_block = rel_x - 5; // Skip the space at position 4
+    }
+    else if (rel_x < 14)
+    {
+        block = 2;
+        pos_in_block = rel_x - 10; // Skip spaces at positions 4 and 9
+    }
+    else
+    {
+        return 255; // Beyond valid range
+    }
+
+    // Calculate final character index
+    UBYTE char_index = rel_y * 12 + block * 4 + pos_in_block;
+
+    return (char_index < LEVEL_CODE_CHARS_TOTAL) ? char_index : 255;
+}
+
+// Apply pattern changes to the actual tilemap
+void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS || pattern_id >= PLATFORM_PATTERN_COUNT)
+    {
+        return;
+    }
+
+    // Calculate block position in tilemap
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+    UBYTE block_y = block_index / SEGMENTS_PER_ROW;
+    UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
+    UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
+
+    // Get the pattern data
+    UWORD pattern = PLATFORM_PATTERNS[pattern_id];
+
+    // Clear the segment first
+    for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
+    {
+        for (UBYTE j = 0; j < SEGMENT_HEIGHT; j++)
+        {
+            replace_meta_tile(segment_x + i, segment_y + j, 0, 1);
+        }
+    }
+
+    // Apply the pattern
+    for (UBYTE i = 0; i < 5; i++)
+    {
+        UBYTE tile_type = (i == 0) ? PLATFORM_TILE_1 : (i == 4) ? PLATFORM_TILE_3
+                                                                : PLATFORM_TILE_2;
+
+        // Top row (bits 9-5)
+        if ((pattern >> (9 - i)) & 1)
+        {
+            replace_meta_tile(segment_x + i, segment_y, tile_type, 1);
+        }
+
+        // Bottom row (bits 4-0)
+        if ((pattern >> (4 - i)) & 1)
+        {
+            replace_meta_tile(segment_x + i, segment_y + 1, tile_type, 1);
+        }
+    }
+}
+
+// Update level code data based on character position and new value
+void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED
+{
+    if (char_index >= LEVEL_CODE_CHARS_TOTAL)
+    {
+        return;
+    }
+
+    if (char_index < TOTAL_BLOCKS)
+    {
+        // Platform pattern positions (0-15)
+        if (new_value < PLATFORM_PATTERN_COUNT)
+        {
+            current_level_code.platform_patterns[char_index] = new_value;
+            apply_pattern_to_tilemap(char_index, new_value);
+        }
+    }
+    else if (char_index == 16)
+    {
+        // Position 16: Enemy position summary - this is complex to decode directly
+        // For now, we'll skip direct editing of encoded positions
+        // Could be enhanced later to support direct enemy count editing
+    }
+    else if (char_index == 17)
+    {
+        // Position 17: Compressed enemy positions - also complex
+        // Skip for now
+    }
+    else if (char_index == 18)
+    {
+        // Position 18: Enemy directions + type bits - complex
+        // Skip for now
+    }
+    else if (char_index == 19)
+    {
+        // Position 19: Player starting column (0-19)
+        if (new_value < 20)
+        {
+            current_level_code.player_column = new_value;
+
+            // Update player position in tilemap
+            // First, clear existing player
+            for (UBYTE col = 2; col < 22; col++)
+            {
+                UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
+                UBYTE tile_type = get_tile_type(tile);
+                if (tile_type == BRUSH_TILE_PLAYER)
+                {
+                    replace_meta_tile(col, 11, 0, 1);
+                }
+            }
+
+            // Place player at new position
+            replace_meta_tile(2 + new_value, 11, BRUSH_TILE_PLAYER, 1);
+        }
+    }
+    else if (char_index >= 20 && char_index <= 22)
+    {
+        // Positions 20-22: Individual enemy positions (enemies 3-5)
+        UBYTE enemy_index = 3 + (char_index - 20);
+        if (enemy_index < MAX_ENEMIES)
+        {
+            if (new_value == 0)
+            {
+                // Value 0 means remove enemy
+                current_level_code.enemy_positions[enemy_index] = 255;
+
+                // Clear enemy from tilemap
+                for (UBYTE row = 12; row <= 18; row += 2)
+                {
+                    for (UBYTE col = 2; col < 22; col++)
+                    {
+                        UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, row)];
+                        UBYTE tile_type = get_tile_type(tile);
+                        if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+                        {
+                            // Check if this is the enemy we want to remove
+                            // This is approximate since we don't track exact enemy-to-position mapping
+                            replace_meta_tile(col, row, 0, 1);
+                            break; // Remove first found enemy
+                        }
+                    }
+                }
+            }
+            else if (new_value < 20)
+            {
+                // Place enemy at specified column
+                current_level_code.enemy_positions[enemy_index] = new_value;
+
+                // Place enemy in tilemap (use default direction - right)
+                // Find a suitable row (start from row 12)
+                for (UBYTE row = 12; row <= 18; row += 2)
+                {
+                    UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(2 + new_value, row)];
+                    if (tile == 0) // Empty position
+                    {
+                        replace_meta_tile(2 + new_value, row, BRUSH_TILE_ENEMY_R, 1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else if (char_index == 23)
+    {
+        // Position 23: Remaining enemy direction bits
+        // Update the upper bits of enemy_directions
+        current_level_code.enemy_directions = (current_level_code.enemy_directions & 0x07) | ((new_value & 0x07) << 3);
+    }
 }
