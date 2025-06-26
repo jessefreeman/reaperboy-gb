@@ -270,7 +270,8 @@
                               "command": "EVENT_GROUP",
                               "args": {
                                 "__label": "Map editor input",
-                                "__collapse": false
+                                "__collapse": false,
+                                "__comment": false
                               },
                               "children": {
                                 "true": [
@@ -300,8 +301,8 @@
                                               "value": "L0"
                                             },
                                             "$variable[V2]$": {
-                                              "type": "constant",
-                                              "value": "a789b698-9ac3-43d7-a40f-d97e24515da7"
+                                              "type": "variable",
+                                              "value": "T0"
                                             },
                                             "$variable[V3]$": {
                                               "type": "constant",
@@ -349,8 +350,8 @@
                                             },
                                             "__comment": false,
                                             "$variable[V2]$": {
-                                              "type": "constant",
-                                              "value": "a789b698-9ac3-43d7-a40f-d97e24515da7"
+                                              "type": "variable",
+                                              "value": "T0"
                                             },
                                             "$variable[V3]$": {
                                               "type": "constant",
@@ -397,8 +398,8 @@
                                               "value": "L0"
                                             },
                                             "$variable[V2]$": {
-                                              "type": "constant",
-                                              "value": "a789b698-9ac3-43d7-a40f-d97e24515da7"
+                                              "type": "variable",
+                                              "value": "T0"
                                             },
                                             "$variable[V3]$": {
                                               "type": "constant",
@@ -446,8 +447,8 @@
                                             },
                                             "__comment": false,
                                             "$variable[V2]$": {
-                                              "type": "constant",
-                                              "value": "a789b698-9ac3-43d7-a40f-d97e24515da7"
+                                              "type": "variable",
+                                              "value": "T0"
                                             },
                                             "$variable[V3]$": {
                                               "type": "constant",
@@ -593,6 +594,85 @@
                                       ]
                                     },
                                     "id": "a1af4ed1-c07e-4582-afa9-411c32f653bc"
+                                  },
+                                  {
+                                    "command": "EVENT_SET_INPUT_SCRIPT",
+                                    "args": {
+                                      "input": [
+                                        "select"
+                                      ],
+                                      "override": true,
+                                      "__scriptTabs": "press"
+                                    },
+                                    "children": {
+                                      "true": [
+                                        {
+                                          "command": "EVENT_TEXT",
+                                          "args": {
+                                            "text": [
+                                              "Switch mode"
+                                            ],
+                                            "__section": "text",
+                                            "avatarId": "",
+                                            "minHeight": 4,
+                                            "maxHeight": 7,
+                                            "textX": 1,
+                                            "textY": 1,
+                                            "textHeight": 5,
+                                            "position": "bottom",
+                                            "clearPrevious": true,
+                                            "showFrame": "true",
+                                            "speedIn": -1,
+                                            "speedOut": -1,
+                                            "closeWhen": "key",
+                                            "closeButton": "a",
+                                            "closeDelayTime": 0.5,
+                                            "closeDelayFrames": 30
+                                          },
+                                          "id": "3e3dac21-53d2-45f1-af6e-d9449112f71e"
+                                        },
+                                        {
+                                          "command": "EVENT_IF",
+                                          "args": {
+                                            "condition": {
+                                              "type": "variable",
+                                              "value": "26"
+                                            },
+                                            "__collapseElse": false
+                                          },
+                                          "children": {
+                                            "true": [
+                                              {
+                                                "command": "EVENT_CALL_CUSTOM_EVENT",
+                                                "args": {
+                                                  "customEventId": "69ead36c-782b-4f56-bd72-8fe5de00db6a",
+                                                  "$variable[V0]$": {
+                                                    "type": "false"
+                                                  },
+                                                  "$actor[0]$": "d5043213-d1dc-4d02-b470-9d13dfa87721"
+                                                },
+                                                "id": "17b08e60-f2f0-4e8c-9b3b-722ec6e3c812"
+                                              }
+                                            ],
+                                            "false": [
+                                              {
+                                                "command": "EVENT_CALL_CUSTOM_EVENT",
+                                                "args": {
+                                                  "customEventId": "69ead36c-782b-4f56-bd72-8fe5de00db6a",
+                                                  "$variable[V0]$": {
+                                                    "type": "true"
+                                                  },
+                                                  "$actor[0]$": "d5043213-d1dc-4d02-b470-9d13dfa87721"
+                                                },
+                                                "id": "83e1b7f5-fa46-47a3-a56a-94254b8aae44"
+                                              }
+                                            ]
+                                          },
+                                          "id": "fde3fcab-b801-48a6-9cce-4ca7f1d2c17f"
+                                        }
+                                      ]
+                                    },
+                                    "id": "662b6c89-8aa8-4332-a7a7-c86dfc210d1b"
                                   }
                                 ]
                               },

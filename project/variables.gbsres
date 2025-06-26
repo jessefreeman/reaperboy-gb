@@ -112,6 +112,31 @@
       "symbol": "var_v_cloud_2_next_y"
     },
     {
+      "id": "22",
+      "name": "V_MAX_X_TILE_ID",
+      "symbol": "var_v_max_x_tile_id"
+    },
+    {
+      "id": "23",
+      "name": "V_MIN_X_TILE_ID",
+      "symbol": "var_v_min_x_tile_id"
+    },
+    {
+      "id": "24",
+      "name": "V_MAX_Y_TILE_ID",
+      "symbol": "var_v_max_y_tile_id"
+    },
+    {
+      "id": "25",
+      "name": "V_MIN_Y_TILE_ID",
+      "symbol": "var_v_min_y_tile_id"
+    },
+    {
+      "id": "26",
+      "name": "V_PAINT_MODE",
+      "symbol": "var_v_paint_mode"
+    },
+    {
       "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L0",
       "name": "L_SET_TO_POSITION",
       "symbol": "var_l_set_to_position"
@@ -344,27 +369,51 @@
     },
     {
       "id": "6bd78af0-982c-4dbd-b013-717d619b1890",
-      "name": "C_MAX_Y_TILE_ID",
-      "symbol": "const_c_max_y_tile_id",
+      "name": "C_EDITOR_MAX_Y_TILE_ID",
+      "symbol": "const_c_editor_max_y_tile_i",
       "value": 20
     },
     {
       "id": "00d87138-e1ab-4d46-a091-3203ccc5316d",
-      "name": "C_MIN_X_TILE_ID",
-      "symbol": "const_c_min_x_tile_id",
+      "name": "C_EDITOR_MIN_X_TILE_ID",
+      "symbol": "const_c_editor_min_x_tile_i",
       "value": 2
     },
     {
       "id": "1d863847-9bca-4431-a3d7-85ff70172e93",
-      "name": "C_MIN_Y_TILE_ID",
-      "symbol": "const_c_min_y_tile_id",
+      "name": "C_EDITOR_MIN_Y_TILE_ID",
+      "symbol": "const_c_editor_min_y_tile_i",
       "value": 11
     },
     {
       "id": "a789b698-9ac3-43d7-a40f-d97e24515da7",
-      "name": "C_MAX_X_TILE_ID",
-      "symbol": "const_c_max_x_tile_id",
+      "name": "C_EDITOR_MAX_X_TILE_ID",
+      "symbol": "const_c_editor_max_x_tile_i",
       "value": 21
+    },
+    {
+      "id": "b3ec3f00-e86a-42c1-ba77-fa30a4e6d78f",
+      "name": "C_CODE_MAX_X_TILE_ID",
+      "symbol": "const_c_code_max_x_tile_id",
+      "value": 18
+    },
+    {
+      "id": "eff4b113-b75e-4ae2-aff8-d8f0a22410d8",
+      "name": "C_CODE_MAX_Y_TILE_ID",
+      "symbol": "const_c_code_max_y_tile_id",
+      "value": 7
+    },
+    {
+      "id": "9492956d-0d10-4dfe-9d83-7993e00ed4c4",
+      "name": "C_CODE_MIN_X_TILE_ID",
+      "symbol": "const_c_code_min_x_tile_id",
+      "value": 5
+    },
+    {
+      "id": "eeca031c-3f78-4591-86c1-caccd4ee2ffd",
+      "name": "C_CODE_MIN_Y_TILE_ID",
+      "symbol": "const_c_code_min_y_tile_id",
+      "value": 6
     }
   ]
 }
