@@ -44,6 +44,9 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED;
 // ENTITY MANAGEMENT
 // ============================================================================
 
+// External paint actor IDs
+extern UBYTE paint_player_id;
+
 void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
 void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
 UBYTE find_next_available_enemy_slot(void) BANKED;

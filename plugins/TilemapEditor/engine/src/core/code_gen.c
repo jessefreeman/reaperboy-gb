@@ -1384,7 +1384,11 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
             }
 
             // Place player at new position
-            replace_meta_tile(2 + new_value, 11, BRUSH_TILE_PLAYER, 1);
+            UBYTE new_x = 2 + new_value;
+            replace_meta_tile(new_x, 11, TILE_PLAYER, 1);
+
+            // Also move the player actor to the new position
+            move_player_actor_to_tile(paint_player_id, new_x, 11);
         }
     }
     else if (char_index >= 20 && char_index <= 22)
