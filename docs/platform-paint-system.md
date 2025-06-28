@@ -1,0 +1,181 @@
+# Platform Paint System
+
+## Overview
+
+The platform paint system handles the creation, modification, and validation of platforms within the tilemap. It ensures platforms follow game rules while providing a consistent painting experience.
+
+## Platform Rules
+
+### Length Constraints
+
+- **Minimum Length**: 2 tiles (single-tile platforms are auto-completed or removed)
+- **Maximum Length**: 8 tiles (prevents creation of overly long platforms)
+- **Auto-completion**: Single platforms at edges automatically extend to 2-tile minimum
+
+### Visual-Logical Consistency
+
+- What users see on screen exactly matches the internal platform structure
+- No visual "phantom" connections that don't represent actual platform data
+- Platform merging follows predictable rules
+
+## Core Functions
+
+### Paint Operations
+
+```c
+void paint(UBYTE x, UBYTE y);                           // Main paint function
+void paint_player(UBYTE x, UBYTE y);                   // Place player
+void paint_enemy_right(UBYTE x, UBYTE y);              // Place right-facing enemy
+void paint_enemy_left(UBYTE x, UBYTE y);               // Place left-facing enemy
+void delete_tile(UBYTE x, UBYTE y);                    // Remove tile/entity
+```
+
+### Platform Validation
+
+```c
+UBYTE count_connected_platform_length(UBYTE x, UBYTE y);    // Calculate total platform length
+UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y);  // Check merge limits
+UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y);   // Check for conflicts
+```
+
+### Platform Management
+
+```c
+void rebuild_platform_row(UBYTE y);                    // Enforce platform rules
+void cleanup_invalid_platforms(void);                  // Remove single-tile platforms
+void remove_enemies_above_platform(UBYTE x, UBYTE y);  // Safety cleanup
+```
+
+## Paint Logic Details
+
+### Platform Creation Process
+
+1. **Empty Tile Click**: Creates a 2-tile platform automatically
+2. **Adjacent to Platform**: Extends existing platform (if within 8-tile limit)
+3. **Gap Bridging**: Creates new 2-tile platform that may auto-merge with nearby platforms
+4. **Validation**: All operations check the 8-tile maximum length rule
+
+### Auto-Completion System
+
+When a single platform tile is created at segment edges:
+
+```c
+// Isolated platform at rightmost position gets auto-completed
+if (is_isolated && i == SEGMENT_WIDTH - 1 && tile_x + 1 <= PLATFORM_X_MAX) {
+    paint(tile_x + 1, current_y);  // Auto-complete to 2-tile platform
+}
+```
+
+### Platform Merging
+
+Adjacent platforms automatically merge when:
+
+- Total length ≤ 8 tiles
+- No vertical conflicts exist
+- Platforms are on the same row
+
+## Brush Preview System
+
+### Preview States
+
+- **BRUSH_TILE_EMPTY**: No tile at position
+- **BRUSH_TILE_PLATFORM**: Platform tile present
+- **BRUSH_TILE_PLAYER**: Player position
+- **BRUSH_TILE_ENEMY_RIGHT**: Right-facing enemy
+- **BRUSH_TILE_ENEMY_LEFT**: Left-facing enemy
+
+### Preview Validation
+
+```c
+UBYTE get_platform_placement_type(UBYTE x, UBYTE y);
+```
+
+Shows users what will happen before they click:
+
+- Green: Valid platform placement
+- Red: Invalid (would exceed limits)
+- Yellow: Will extend existing platform
+
+## Pattern Application Integration
+
+### True Manual Paint Simulation
+
+Pattern application uses the actual `paint()` function to ensure consistency:
+
+```c
+void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) {
+    // Apply pattern tile by tile using real paint() calls
+    for (UBYTE i = 0; i < SEGMENT_WIDTH; i++) {
+        if ((row_pattern >> (4 - i)) & 1) {
+            UBYTE tile_x = PLATFORM_X_MIN + (segment_x * SEGMENT_WIDTH) + i;
+
+            // Check if already has correct platform
+            if (get_meta_tile(tile_x, current_y) != PLATFORM_TILE_2) {
+                paint(tile_x, current_y);  // Use actual paint function
+            }
+        }
+    }
+}
+```
+
+### Benefits of True Simulation
+
+- **Perfect Consistency**: Code entry performs identical actions to manual painting
+- **Automatic Updates**: Level codes sync immediately
+- **Auto-completion**: Single platforms get completed automatically
+- **Platform Merging**: Uses same logic as manual editing
+
+## Error Prevention
+
+### Length Validation
+
+- **Direct Extension**: Prevents extending 8-tile platforms
+- **Indirect Merging**: Prevents creating platforms that would merge beyond limits
+- **Gap Analysis**: Calculates total post-merge length before allowing placement
+
+### Safety Measures
+
+- **Enemy Cleanup**: Removes enemies when platforms are deleted
+- **Boundary Checks**: Ensures operations stay within tilemap bounds
+- **Conflict Detection**: Prevents invalid vertical platform arrangements
+
+## Cleanup System
+
+### Platform Rule Enforcement
+
+```c
+void fix_platform_segment_rules(UBYTE segment_x, UBYTE segment_y);
+```
+
+Automatically called to:
+
+1. Remove single-tile platforms
+2. Enforce minimum 2-tile length
+3. Split platforms exceeding 8-tile maximum
+4. Update level codes after changes
+
+### Usage in Code Entry Mode
+
+- During code entry: All patterns allowed (including single tiles)
+- On exit: Cleanup automatically fixes invalid patterns
+- Result: Valid tilemap that follows all platform rules
+
+## Integration with Level Code System
+
+### Immediate Updates
+
+Every paint operation triggers:
+
+```c
+update_level_code_for_paint(x, y);  // Smart zone-specific update
+```
+
+### Complete Refresh
+
+For pattern application and major changes:
+
+```c
+update_complete_level_code();  // Full re-extraction and display
+```
+
+This ensures the visual level code display always reflects the current tilemap state immediately after any paint operation.
