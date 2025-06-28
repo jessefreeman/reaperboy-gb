@@ -741,11 +741,19 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
     UBYTE enemy_count = 0, playerPlaced = 0, exitPlaced = 0;
     UBYTE playerX = 0, playerRow = 0;
 
-    // Single pass through the map
-    for (UBYTE yy = 10; yy <= 19 && (!playerPlaced || !exitPlaced || enemy_count < 6); ++yy)
+    // Single pass through the map - simplified loop conditions to avoid optimizer warnings
+    for (UBYTE yy = 10; yy <= 19; ++yy)
     {
-        for (UBYTE xx = 2; xx < 22 && (!playerPlaced || !exitPlaced || enemy_count < 6); ++xx)
+        // Check if we can exit early
+        if (playerPlaced && exitPlaced && enemy_count >= 6)
+            break;
+
+        for (UBYTE xx = 2; xx < 22; ++xx)
         {
+            // Check if we can exit early
+            if (playerPlaced && exitPlaced && enemy_count >= 6)
+                break;
+
             UBYTE tid = sram_map_data[METATILE_MAP_OFFSET(xx, yy)];
             UBYTE tt = get_tile_type(tid); // Place player
             if (!playerPlaced && tt == BRUSH_TILE_PLAYER)

@@ -102,6 +102,8 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED;
 void update_neighboring_block_codes(UBYTE block_index) BANKED;
 void update_all_affected_block_codes(UBYTE block_index) BANKED;
 void update_single_block_code(UBYTE block_index) BANKED;
+void validate_final_pattern_match(UBYTE block_index, UBYTE intended_pattern_id) BANKED;
+void validate_all_block_patterns(void) BANKED;
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
 // ============================================================================
@@ -603,9 +605,13 @@ UBYTE encode_enemy_details_1(void) BANKED
     UBYTE shift = 0;
 
     // Pack first 3 enemy positions (each needs ~5 bits for 0-19)
-    for (UBYTE i = 0; i < 3 && i < MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < 3; i++)
     {
-        if (current_level_code.enemy_positions[i] != 255 && shift <= 30)
+        if (i >= MAX_ENEMIES)
+            break;
+        if (shift > 30)
+            break;
+        if (current_level_code.enemy_positions[i] != 255)
         {
             // Reduce precision: map 0-19 to 0-15 for better packing
             UBYTE compressed_pos = (current_level_code.enemy_positions[i] * 15) / 19;
@@ -793,6 +799,13 @@ void vm_load_level_code(SCRIPT_CTX *THIS) BANKED
     load_level_code_from_variables();
     reconstruct_tilemap_from_level_code(); // Apply patterns to tilemap using brush logic
     force_complete_level_code_display();   // Force complete redraw after loading
+}
+
+// VM wrapper for comprehensive pattern validation
+void vm_validate_all_patterns(SCRIPT_CTX *THIS) BANKED
+{
+    (void)THIS;
+    validate_all_block_patterns();
 }
 
 // Check if saved level code exists
@@ -1412,6 +1425,10 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
     // Force immediate update of neighboring blocks that might have been affected by auto-completion
     // We need to do this comprehensively since auto-completion can affect multiple neighbors
     update_all_affected_block_codes(block_index);
+
+    // FINAL VALIDATION: Ensure the displayed pattern matches what was actually painted
+    // This handles edge cases where platform length limits prevent the intended pattern
+    validate_final_pattern_match(block_index, pattern_id);
 }
 
 // Comprehensive update of all blocks that might have been affected by auto-completion
@@ -1831,25 +1848,70 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
     }
 }
 
-// ============================================================================
-// LEVEL CODE CHARACTER EDITING - Enhanced with immediate neighbor updates
-// ============================================================================
+// Final validation to ensure displayed pattern matches actual painted pattern
+// This handles edge cases where platform length limits prevent painting the intended pattern
+void validate_final_pattern_match(UBYTE block_index, UBYTE intended_pattern_id) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS)
+        return;
 
-/*
- * ISSUE FIXED: Level code character changes now properly update neighbors immediately
- *
- * Previous behavior:
- * - User changes pattern 0->1 in block A
- * - Block A gets updated immediately
- * - Block B neighbor doesn't update until next pattern change
- *
- * New behavior:
- * - User changes pattern 0->1 in block A
- * - Block A gets updated immediately
- * - All neighboring blocks (B, C, etc.) get updated immediately
- * - Display reflects the true state of all affected blocks
- *
- * This ensures that when auto-completion creates platforms that span multiple blocks,
- * all affected block level codes are updated instantly, matching the behavior of
- * manual painting where neighbors update immediately.
- */
+    // Calculate segment position
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+    UBYTE block_y = block_index / SEGMENTS_PER_ROW;
+    UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
+    UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
+
+    // Extract the actual pattern from the tilemap
+    UBYTE row0, row1;
+    UWORD actual_pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+    UWORD actual_pattern_id = match_platform_pattern(actual_pattern);
+
+    // Check if the actual pattern differs from what we intended to paint
+    if (actual_pattern_id != intended_pattern_id)
+    {
+        // The paint logic prevented painting the intended pattern (likely due to length limits)
+        // Update the level code to reflect what was actually painted
+        current_level_code.platform_patterns[block_index] = (UBYTE)actual_pattern_id;
+
+        // Update the display to show the correct pattern
+        UBYTE display_x, display_y;
+        get_display_position(block_index, &display_x, &display_y);
+        display_pattern_char((UBYTE)actual_pattern_id, display_x, display_y);
+
+        // Mark this position as updated
+        mark_display_position_for_update(block_index);
+    }
+}
+
+// Comprehensive validation of all block patterns to ensure display matches reality
+// Useful after complex operations that might affect multiple blocks
+void validate_all_block_patterns(void) BANKED
+{
+    for (UBYTE block_index = 0; block_index < TOTAL_BLOCKS; block_index++)
+    {
+        // Calculate segment position
+        UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+        UBYTE block_y = block_index / SEGMENTS_PER_ROW;
+        UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
+        UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
+
+        // Extract the actual pattern from the tilemap
+        UBYTE row0, row1;
+        UWORD actual_pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+        UWORD actual_pattern_id = match_platform_pattern(actual_pattern);
+
+        // Update if there's a mismatch
+        if (current_level_code.platform_patterns[block_index] != (UBYTE)actual_pattern_id)
+        {
+            current_level_code.platform_patterns[block_index] = (UBYTE)actual_pattern_id;
+
+            // Update the display
+            UBYTE display_x, display_y;
+            get_display_position(block_index, &display_x, &display_y);
+            display_pattern_char((UBYTE)actual_pattern_id, display_x, display_y);
+
+            // Mark this position as updated
+            mark_display_position_for_update(block_index);
+        }
+    }
+}
