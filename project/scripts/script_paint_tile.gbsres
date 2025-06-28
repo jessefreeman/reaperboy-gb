@@ -69,7 +69,8 @@
                 "type": "variable",
                 "value": "4"
               },
-              "debug_var": "27"
+              "debug_var": "27",
+              "__collapse": true
             },
             "id": "023b80d1-44f5-44a3-8a7f-d44d6a58efbb"
           }
