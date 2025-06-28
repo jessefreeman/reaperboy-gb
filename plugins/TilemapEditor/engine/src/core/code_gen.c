@@ -13,6 +13,8 @@
 
 #define PLATFORM_Y_MIN 12
 #define PLATFORM_Y_MAX 19
+#define PLATFORM_X_MIN 2
+#define PLATFORM_X_MAX 21
 #define SEGMENTS_PER_ROW 4
 #define SEGMENT_WIDTH 5
 #define SEGMENT_HEIGHT 2
@@ -96,6 +98,9 @@ void clear_level_code_display(void) BANKED;
 void update_complete_level_code(void) BANKED;
 UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED;
 void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED;
+void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED;
+void update_neighboring_block_codes(UBYTE block_index) BANKED;
+void update_single_block_code(UBYTE block_index) BANKED;
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
 // ============================================================================
@@ -785,7 +790,8 @@ void vm_load_level_code(SCRIPT_CTX *THIS) BANKED
 {
     (void)THIS;
     load_level_code_from_variables();
-    force_complete_level_code_display(); // Force complete redraw after loading
+    reconstruct_tilemap_from_level_code(); // Apply patterns to tilemap using brush logic
+    force_complete_level_code_display();   // Force complete redraw after loading
 }
 
 // Check if saved level code exists
@@ -1143,7 +1149,8 @@ void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED
     *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = success;
     if (success)
     {
-        force_complete_level_code_display(); // Force complete redraw after loading
+        reconstruct_tilemap_from_level_code(); // Apply patterns to tilemap using brush logic
+        force_complete_level_code_display();   // Force complete redraw after loading
     }
 }
 
@@ -1166,33 +1173,54 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         UBYTE max_value;
         if (char_index < TOTAL_BLOCKS)
         {
-            // Platform patterns: 0 to PLATFORM_PATTERN_COUNT-1
+            // Platform patterns: cycle through 0 to PLATFORM_PATTERN_COUNT-1
             max_value = PLATFORM_PATTERN_COUNT - 1;
+            new_value = (current_value + 1) % PLATFORM_PATTERN_COUNT;
         }
         else if (char_index == 19)
         {
             // Player column: 0-19
             max_value = 19;
+
+            // Cycle to next value
+            if (current_value >= max_value)
+            {
+                new_value = 0; // Wrap to 0
+            }
+            else
+            {
+                new_value = current_value + 1;
+            }
         }
         else if (char_index >= 20 && char_index <= 22)
         {
             // Enemy positions: 0-19 (0 means no enemy)
             max_value = 19;
+
+            // Cycle to next value
+            if (current_value >= max_value)
+            {
+                new_value = 0; // Wrap to 0
+            }
+            else
+            {
+                new_value = current_value + 1;
+            }
         }
         else
         {
             // Other encoded values: 0-34
             max_value = 34;
-        }
 
-        // Cycle to next value
-        if (current_value >= max_value)
-        {
-            new_value = 0; // Wrap to 0
-        }
-        else
-        {
-            new_value = current_value + 1;
+            // Cycle to next value
+            if (current_value >= max_value)
+            {
+                new_value = 0; // Wrap to 0
+            }
+            else
+            {
+                new_value = current_value + 1;
+            }
         }
 
         // Update the level code data and tilemap
@@ -1313,6 +1341,159 @@ void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED
 
     // Apply the pattern with proper end cap logic
     apply_pattern_with_endcaps(segment_x, segment_y, pattern, block_index);
+}
+
+// New function that applies patterns using the same brush logic as manual painting
+void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS || pattern_id >= PLATFORM_PATTERN_COUNT)
+    {
+        return;
+    }
+
+    // Calculate block position in tilemap
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+    UBYTE block_y = block_index / SEGMENTS_PER_ROW;
+    UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
+    UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
+
+    // Get the pattern data
+    UWORD pattern = PLATFORM_PATTERNS[pattern_id];
+
+    // Clear the segment first by calling paint() on each tile (simulates delete clicks)
+    for (UBYTE row = 0; row < SEGMENT_HEIGHT; row++)
+    {
+        UBYTE current_y = segment_y + row;
+        for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
+        {
+            UBYTE tile_x = segment_x + i;
+            // If there's a platform tile here, delete it by calling paint (which will delete it)
+            if (get_current_tile_type(tile_x, current_y) == BRUSH_TILE_PLATFORM)
+            {
+                paint(tile_x, current_y); // This will delete the platform
+            }
+        }
+    }
+
+    // Apply pattern by simulating manual paint clicks from left to right
+    for (UBYTE row = 0; row < SEGMENT_HEIGHT; row++)
+    {
+        // Extract row pattern (top row: bits 9-5, bottom row: bits 4-0)
+        UBYTE row_pattern = (row == 0) ? ((pattern >> 5) & 0x1F) : (pattern & 0x1F);
+
+        if (row_pattern == 0)
+            continue; // Skip empty rows
+
+        UBYTE current_y = segment_y + row;
+
+        // Process tiles from left to right (position 0 to 4)
+        for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
+        {
+            if ((row_pattern >> (4 - i)) & 1)
+            {
+                UBYTE tile_x = segment_x + i;
+
+                // Only call paint() if there isn't already a platform tile here
+                // This prevents deleting platforms that were auto-created by previous paint() calls
+                if (get_current_tile_type(tile_x, current_y) != BRUSH_TILE_PLATFORM)
+                {
+                    // Call the exact same paint function that manual clicking uses
+                    // This handles all the logic: auto-completion, merging, level code updates, etc.
+                    paint(tile_x, current_y);
+                }
+            }
+        }
+    }
+
+    // Update level codes for neighboring blocks that might have been affected by auto-completion
+    update_neighboring_block_codes(block_index);
+}
+
+// Update level codes for blocks adjacent to the given block that may have been affected by auto-completion
+void update_neighboring_block_codes(UBYTE block_index) BANKED
+{
+    // Check horizontal neighbors (left and right)
+    UBYTE current_row = block_index / SEGMENTS_PER_ROW;
+
+    // Left neighbor
+    if ((block_index % SEGMENTS_PER_ROW) > 0)
+    {
+        UBYTE left_neighbor = block_index - 1;
+        update_single_block_code(left_neighbor);
+    }
+
+    // Right neighbor
+    if ((block_index % SEGMENTS_PER_ROW) < (SEGMENTS_PER_ROW - 1))
+    {
+        UBYTE right_neighbor = block_index + 1;
+        update_single_block_code(right_neighbor);
+    }
+
+    // Vertical neighbors (above and below)
+    // Above neighbor
+    if (current_row > 0)
+    {
+        UBYTE above_neighbor = block_index - SEGMENTS_PER_ROW;
+        update_single_block_code(above_neighbor);
+    }
+
+    // Below neighbor
+    if (current_row < (TOTAL_BLOCKS / SEGMENTS_PER_ROW - 1))
+    {
+        UBYTE below_neighbor = block_index + SEGMENTS_PER_ROW;
+        update_single_block_code(below_neighbor);
+    }
+}
+
+// Update the level code for a single block by extracting its current pattern
+void update_single_block_code(UBYTE block_index) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS)
+        return;
+
+    // Calculate segment position
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+    UBYTE block_y = block_index / SEGMENTS_PER_ROW;
+    UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
+    UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
+
+    // Extract the current pattern from the tilemap
+    UBYTE row0, row1;
+    UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
+    UWORD pattern_id = match_platform_pattern(pattern);
+
+    // Update the level code if it changed
+    if (current_level_code.platform_patterns[block_index] != (UBYTE)pattern_id)
+    {
+        current_level_code.platform_patterns[block_index] = (UBYTE)pattern_id;
+        mark_display_position_for_update(block_index);
+    }
+}
+
+// Reconstruct the entire tilemap from the current level code using brush logic
+void reconstruct_tilemap_from_level_code(void) BANKED
+{
+    // Clear all platform areas first
+    for (UBYTE y = PLATFORM_Y_MIN; y <= PLATFORM_Y_MAX; y++)
+    {
+        for (UBYTE x = 2; x <= PLATFORM_X_MAX; x++)
+        {
+            replace_meta_tile(x, y, 0, 1);
+        }
+    }
+
+    // Apply all platform patterns using brush logic
+    for (UBYTE block_index = 0; block_index < TOTAL_BLOCKS; block_index++)
+    {
+        UBYTE pattern_id = current_level_code.platform_patterns[block_index];
+        if (pattern_id > 0 && pattern_id < PLATFORM_PATTERN_COUNT)
+        {
+            apply_pattern_with_brush_logic(block_index, pattern_id);
+        }
+    }
+
+    // Update the level code to reflect any auto-completion effects
+    extract_platform_data();
 }
 
 // Helper function to check if there's a platform in adjacent segment
@@ -1442,64 +1623,6 @@ void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_le
     }
 }
 
-// Validate if a pattern is acceptable for placement at given block index
-UBYTE is_pattern_valid(UBYTE block_index, UBYTE pattern_id) BANKED
-{
-    if (pattern_id >= PLATFORM_PATTERN_COUNT)
-        return 0;
-
-    UWORD pattern = PLATFORM_PATTERNS[pattern_id];
-
-    // Empty pattern is always valid
-    if (pattern == 0)
-        return 1;
-
-    // Check for problematic single platforms at segment edges
-    UBYTE has_left_neighbor = has_adjacent_platform(block_index, -1);
-    UBYTE has_right_neighbor = has_adjacent_platform(block_index, 1);
-
-    // Check both rows of the pattern
-    for (UBYTE row = 0; row < 2; row++)
-    {
-        UBYTE row_pattern = (row == 0) ? ((pattern >> 5) & 0x1F) : (pattern & 0x1F);
-
-        if (row_pattern == 0)
-            continue;
-
-        // Check for isolated single platforms at edges
-        if (row_pattern == 0b10000) // Single platform at leftmost position (bit 4)
-        {
-            if (!has_left_neighbor)
-                return 0; // Isolated single at left edge
-        }
-
-        if (row_pattern == 0b00001) // Single platform at rightmost position (bit 0)
-        {
-            if (!has_right_neighbor)
-                return 0; // Isolated single at right edge
-        }
-    }
-
-    return 1; // Pattern is valid
-}
-
-// Find the next valid pattern starting from requested value
-UBYTE find_valid_pattern(UBYTE block_index, UBYTE start_value) BANKED
-{
-    // Try patterns starting from start_value, wrapping around
-    for (UBYTE attempt = 0; attempt < PLATFORM_PATTERN_COUNT; attempt++)
-    {
-        UBYTE test_pattern = (start_value + attempt) % PLATFORM_PATTERN_COUNT;
-
-        if (is_pattern_valid(block_index, test_pattern))
-        {
-            return test_pattern;
-        }
-    }
-
-    return 255; // No valid pattern found
-}
-
 // Update level code data based on character position and new value
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED
 {
@@ -1513,15 +1636,9 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
         // Platform pattern positions (0-15)
         if (new_value < PLATFORM_PATTERN_COUNT)
         {
-            // Find the next valid pattern starting from new_value
-            UBYTE valid_pattern = find_valid_pattern(char_index, new_value);
-
-            if (valid_pattern != 255)
-            {
-                current_level_code.platform_patterns[char_index] = valid_pattern;
-                apply_pattern_to_tilemap(char_index, valid_pattern);
-            }
-            // If no valid pattern found, keep the current pattern unchanged
+            // Apply the pattern directly - no validation restrictions
+            current_level_code.platform_patterns[char_index] = new_value;
+            apply_pattern_with_brush_logic(char_index, new_value);
         }
     }
     else if (char_index == 16)

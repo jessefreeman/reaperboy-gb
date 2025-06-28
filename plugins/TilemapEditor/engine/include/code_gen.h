@@ -33,13 +33,14 @@ UWORD match_platform_pattern(UWORD pattern) BANKED;
 
 // Platform application with proper end cap logic
 void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UWORD pattern, UBYTE block_index) BANKED;
+void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED;
+void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED;
+void update_neighboring_block_codes(UBYTE block_index) BANKED;
+void update_single_block_code(UBYTE block_index) BANKED;
+void reconstruct_tilemap_from_level_code(void) BANKED;
 void apply_row_platforms(UBYTE base_x, UBYTE y, UBYTE row_pattern, UBYTE has_left_neighbor, UBYTE has_right_neighbor) BANKED;
 void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_left, UBYTE connected_right) BANKED;
 UBYTE has_adjacent_platform(UBYTE block_index, BYTE direction) BANKED;
-
-// Platform pattern validation
-UBYTE is_pattern_valid(UBYTE block_index, UBYTE pattern_id) BANKED;
-UBYTE find_valid_pattern(UBYTE block_index, UBYTE start_value) BANKED;
 
 // ============================================================================
 // LEVEL CODE SYSTEM - Unified 24-character display
