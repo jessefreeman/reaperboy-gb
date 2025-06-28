@@ -65,6 +65,7 @@ UBYTE display_position_needs_update(UBYTE position) BANKED;
 void draw_segment_ids(void) BANKED;
 void update_zone_code(UBYTE zone_index) BANKED;
 UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
+void update_all_affected_block_codes(UBYTE block_index) BANKED;
 
 // Encoding functions for compact display
 UBYTE encode_enemy_bitmask(void) BANKED;

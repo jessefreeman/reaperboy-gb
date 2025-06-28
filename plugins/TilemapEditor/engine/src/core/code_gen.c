@@ -100,6 +100,7 @@ UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED;
 void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED;
 void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED;
 void update_neighboring_block_codes(UBYTE block_index) BANKED;
+void update_all_affected_block_codes(UBYTE block_index) BANKED;
 void update_single_block_code(UBYTE block_index) BANKED;
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
@@ -1405,8 +1406,66 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
         }
     }
 
-    // Update level codes for neighboring blocks that might have been affected by auto-completion
-    update_neighboring_block_codes(block_index);
+    // Update current block first to reflect the changes we just made
+    update_single_block_code(block_index);
+
+    // Force immediate update of neighboring blocks that might have been affected by auto-completion
+    // We need to do this comprehensively since auto-completion can affect multiple neighbors
+    update_all_affected_block_codes(block_index);
+}
+
+// Comprehensive update of all blocks that might have been affected by auto-completion
+// This is more thorough than update_neighboring_block_codes and handles cascade effects
+void update_all_affected_block_codes(UBYTE block_index) BANKED
+{
+    // First, update immediate neighbors (left, right, above, below)
+    UBYTE current_row = block_index / SEGMENTS_PER_ROW;
+
+    // Left neighbor
+    if ((block_index % SEGMENTS_PER_ROW) > 0)
+    {
+        UBYTE left_neighbor = block_index - 1;
+        update_single_block_code(left_neighbor);
+    }
+
+    // Right neighbor
+    if ((block_index % SEGMENTS_PER_ROW) < (SEGMENTS_PER_ROW - 1))
+    {
+        UBYTE right_neighbor = block_index + 1;
+        update_single_block_code(right_neighbor);
+    }
+
+    // Above neighbor
+    if (current_row > 0)
+    {
+        UBYTE above_neighbor = block_index - SEGMENTS_PER_ROW;
+        update_single_block_code(above_neighbor);
+    }
+
+    // Below neighbor
+    if (current_row < 3) // 4 total rows (0-3)
+    {
+        UBYTE below_neighbor = block_index + SEGMENTS_PER_ROW;
+        update_single_block_code(below_neighbor);
+    }
+
+    // For horizontal auto-completion effects, we might need to check extended neighbors
+    // Auto-completion can create 2-tile platforms that span across block boundaries
+    // Check 2 blocks to the left and right for potential cascade effects
+
+    // Extended left neighbor (2 blocks away)
+    if ((block_index % SEGMENTS_PER_ROW) >= 2)
+    {
+        UBYTE extended_left = block_index - 2;
+        update_single_block_code(extended_left);
+    }
+
+    // Extended right neighbor (2 blocks away)
+    if ((block_index % SEGMENTS_PER_ROW) <= (SEGMENTS_PER_ROW - 3))
+    {
+        UBYTE extended_right = block_index + 2;
+        update_single_block_code(extended_right);
+    }
 }
 
 // Update level codes for blocks adjacent to the given block that may have been affected by auto-completion
@@ -1467,6 +1526,11 @@ void update_single_block_code(UBYTE block_index) BANKED
     {
         current_level_code.platform_patterns[block_index] = (UBYTE)pattern_id;
         mark_display_position_for_update(block_index);
+
+        // Immediately update the display for this block to prevent delays
+        UBYTE display_x, display_y;
+        get_display_position(block_index, &display_x, &display_y);
+        display_pattern_char((UBYTE)pattern_id, display_x, display_y);
     }
 }
 
@@ -1636,9 +1700,15 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
         // Platform pattern positions (0-15)
         if (new_value < PLATFORM_PATTERN_COUNT)
         {
+            // Store the old pattern for comparison
+            UBYTE old_pattern = current_level_code.platform_patterns[char_index];
+
             // Apply the pattern directly - no validation restrictions
             current_level_code.platform_patterns[char_index] = new_value;
             apply_pattern_with_brush_logic(char_index, new_value);
+
+            // The comprehensive update is handled in apply_pattern_with_brush_logic
+            // so we don't need additional updates here
         }
     }
     else if (char_index == 16)
@@ -1760,3 +1830,26 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
         current_level_code.enemy_directions = (current_level_code.enemy_directions & 0x07) | ((new_value & 0x07) << 3);
     }
 }
+
+// ============================================================================
+// LEVEL CODE CHARACTER EDITING - Enhanced with immediate neighbor updates
+// ============================================================================
+
+/*
+ * ISSUE FIXED: Level code character changes now properly update neighbors immediately
+ *
+ * Previous behavior:
+ * - User changes pattern 0->1 in block A
+ * - Block A gets updated immediately
+ * - Block B neighbor doesn't update until next pattern change
+ *
+ * New behavior:
+ * - User changes pattern 0->1 in block A
+ * - Block A gets updated immediately
+ * - All neighboring blocks (B, C, etc.) get updated immediately
+ * - Display reflects the true state of all affected blocks
+ *
+ * This ensures that when auto-completion creates platforms that span multiple blocks,
+ * all affected block level codes are updated instantly, matching the behavior of
+ * manual painting where neighbors update immediately.
+ */
