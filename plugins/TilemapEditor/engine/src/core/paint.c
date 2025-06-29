@@ -11,6 +11,17 @@
 void extract_enemy_data(void) BANKED;
 void extract_player_data(void) BANKED;
 void display_selective_level_code_fast(void) BANKED;
+void force_complete_level_code_display(void) BANKED;
+void update_complete_level_code(void) BANKED;
+void reconstruct_tilemap_from_level_code(void) BANKED;
+void mark_display_position_for_update(UBYTE position) BANKED;
+void display_complete_level_code(void) BANKED;
+UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
+UWORD match_platform_pattern(UWORD pattern) BANKED;
+UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
+
+// External reference to level code structure
+extern level_code_t current_level_code;
 
 // ============================================================================
 // ACTOR SYSTEM DECLARATIONS - For GB Studio Engine Compatibility
@@ -190,21 +201,24 @@ UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
 
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 {
+    // Basic validation - must be within bounds and empty
     if (!is_within_platform_bounds(x, y))
         return 0;
     if (get_current_tile_type(x, y) != BRUSH_TILE_EMPTY)
         return 0;
     if (count_enemies_on_map() >= MAX_ENEMIES)
         return 0;
+
+    // Allow enemies on even rows where they are scanned: 12, 14, 16, 18
+    // This removes the platform requirement temporarily for easier enemy placement testing
+    if (y != 12 && y != 14 && y != 16 && y != 18)
+        return 0;
+
+    // Don't allow multiple enemies in the same position
     if (has_enemy_nearby(x, y))
         return 0;
 
-    // Check for platform directly below
-    if (y + 1 <= PLATFORM_Y_MAX && is_valid_platform_row(y + 1))
-    {
-        return get_current_tile_type(x, y + 1) == BRUSH_TILE_PLATFORM;
-    }
-    return 0;
+    return 1;
 }
 
 UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED
@@ -508,8 +522,11 @@ void paint_enemy_right(UBYTE x, UBYTE y) BANKED
     UBYTE enemy_slot = find_next_available_enemy_slot();
     if (enemy_slot != 255)
     {
-        move_actor_to_tile(paint_enemy_ids[enemy_slot], x, y);
-        actor_set_dir(&actors[paint_enemy_ids[enemy_slot]], DIRECTION_RIGHT, TRUE);
+        actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
+        enemy->pos.x = TO_FP(x * 8);
+        enemy->pos.y = TO_FP(y * 8);
+        activate_actor(enemy);
+        actor_set_dir(enemy, DIRECTION_RIGHT, TRUE);
         paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
     }
 
@@ -537,6 +554,8 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
 
                 if (actor_tile_x == x && actor_tile_y == y)
                 {
+                    // When changing to left direction, offset the actor position
+                    enemy->pos.x = TO_FP(x * 8 - 8);
                     actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
                     break;
                 }
@@ -551,8 +570,12 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
         UBYTE enemy_slot = find_next_available_enemy_slot();
         if (enemy_slot != 255)
         {
-            move_actor_to_tile(paint_enemy_ids[enemy_slot], x, y);
-            actor_set_dir(&actors[paint_enemy_ids[enemy_slot]], DIRECTION_LEFT, TRUE);
+            actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
+            // Position left-facing enemy with offset
+            enemy->pos.x = TO_FP(x * 8 - 8);
+            enemy->pos.y = TO_FP(y * 8);
+            activate_actor(enemy);
+            actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
             paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
         }
 
@@ -747,19 +770,11 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
     UBYTE enemy_count = 0, playerPlaced = 0, exitPlaced = 0;
     UBYTE playerX = 0, playerRow = 0;
 
-    // Single pass through the map - simplified loop conditions to avoid optimizer warnings
-    for (UBYTE yy = 10; yy <= 19; ++yy)
+    // Single pass through the map
+    for (UBYTE yy = 10; yy <= 19 && !(playerPlaced && exitPlaced && enemy_count >= 6); ++yy)
     {
-        // Check if we can exit early
-        if (playerPlaced && exitPlaced && enemy_count >= 6)
-            break;
-
-        for (UBYTE xx = 2; xx < 22; ++xx)
+        for (UBYTE xx = 2; xx < 22 && !(playerPlaced && exitPlaced && enemy_count >= 6); ++xx)
         {
-            // Check if we can exit early
-            if (playerPlaced && exitPlaced && enemy_count >= 6)
-                break;
-
             UBYTE tid = sram_map_data[METATILE_MAP_OFFSET(xx, yy)];
             UBYTE tt = get_tile_type(tid); // Place player
             if (!playerPlaced && tt == BRUSH_TILE_PLAYER)
