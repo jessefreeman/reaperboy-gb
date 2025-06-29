@@ -371,7 +371,7 @@
       "flipLeft": true
     }
   ],
-  "numTiles": 5,
+  "numTiles": 6,
   "canvasWidth": 16,
   "canvasHeight": 40,
   "boundsX": 4,
@@ -382,5 +382,5 @@
   "filename": "exit.png",
   "width": 64,
   "height": 16,
-  "checksum": "b22603ca5cfc44c39ecece88444ce762bb83007c"
+  "checksum": "f540832bd8717cdf470f398c6ef4b72bcb8cb6cd"
 }
