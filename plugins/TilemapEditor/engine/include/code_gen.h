@@ -102,6 +102,21 @@ void vm_save_level_code_sram(SCRIPT_CTX *THIS) BANKED;
 void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED;
 
 void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED;
+
+// ============================================================================
+// VALID PLAYER POSITION SYSTEM
+// ============================================================================
+
+void update_valid_player_positions(void) BANKED;
+UBYTE get_next_valid_player_position(UBYTE current_position) BANKED;
+UBYTE is_valid_player_position(UBYTE column) BANKED;
+
+// Debug functions
+void debug_show_valid_positions(void) BANKED;
+void vm_debug_show_valid_positions(SCRIPT_CTX *THIS) BANKED;
+void test_valid_player_positions(void) BANKED;
+void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED;
+
 // ============================================================================
 
 #endif // CODE_GEN_H

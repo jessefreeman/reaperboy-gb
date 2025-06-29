@@ -118,6 +118,10 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
 // Main level code data structure instance
 level_code_t current_level_code;
 
+// Valid player position tracking
+UBYTE valid_player_columns[20];
+UBYTE valid_player_count = 0;
+
 // ============================================================================
 // SELECTIVE UPDATE SYSTEM - Prevents flicker by only updating changed chars
 // ============================================================================
@@ -501,6 +505,15 @@ void init_level_code(void) BANKED
     current_level_code.enemy_directions = 0;
     current_level_code.enemy_types = 0;
     current_level_code.player_column = 0;
+
+    // Initialize valid player positions
+    update_valid_player_positions();
+
+    // Ensure player starts at a valid position
+    if (valid_player_count > 0 && !is_valid_player_position(current_level_code.player_column))
+    {
+        current_level_code.player_column = valid_player_columns[0];
+    }
 }
 
 void extract_platform_data(void) BANKED
@@ -520,6 +533,9 @@ void extract_platform_data(void) BANKED
             current_level_code.platform_patterns[block_index] = (UBYTE)pattern_id;
         }
     }
+
+    // Update valid player positions after extracting platform patterns
+    update_valid_player_positions();
 }
 
 void extract_enemy_data(void) BANKED
@@ -762,6 +778,9 @@ void update_zone_code(UBYTE zone_index) BANKED
 
     current_level_code.platform_patterns[zone_index] = (UBYTE)pattern_id;
 
+    // Update valid player positions since a platform pattern changed
+    update_valid_player_positions();
+
     // Mark only the specific zone position for update
     mark_display_position_for_update(zone_index);
 
@@ -897,6 +916,72 @@ void vm_get_enemy_info(SCRIPT_CTX *THIS) BANKED
     *(UWORD *)VM_REF_TO_PTR(FN_ARG3) = current_level_code.enemy_types;
 }
 
+// Test function to verify valid player position system works correctly
+void test_valid_player_positions(void) BANKED
+{
+    // Set up a test pattern with platforms only in certain columns
+    init_level_code();
+
+    // Set pattern 1 (single platform at position 4) in block 0
+    // This should make column 4 valid
+    current_level_code.platform_patterns[0] = 1;
+
+    // Set pattern 7 (three platforms at positions 2-4) in block 1
+    // This should make columns 7, 8, 9 valid (block 1 covers columns 5-9)
+    current_level_code.platform_patterns[1] = 7;
+
+    // Update valid positions based on these patterns
+    update_valid_player_positions();
+
+    // The valid positions should now be: 4, 7, 8, 9
+    // Test cycling through them
+    UBYTE current_pos = 4;
+    UBYTE next_pos = get_next_valid_player_position(current_pos);
+    // next_pos should be 7
+
+    next_pos = get_next_valid_player_position(next_pos);
+    // next_pos should be 8
+
+    next_pos = get_next_valid_player_position(next_pos);
+    // next_pos should be 9
+
+    next_pos = get_next_valid_player_position(next_pos);
+    // next_pos should wrap back to 4
+}
+
+void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED
+{
+    (void)THIS;
+    test_valid_player_positions();
+}
+
+// Debug function to display current valid player positions
+void debug_show_valid_positions(void) BANKED
+{
+    update_valid_player_positions();
+
+    // This could be used to display valid positions on screen or store in variables
+    // for script access. For now, just ensure the function works.
+}
+
+// VM wrapper for debugging valid positions
+void vm_debug_show_valid_positions(SCRIPT_CTX *THIS) BANKED
+{
+    (void)THIS;
+    debug_show_valid_positions();
+
+    // Store count and first few valid positions in script variables for debugging
+    *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = valid_player_count;
+    if (valid_player_count > 0)
+    {
+        *(UWORD *)VM_REF_TO_PTR(FN_ARG1) = valid_player_columns[0];
+        if (valid_player_count > 1)
+            *(UWORD *)VM_REF_TO_PTR(FN_ARG2) = valid_player_columns[1];
+        if (valid_player_count > 2)
+            *(UWORD *)VM_REF_TO_PTR(FN_ARG3) = valid_player_columns[2];
+    }
+}
+
 #else
 // Release mode stub implementations
 void test_enemy_encoding(void) BANKED
@@ -911,6 +996,30 @@ void vm_test_enemy_encoding(SCRIPT_CTX *THIS) BANKED
 }
 
 void vm_get_enemy_info(SCRIPT_CTX *THIS) BANKED
+{
+    (void)THIS;
+    // No-op in release mode
+}
+
+void test_valid_player_positions(void) BANKED
+{
+    // No-op in release mode
+}
+
+void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED
+{
+    (void)THIS;
+    // No-op in release mode
+}
+
+// Debug function to display current valid player positions
+void debug_show_valid_positions(void) BANKED
+{
+    // No-op in release mode
+}
+
+// VM wrapper for debugging valid positions
+void vm_debug_show_valid_positions(SCRIPT_CTX *THIS) BANKED
 {
     (void)THIS;
     // No-op in release mode
@@ -1053,6 +1162,15 @@ void load_level_code_from_variables(void) BANKED
     current_level_code.platform_patterns[14] = part5 & 0x1F;
 
     current_level_code.platform_patterns[15] = part6 & 0x1F;
+
+    // Update valid player positions after loading platform patterns
+    update_valid_player_positions();
+
+    // Ensure player position is valid, if not, move to first valid position
+    if (valid_player_count > 0 && !is_valid_player_position(current_level_code.player_column))
+    {
+        current_level_code.player_column = valid_player_columns[0];
+    }
 }
 
 // ============================================================================
@@ -1164,6 +1282,15 @@ UBYTE load_level_code_from_sram(void) BANKED
     current_level_code.enemy_types = sram_data.enemy_types;
     current_level_code.player_column = sram_data.player_column;
 
+    // Update valid player positions after loading platform patterns
+    update_valid_player_positions();
+
+    // Ensure player position is valid, if not, move to first valid position
+    if (valid_player_count > 0 && !is_valid_player_position(current_level_code.player_column))
+    {
+        current_level_code.player_column = valid_player_columns[0];
+    }
+
     return 1; // Success
 }
 
@@ -1210,18 +1337,10 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         }
         else if (char_index == 16)
         {
-            // Player column: 0-19
-            max_value = 19;
-
-            // Cycle to next value
-            if (current_value >= max_value)
-            {
-                new_value = 0; // Wrap to 0
-            }
-            else
-            {
-                new_value = current_value + 1;
-            }
+            // Player column: cycle only through valid positions (columns with platforms)
+            UBYTE current_col = char_to_value(current_tile);
+            UBYTE next_col = get_next_valid_player_position(current_col);
+            new_value = next_col;
         }
         else if (char_index >= 17 && char_index <= 22)
         {
@@ -1561,6 +1680,9 @@ void update_single_block_code(UBYTE block_index) BANKED
         current_level_code.platform_patterns[block_index] = (UBYTE)pattern_id;
         mark_display_position_for_update(block_index);
 
+        // Update valid player positions since a platform pattern changed
+        update_valid_player_positions();
+
         // Immediately update the display for this block to prevent delays
         UBYTE display_x, display_y;
         get_display_position(block_index, &display_x, &display_y);
@@ -1592,6 +1714,9 @@ void reconstruct_tilemap_from_level_code(void) BANKED
 
     // Update the level code to reflect any auto-completion effects
     extract_platform_data();
+
+    // Update valid player positions since platform patterns may have changed
+    update_valid_player_positions();
 }
 
 // Helper function to check if there's a platform in adjacent segment
@@ -1731,16 +1856,42 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
         {
             current_level_code.platform_patterns[char_index] = new_value;
             apply_pattern_with_brush_logic(char_index, new_value);
+
+            // Update valid player positions since platform patterns changed
+            update_valid_player_positions();
         }
     }
     else if (char_index == 16)
     {
         // Player column update (now at char 16)
-        if (new_value < 20)
+        // Validate that the new position is valid before applying
+        if (new_value < 20 && is_valid_player_position(new_value))
         {
             // Instead of directly updating the level code and tilemap, simulate a paint_player action
             // This ensures all logic and display updates are consistent
             paint_player(new_value + 2, 11); // x = col + 2, y = 11
+        }
+        else
+        {
+            // If trying to set an invalid position, find the nearest valid one
+            UBYTE nearest_valid = 0;
+            if (valid_player_count > 0)
+            {
+                nearest_valid = valid_player_columns[0]; // Default to first valid position
+
+                // Find closest valid position to the requested one
+                UBYTE min_distance = 20;
+                for (UBYTE i = 0; i < valid_player_count; i++)
+                {
+                    UBYTE distance = (new_value > valid_player_columns[i]) ? (new_value - valid_player_columns[i]) : (valid_player_columns[i] - new_value);
+                    if (distance < min_distance)
+                    {
+                        min_distance = distance;
+                        nearest_valid = valid_player_columns[i];
+                    }
+                }
+            }
+            paint_player(nearest_valid + 2, 11); // x = col + 2, y = 11
         }
     }
     else if (char_index >= 17 && char_index <= 23)
@@ -1817,3 +1968,110 @@ void validate_all_block_patterns(void) BANKED
         }
     }
 }
+
+// ============================================================================
+// VALID PLAYER POSITION SYSTEM - Only allow player in columns with platforms
+// ============================================================================
+
+// The player can be placed in any of 20 possible columns (0-19), but only
+// if there's a platform below them. This system tracks which columns are valid.
+
+// Update the list of valid player positions based on current platform patterns
+void update_valid_player_positions(void) BANKED
+{
+    valid_player_count = 0;
+
+    // Check each column (0-19) to see if it has a platform below
+    for (UBYTE col = 0; col < 20; col++)
+    {
+        UBYTE has_platform = 0;
+
+        // Check all platform rows for this column
+        for (UBYTE row = 0; row < 4; row++) // 4 rows of platform blocks
+        {
+            // Calculate which block this column falls into
+            UBYTE block_x = col / 5; // Each block covers 5 columns
+            UBYTE block_index = row * 4 + block_x;
+
+            if (block_index >= TOTAL_BLOCKS)
+                continue;
+
+            UBYTE pattern_id = current_level_code.platform_patterns[block_index];
+            if (pattern_id >= PLATFORM_PATTERN_COUNT)
+                continue;
+
+            UWORD pattern = PLATFORM_PATTERNS[pattern_id];
+            UBYTE col_in_block = col % 5; // Position within the 5-column block (0-4)
+
+            // Check both rows of the pattern for this column
+            // Top row platforms: bits 9-5, bottom row platforms: bits 4-0
+            // Bit mapping: col_in_block 0->bit9/4, 1->bit8/3, 2->bit7/2, 3->bit6/1, 4->bit5/0
+            UBYTE top_row_bit = (pattern >> (9 - col_in_block)) & 1;
+            UBYTE bottom_row_bit = (pattern >> (4 - col_in_block)) & 1;
+
+            if (top_row_bit || bottom_row_bit)
+            {
+                has_platform = 1;
+                break;
+            }
+        }
+
+        // If this column has at least one platform, add it to valid list
+        if (has_platform)
+        {
+            valid_player_columns[valid_player_count] = col;
+            valid_player_count++;
+        }
+    }
+
+    // Ensure we always have at least one valid position (default to column 0)
+    if (valid_player_count == 0)
+    {
+        valid_player_columns[0] = 0;
+        valid_player_count = 1;
+    }
+}
+
+// Get the next valid player position after the current one
+UBYTE get_next_valid_player_position(UBYTE current_position) BANKED
+{
+    if (valid_player_count == 0)
+    {
+        update_valid_player_positions();
+    }
+
+    // Find current position in valid list
+    UBYTE current_index = 0;
+    for (UBYTE i = 0; i < valid_player_count; i++)
+    {
+        if (valid_player_columns[i] == current_position)
+        {
+            current_index = i;
+            break;
+        }
+    }
+
+    // Get next valid position (wrap around if at end)
+    UBYTE next_index = (current_index + 1) % valid_player_count;
+    return valid_player_columns[next_index];
+}
+
+// Check if a given column position is valid for the player
+UBYTE is_valid_player_position(UBYTE column) BANKED
+{
+    if (valid_player_count == 0)
+    {
+        update_valid_player_positions();
+    }
+
+    for (UBYTE i = 0; i < valid_player_count; i++)
+    {
+        if (valid_player_columns[i] == column)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// ============================================================================
