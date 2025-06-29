@@ -176,7 +176,7 @@
               "actorId": "d5043213-d1dc-4d02-b470-9d13dfa87721",
               "vectorX": "3",
               "vectorY": "4",
-              "__collapse": false,
+              "__collapse": true,
               "__label": "Setup selector x,y position"
             },
             "id": "cc3bd092-dd9a-4df5-b16c-b592ab981036"
@@ -189,7 +189,7 @@
               ],
               "override": true,
               "__scriptTabs": "press",
-              "__collapse": false
+              "__collapse": true
             },
             "children": {
               "true": [

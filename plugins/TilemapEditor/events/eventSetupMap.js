@@ -15,7 +15,6 @@ export const fields = [
   { key: "e3", label: "Enemy 3", type: "actor", defaultValue: "4" },
   { key: "e4", label: "Enemy 4", type: "actor", defaultValue: "5" },
   { key: "e5", label: "Enemy 5", type: "actor", defaultValue: "6" },
-  { key: "e6", label: "Enemy 6", type: "actor", defaultValue: "7" },
 ];
 
 export const compile = (input, helpers) => {
@@ -30,7 +29,6 @@ export const compile = (input, helpers) => {
 
   _addComment("↪ Setup map: player, exit, enemies");
   // push in reverse order for pop() in C
-  actorPushById(input.e6);
   actorPushById(input.e5);
   actorPushById(input.e4);
   actorPushById(input.e3);
@@ -42,5 +40,5 @@ export const compile = (input, helpers) => {
   _stackPushConst(variableAlias);
 
   _callNative("vm_setup_map");
-  _stackPop(8);
+  _stackPop(7);
 };

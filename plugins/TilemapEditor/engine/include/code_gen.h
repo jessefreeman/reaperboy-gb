@@ -9,20 +9,35 @@
 // ============================================================================
 
 #define TOTAL_BLOCKS 16
-#define MAX_ENEMIES 6
+#define MAX_ENEMIES 5
 
-// Level code structure - Single source of truth
+// Level code constants
+#define LEVEL_CODE_CHARS_TOTAL 24
+#define TOTAL_PLATFORM_BLOCKS 16
+
+// Screen dimensions for metatile system
+#define METATILE_SCREEN_WIDTH 20
+#define METATILE_SCREEN_HEIGHT 18
+
+// Level code structure - CORRECTED: Platform patterns must come first!
 typedef struct
 {
-    UBYTE platform_patterns[TOTAL_BLOCKS]; // 16 platform patterns
-    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255=empty)
-    UBYTE enemy_directions;                // Packed direction bits (6 bits)
-    UBYTE enemy_types;                     // Packed enemy type bits (6 bits: 0=walker, 1=jumper)
-    UBYTE player_column;                   // Player starting column
+    UBYTE platform_patterns[TOTAL_BLOCKS]; // Characters 0-15: Platform patterns (16 blocks, 5x2 each)
+    UBYTE player_column;                   // Character 16: Player starting column (0-19)
+    UBYTE enemy_patterns[5];               // Characters 17-21: Enemy pattern data (one per block row)
+    UBYTE enemy_directions;                // Character 22: Enemy direction bitmask (5 bits used)
+    UBYTE reserved;                        // Character 23: Reserved for future use
+
+    // Legacy compatibility fields (kept for backward compatibility)
+    UBYTE enemy_positions[MAX_ENEMIES]; // Enemy column positions (255=empty) - DEPRECATED
+    UBYTE enemy_types;                  // Packed enemy type bits (6 bits: 0=walker, 1=jumper) - DEPRECATED
 } level_code_t;
 
 // External reference to main level code structure
 extern level_code_t current_level_code;
+
+// External reference to display update flags
+extern UBYTE update_flags[LEVEL_CODE_CHARS_TOTAL];
 
 // ============================================================================
 // CORE PATTERN EXTRACTION AND MATCHING
@@ -72,6 +87,12 @@ void validate_all_block_patterns(void) BANKED;
 // Encoding functions for compact display
 UBYTE encode_enemy_bitmask(void) BANKED;
 UBYTE encode_enemy_directions(void) BANKED;
+
+// Character display helpers
+UBYTE get_extended_display_char(UBYTE value) BANKED;
+void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED;
+void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED;
+void clear_level_code_display(void) BANKED;
 
 // Character display helpers
 void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED;
@@ -124,5 +145,40 @@ void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED;
 void update_exit_position_after_platform_change(void) BANKED;
 
 // ============================================================================
+// ENEMY PATTERN ENCODING SYSTEM - New refactored system
+// ============================================================================
+
+// Extract and apply enemy patterns for block rows
+UBYTE extract_enemy_pattern_for_block_row(UBYTE row) BANKED;
+void apply_enemy_pattern_to_block_row(UBYTE row, UBYTE pattern_id, UBYTE direction_mask) BANKED;
+
+// Enemy patterns from refactor document
+// Enemy pattern structure for new pattern system
+typedef struct
+{
+    UBYTE pattern_id;
+    UBYTE positions[MAX_ENEMIES];
+    UBYTE count;
+    char description[32];
+} enemy_pattern_t;
+
+// External reference to enemy patterns
+extern const enemy_pattern_t ENEMY_PATTERNS[];
+
+// Debug and test functions for enemy patterns
+void init_test_enemy_patterns(void) BANKED;
+void vm_init_test_enemy_patterns(SCRIPT_CTX *THIS) BANKED;
+
+// Additional helper functions for enemy pattern system
+void test_cycle_enemy_patterns(void) BANKED;
+void test_cycle_enemy_directions(void) BANKED;
+UBYTE is_valid_player_position(UBYTE column) BANKED;
+UBYTE get_next_valid_player_position(UBYTE current_position) BANKED;
+void position_player_at_valid_location(void) BANKED;
+
+// Enemy encoding functions for new pattern system
+UBYTE encode_enemy_pattern_id(void) BANKED;
+UBYTE encode_enemy_directions(void) BANKED;
+UBYTE encode_enemy_details(void) BANKED;
 
 #endif // CODE_GEN_H

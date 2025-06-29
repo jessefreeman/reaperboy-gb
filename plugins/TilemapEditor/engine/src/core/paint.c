@@ -53,7 +53,7 @@ void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 #define PLATFORM_Y_MAX 19
 #define PLATFORM_MIN_VERTICAL_GAP 1
 #define PLATFORM_MAX_LENGTH 8
-#define MAX_ENEMIES 6
+#define MAX_ENEMIES 5
 
 // Segment layout constants for level code display
 #define SEGMENTS_PER_ROW 5
@@ -86,8 +86,13 @@ UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED
 
 UBYTE paint_player_id = 0;
 UBYTE paint_exit_id = 1;
-UBYTE paint_enemy_ids[6] = {2, 3, 4, 5, 6, 7};
-UBYTE paint_enemy_slots_used[6] = {0, 0, 0, 0, 0, 0}; // Track which slots are in use
+UBYTE paint_enemy_ids[5] = {2, 3, 4, 5, 6};
+UBYTE paint_enemy_slots_used[5] = {0, 0, 0, 0, 0}; // Track which slots are in use
+
+// FIFO enemy pool implementation - tracks paint order
+UBYTE enemy_paint_order[5];  // Order in which enemies were painted (oldest first)
+UBYTE enemy_paint_count = 0; // Number of enemies currently painted
+UBYTE next_paint_slot = 0;   // Next slot to use when painting (cycles 0-4)
 
 // ============================================================================
 // VALIDATION HELPERS - Streamlined logic
@@ -206,8 +211,8 @@ UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
         return 0;
     if (get_current_tile_type(x, y) != BRUSH_TILE_EMPTY)
         return 0;
-    if (count_enemies_on_map() >= MAX_ENEMIES)
-        return 0;
+
+    // No need to check enemy count - we use a pool system that cycles through enemies
 
     // Allow enemies on even rows where they are scanned: 12, 14, 16, 18
     // This removes the platform requirement temporarily for easier enemy placement testing
@@ -435,16 +440,95 @@ void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED
     activate_actor(actor);
 }
 
-UBYTE find_next_available_enemy_slot(void) BANKED
+UBYTE get_next_enemy_slot_from_pool(void) BANKED
 {
-    for (UBYTE i = 0; i < 6; i++)
+    UBYTE slot_to_use;
+
+    if (enemy_paint_count < 5)
     {
-        if (!paint_enemy_slots_used[i])
+        // We have available slots, use the next unused one
+        slot_to_use = next_paint_slot;
+
+        // Add this slot to the paint order queue
+        enemy_paint_order[enemy_paint_count] = slot_to_use;
+        enemy_paint_count++;
+
+        // Move to next slot for future painting
+        next_paint_slot = (next_paint_slot + 1) % 5;
+    }
+    else
+    {
+        // All slots are used, reuse the oldest (first in queue)
+        slot_to_use = enemy_paint_order[0];
+
+        // Shift the queue left to remove the oldest
+        for (UBYTE i = 0; i < 4; i++)
         {
-            return i;
+            enemy_paint_order[i] = enemy_paint_order[i + 1];
+        }
+
+        // Add the reused slot to the back of the queue
+        enemy_paint_order[4] = slot_to_use;
+        // enemy_paint_count stays at 5
+    }
+
+    return slot_to_use;
+}
+
+void remove_enemy_from_paint_order(UBYTE slot) BANKED
+{
+    // Find the slot in the paint order and remove it
+    for (UBYTE i = 0; i < enemy_paint_count; i++)
+    {
+        if (enemy_paint_order[i] == slot)
+        {
+            // Shift remaining elements left
+            for (UBYTE j = i; j < enemy_paint_count - 1; j++)
+            {
+                enemy_paint_order[j] = enemy_paint_order[j + 1];
+            }
+            enemy_paint_count--;
+            break;
         }
     }
-    return 255; // No slots available
+}
+
+void add_enemy_to_front_of_paint_order(UBYTE slot) BANKED
+{
+    // Shift existing elements right
+    for (UBYTE i = enemy_paint_count; i > 0; i--)
+    {
+        enemy_paint_order[i] = enemy_paint_order[i - 1];
+    }
+
+    // Add the slot to the front (will be next to reuse)
+    enemy_paint_order[0] = slot;
+    if (enemy_paint_count < 5)
+    {
+        enemy_paint_count++;
+    }
+}
+
+void clear_enemy_tile_at_position(UBYTE x, UBYTE y) BANKED
+{
+    UBYTE tile_type = get_current_tile_type(x, y);
+    if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+    {
+        replace_meta_tile(x, y, TILE_EMPTY, 1);
+        update_level_code_for_paint(x, y);
+    }
+}
+
+void reset_enemy_pool(void) BANKED
+{
+    // Reset paint order tracking
+    for (UBYTE i = 0; i < 5; i++)
+    {
+        enemy_paint_order[i] = 0;
+        paint_enemy_slots_used[i] = 0;
+    }
+    enemy_paint_count = 0;
+    next_paint_slot = 0;
 }
 
 void clear_existing_player_on_row_11(void) BANKED
@@ -468,7 +552,7 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
             replace_meta_tile(x, check_y, TILE_EMPTY, 1);
 
             // Also deactivate the corresponding actor
-            for (UBYTE i = 0; i < 6; i++)
+            for (UBYTE i = 0; i < 5; i++)
             {
                 if (paint_enemy_slots_used[i])
                 {
@@ -477,10 +561,20 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
                     UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
                     UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
+                    // For left-facing enemies, the tile position is offset by +1 tile
+                    if (enemy->dir == DIRECTION_LEFT)
+                    {
+                        actor_tile_x += 1;
+                    }
+
                     if (actor_tile_x == x && actor_tile_y == check_y)
                     {
                         deactivate_actor(enemy);
                         paint_enemy_slots_used[i] = 0; // Mark slot as available
+
+                        // Remove from paint order and add to front for immediate reuse
+                        remove_enemy_from_paint_order(i);
+                        add_enemy_to_front_of_paint_order(i);
                         break;
                     }
                 }
@@ -518,17 +612,36 @@ void paint_enemy_right(UBYTE x, UBYTE y) BANKED
 
     replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
 
-    // Find available enemy slot and move actor to this position
-    UBYTE enemy_slot = find_next_available_enemy_slot();
-    if (enemy_slot != 255)
+    // Get next enemy from FIFO pool
+    UBYTE enemy_slot = get_next_enemy_slot_from_pool();
+
+    // If this slot was already in use, clear its old tile and deactivate the actor
+    if (paint_enemy_slots_used[enemy_slot])
     {
-        actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
-        enemy->pos.x = TO_FP(x * 8);
-        enemy->pos.y = TO_FP(y * 8);
-        activate_actor(enemy);
-        actor_set_dir(enemy, DIRECTION_RIGHT, TRUE);
-        paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
+        actor_t *old_enemy = &actors[paint_enemy_ids[enemy_slot]];
+        // Convert actor position from fixed point to tile coordinates
+        UBYTE old_tile_x = (old_enemy->pos.x >> 4) / 8;
+        UBYTE old_tile_y = (old_enemy->pos.y >> 4) / 8;
+
+        // For left-facing enemies, the tile position is offset by +1 tile
+        if (old_enemy->dir == DIRECTION_LEFT)
+        {
+            old_tile_x += 1;
+        }
+
+        // Clear the old tile
+        clear_enemy_tile_at_position(old_tile_x, old_tile_y);
+
+        deactivate_actor(old_enemy);
     }
+
+    // Set up the new enemy
+    actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
+    enemy->pos.x = TO_FP(x * 8);
+    enemy->pos.y = TO_FP(y * 8);
+    activate_actor(enemy);
+    actor_set_dir(enemy, DIRECTION_RIGHT, TRUE);
+    paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
 
     update_level_code_for_paint(x, y); // Smart update
 }
@@ -543,7 +656,7 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
     if (current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1); // Find the enemy actor at this position and change direction
-        for (UBYTE i = 0; i < 6; i++)
+        for (UBYTE i = 0; i < 5; i++)
         {
             if (paint_enemy_slots_used[i])
             {
@@ -566,18 +679,39 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
     }
     else if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
     {
-        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1); // Find available enemy slot and move actor to this position
-        UBYTE enemy_slot = find_next_available_enemy_slot();
-        if (enemy_slot != 255)
+        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
+
+        // Get next enemy from FIFO pool
+        UBYTE enemy_slot = get_next_enemy_slot_from_pool();
+
+        // If this slot was already in use, clear its old tile and deactivate the actor
+        if (paint_enemy_slots_used[enemy_slot])
         {
-            actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
-            // Position left-facing enemy with offset
-            enemy->pos.x = TO_FP(x * 8 - 8);
-            enemy->pos.y = TO_FP(y * 8);
-            activate_actor(enemy);
-            actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
-            paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
+            actor_t *old_enemy = &actors[paint_enemy_ids[enemy_slot]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE old_tile_x = (old_enemy->pos.x >> 4) / 8;
+            UBYTE old_tile_y = (old_enemy->pos.y >> 4) / 8;
+
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (old_enemy->dir == DIRECTION_LEFT)
+            {
+                old_tile_x += 1;
+            }
+
+            // Clear the old tile
+            clear_enemy_tile_at_position(old_tile_x, old_tile_y);
+
+            deactivate_actor(old_enemy);
         }
+
+        // Set up the new left-facing enemy
+        actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
+        // Position left-facing enemy with offset
+        enemy->pos.x = TO_FP(x * 8 - 8);
+        enemy->pos.y = TO_FP(y * 8);
+        activate_actor(enemy);
+        actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
+        paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
 
         update_level_code_for_paint(x, y);
     }
@@ -594,7 +728,7 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
     {
         replace_meta_tile(x, y, TILE_EMPTY, 1);
         // Find and deactivate the enemy actor at this position
-        for (UBYTE i = 0; i < 6; i++)
+        for (UBYTE i = 0; i < 5; i++)
         {
             if (paint_enemy_slots_used[i])
             {
@@ -603,10 +737,20 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
                 UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
                 UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
+                // For left-facing enemies, the tile position is offset by +1 tile
+                if (enemy->dir == DIRECTION_LEFT)
+                {
+                    actor_tile_x += 1;
+                }
+
                 if (actor_tile_x == x && actor_tile_y == y)
                 {
                     deactivate_actor(enemy);
-                    paint_enemy_slots_used[i] = 0; // Mark slot as available
+                    paint_enemy_slots_used[i] = 0; // Mark slot as available for reuse
+
+                    // Remove from paint order and add to front for immediate reuse
+                    remove_enemy_from_paint_order(i);
+                    add_enemy_to_front_of_paint_order(i);
                     break;
                 }
             }
@@ -762,18 +906,18 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
     uint16_t varId = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
     UBYTE playerId = 0;
     UBYTE exitId = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
-    UBYTE enemies[6] = {
+    UBYTE enemies[5] = {
         *(UBYTE *)VM_REF_TO_PTR(FN_ARG2), *(UBYTE *)VM_REF_TO_PTR(FN_ARG3),
         *(UBYTE *)VM_REF_TO_PTR(FN_ARG4), *(UBYTE *)VM_REF_TO_PTR(FN_ARG5),
-        *(UBYTE *)VM_REF_TO_PTR(FN_ARG6), *(UBYTE *)VM_REF_TO_PTR(FN_ARG7)};
+        *(UBYTE *)VM_REF_TO_PTR(FN_ARG6)};
 
     UBYTE enemy_count = 0, playerPlaced = 0, exitPlaced = 0;
     UBYTE playerX = 0, playerRow = 0;
 
     // Single pass through the map
-    for (UBYTE yy = 10; yy <= 19 && !(playerPlaced && exitPlaced && enemy_count >= 6); ++yy)
+    for (UBYTE yy = 10; yy <= 19 && !(playerPlaced && exitPlaced && enemy_count >= 5); ++yy)
     {
-        for (UBYTE xx = 2; xx < 22 && !(playerPlaced && exitPlaced && enemy_count >= 6); ++xx)
+        for (UBYTE xx = 2; xx < 22 && !(playerPlaced && exitPlaced && enemy_count >= 5); ++xx)
         {
             UBYTE tid = sram_map_data[METATILE_MAP_OFFSET(xx, yy)];
             UBYTE tt = get_tile_type(tid); // Place player
@@ -806,7 +950,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
             //     replace_meta_tile(placeX + 1, yy - 2, TILE_EXIT_TOP_RIGHT, 1);
             //     exitPlaced = 1;
             // } // Place enemies
-            if (enemy_count < 6 && (tt == BRUSH_TILE_ENEMY_R || tt == BRUSH_TILE_ENEMY_L))
+            if (enemy_count < 5 && (tt == BRUSH_TILE_ENEMY_R || tt == BRUSH_TILE_ENEMY_L))
             {
                 actor_t *e = &actors[enemies[enemy_count]];
                 INT16 fx = (tt == BRUSH_TILE_ENEMY_L) ? (xx * 8 - 8) : (xx * 8);
@@ -821,7 +965,7 @@ void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
     }
 
     // Deactivate unused enemy actors
-    for (UBYTE ec = enemy_count; ec < 6; ++ec)
+    for (UBYTE ec = enemy_count; ec < 5; ++ec)
     {
         deactivate_actor(&actors[enemies[ec]]);
     }
@@ -842,20 +986,16 @@ void vm_setup_paint_actors(SCRIPT_CTX *THIS) BANKED
     paint_enemy_ids[2] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG4);
     paint_enemy_ids[3] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG5);
     paint_enemy_ids[4] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG6);
-    paint_enemy_ids[5] = *(UBYTE *)VM_REF_TO_PTR(FN_ARG7);
 
-    // Reset slot tracking
-    for (UBYTE i = 0; i < 6; i++)
-    {
-        paint_enemy_slots_used[i] = 0;
-    }
+    // Reset the FIFO enemy pool
+    reset_enemy_pool();
 
     // Disable all assigned actors to prepare for level loading
     deactivate_actor(&actors[paint_player_id]);
     deactivate_actor(&actors[paint_exit_id]);
 
     // Deactivate enemy actors
-    for (UBYTE i = 0; i < 6; i++)
+    for (UBYTE i = 0; i < 5; i++)
     {
         deactivate_actor(&actors[paint_enemy_ids[i]]);
     }
@@ -896,16 +1036,13 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
     deactivate_actor(&actors[paint_exit_id]);
 
     // Deactivate enemy actors
-    for (UBYTE i = 0; i < 6; i++)
+    for (UBYTE i = 0; i < 5; i++)
     {
         deactivate_actor(&actors[paint_enemy_ids[i]]);
     }
 
-    // Reset paint actor slot tracking
-    for (UBYTE i = 0; i < 6; i++)
-    {
-        paint_enemy_slots_used[i] = 0;
-    }
+    // Reset the FIFO enemy pool
+    reset_enemy_pool();
 
     // Check if map is empty and initialize with default level if needed
     if (is_map_empty())
