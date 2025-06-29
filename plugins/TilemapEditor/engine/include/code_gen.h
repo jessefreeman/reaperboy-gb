@@ -118,5 +118,11 @@ void test_valid_player_positions(void) BANKED;
 void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED;
 
 // ============================================================================
+// EXIT POSITIONING SYSTEM
+// ============================================================================
+
+void update_exit_position_after_platform_change(void) BANKED;
+
+// ============================================================================
 
 #endif // CODE_GEN_H

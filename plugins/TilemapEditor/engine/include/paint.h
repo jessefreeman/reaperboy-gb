@@ -46,6 +46,7 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED;
 
 // External paint actor IDs
 extern UBYTE paint_player_id;
+extern UBYTE paint_exit_id;
 
 void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
 void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
@@ -92,5 +93,14 @@ void vm_paint(SCRIPT_CTX *THIS) BANKED;
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED;
 void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED;
 void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED;
+
+// ============================================================================
+// EXIT POSITIONING FUNCTIONS
+// ============================================================================
+
+void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
+void clear_existing_exit_tiles(void) BANKED;
+
+// ============================================================================
 
 #endif // PAINT_H

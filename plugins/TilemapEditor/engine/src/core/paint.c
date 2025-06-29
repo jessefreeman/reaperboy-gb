@@ -488,6 +488,9 @@ void paint_player(UBYTE x, UBYTE y) BANKED
     replace_meta_tile(x, y, TILE_PLAYER, 1); // Move player actor to this position with centering offset
     move_player_actor_to_tile(paint_player_id, x, y);
 
+    // Position the exit sprite based on the new player position
+    position_exit_for_player(x, y);
+
     // --- Ensure level code and display are updated after painting the player ---
     extract_player_data();
     mark_display_position_for_update(16); // Mark char 16 for display update
@@ -887,6 +890,74 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
     for (UBYTE i = 0; i < 6; i++)
     {
         paint_enemy_slots_used[i] = 0;
+    }
+}
+
+// ============================================================================
+// EXIT POSITIONING SYSTEM
+// ============================================================================
+
+void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED
+{
+    // Find the first platform below the player
+    UBYTE exit_platform_y = 0;
+    UBYTE found_platform = 0;
+
+    for (UBYTE check_y = player_y + 1; check_y <= PLATFORM_Y_MAX; check_y++)
+    {
+        if (is_valid_platform_row(check_y))
+        {
+            if (get_current_tile_type(player_x, check_y) == BRUSH_TILE_PLATFORM)
+            {
+                exit_platform_y = check_y;
+                found_platform = 1;
+                break;
+            }
+        }
+    }
+
+    if (!found_platform)
+        return; // No platform found below player
+
+    // Calculate exit position: 1 tile above the platform
+    UBYTE exit_y = exit_platform_y - 1;
+    UBYTE exit_x = player_x;
+
+    // Check if player is on the right edge of a platform
+    // If so, move exit left by 1 tile
+    UBYTE platform_tile = sram_map_data[METATILE_MAP_OFFSET(player_x, exit_platform_y)];
+    if (platform_tile == TILE_PLATFORM_RIGHT && exit_x > PLATFORM_X_MIN)
+    {
+        exit_x = exit_x - 1;
+    }
+
+    // Clear any existing exit tiles from the map
+    clear_existing_exit_tiles();
+
+    // Position the exit actor
+    move_actor_to_tile(paint_exit_id, exit_x, exit_y);
+
+    // Place the exit tiles (2x2 exit sprite)
+    replace_meta_tile(exit_x, exit_y, TILE_EXIT_BOTTOM_LEFT, 1);
+    replace_meta_tile(exit_x + 1, exit_y, TILE_EXIT_BOTTOM_RIGHT, 1);
+    replace_meta_tile(exit_x, exit_y - 1, TILE_EXIT_TOP_LEFT, 1);
+    replace_meta_tile(exit_x + 1, exit_y - 1, TILE_EXIT_TOP_RIGHT, 1);
+}
+
+void clear_existing_exit_tiles(void) BANKED
+{
+    // Scan the map for existing exit tiles and clear them
+    for (UBYTE y = PLATFORM_Y_MIN - 2; y <= PLATFORM_Y_MAX; y++)
+    {
+        for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+        {
+            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
+            if (tile == TILE_EXIT_TOP_LEFT || tile == TILE_EXIT_TOP_RIGHT ||
+                tile == TILE_EXIT_BOTTOM_LEFT || tile == TILE_EXIT_BOTTOM_RIGHT)
+            {
+                replace_meta_tile(x, y, TILE_EMPTY, 1);
+            }
+        }
     }
 }
 

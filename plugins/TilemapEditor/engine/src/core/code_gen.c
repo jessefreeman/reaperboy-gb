@@ -2030,6 +2030,9 @@ void update_valid_player_positions(void) BANKED
         valid_player_columns[0] = 0;
         valid_player_count = 1;
     }
+
+    // Update exit position after platform patterns change
+    update_exit_position_after_platform_change();
 }
 
 // Get the next valid player position after the current one
@@ -2072,6 +2075,40 @@ UBYTE is_valid_player_position(UBYTE column) BANKED
         }
     }
     return 0;
+}
+
+// ============================================================================
+// EXIT POSITIONING UPDATES
+// ============================================================================
+
+// Update exit position when platforms change
+void update_exit_position_after_platform_change(void) BANKED
+{
+    // Get current player position in tile coordinates
+    UBYTE player_x = current_level_code.player_column + 2; // Convert to tile coordinates
+    UBYTE player_y = 11;                                   // Player is always on row 11
+
+    // Check if player is still in a valid position after platform changes
+    if (!is_valid_player_position(current_level_code.player_column))
+    {
+        // Player is no longer in a valid position, move to first valid position
+        if (valid_player_count > 0)
+        {
+            current_level_code.player_column = valid_player_columns[0];
+            player_x = current_level_code.player_column + 2;
+
+            // Update the player's visual position on the tilemap
+            clear_existing_player_on_row_11();
+            replace_meta_tile(player_x, player_y, TILE_PLAYER, 1);
+            move_player_actor_to_tile(paint_player_id, player_x, player_y);
+
+            // Mark player position for display update
+            mark_display_position_for_update(16);
+        }
+    }
+
+    // Reposition the exit based on the current player position
+    position_exit_for_player(player_x, player_y);
 }
 
 // ============================================================================
