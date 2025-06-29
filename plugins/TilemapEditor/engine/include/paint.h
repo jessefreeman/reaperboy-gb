@@ -102,5 +102,12 @@ void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
 void clear_existing_exit_tiles(void) BANKED;
 
 // ============================================================================
+// DEFAULT LEVEL INITIALIZATION
+// ============================================================================
+
+UBYTE is_map_empty(void) BANKED;
+void init_default_level_code(void) BANKED;
+
+// ============================================================================
 
 #endif // PAINT_H

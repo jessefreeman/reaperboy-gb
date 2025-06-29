@@ -891,6 +891,20 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
     {
         paint_enemy_slots_used[i] = 0;
     }
+
+    // Check if map is empty and initialize with default level if needed
+    if (is_map_empty())
+    {
+        init_default_level_code();
+    }
+    else
+    {
+        // Map has content, update level code from existing tilemap
+        update_complete_level_code();
+    }
+
+    // Always ensure the level code is displayed after initialization
+    force_complete_level_code_display();
 }
 
 // ============================================================================
@@ -962,38 +976,89 @@ void clear_existing_exit_tiles(void) BANKED
 }
 
 // ============================================================================
-// UTILITY FUNCTIONS - Simple and focused
+// DEFAULT LEVEL INITIALIZATION
 // ============================================================================
 
-UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED
+// Check if the map is empty (no platforms, player, or enemies)
+UBYTE is_map_empty(void) BANKED
 {
-    return get_current_tile_type(x, y);
-}
+    // Check for any platform tiles
+    for (UBYTE y = PLATFORM_Y_MIN; y <= PLATFORM_Y_MAX; y++)
+    {
+        for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+        {
+            if (get_current_tile_type(x, y) == BRUSH_TILE_PLATFORM)
+            {
+                return 0; // Found a platform, map is not empty
+            }
+        }
+    }
 
-UBYTE validate_level_setup(void) BANKED
-{
+    // Check for player tile
     for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
     {
         if (get_current_tile_type(x, 11) == BRUSH_TILE_PLAYER)
         {
-            return 1;
+            return 0; // Found player, map is not empty
         }
     }
-    return 0;
+
+    // Check for enemy tiles
+    for (UBYTE y = PLATFORM_Y_MIN; y <= PLATFORM_Y_MAX; y++)
+    {
+        for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+        {
+            UBYTE tile_type = get_current_tile_type(x, y);
+            if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+            {
+                return 0; // Found enemy, map is not empty
+            }
+        }
+    }
+
+    return 1; // Map is empty
 }
 
-void get_level_stats(UBYTE *player_x, UBYTE *enemy_count) BANKED
+// Initialize with default level code: "000000000120000090000000"
+// This creates a 2-tile platform in the middle with player positioned above it
+void init_default_level_code(void) BANKED
 {
-    *player_x = 0;
-    for (UBYTE x = PLATFORM_X_MIN; x <= PLATFORM_X_MAX; x++)
+    // Clear all platform patterns
+    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
-        if (get_current_tile_type(x, 11) == BRUSH_TILE_PLAYER)
-        {
-            *player_x = x;
-            break;
-        }
+        current_level_code.platform_patterns[i] = 0;
     }
-    *enemy_count = count_enemies_on_map();
+
+    // Set pattern 1 at position 9 and pattern 2 at position 10
+    // Block 9 covers columns 5-9, pattern 1 places platform at position 4 (column 9)
+    // Block 10 covers columns 10-14, pattern 2 places platform at position 3 (column 13)
+    // This creates two separate single platforms - let's use pattern 3 instead for a continuous platform
+    current_level_code.platform_patterns[9] = 3; // Two platforms at positions 3-4 (columns 8-9)
+
+    // Set player column to 8 (above the first platform tile)
+    current_level_code.player_column = 8;
+
+    // Clear enemy data
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        current_level_code.enemy_positions[i] = 255;
+    }
+    current_level_code.enemy_directions = 0;
+    current_level_code.enemy_types = 0;
+
+    // Apply the patterns to the tilemap
+    reconstruct_tilemap_from_level_code();
+
+    // Place the player
+    UBYTE player_x = current_level_code.player_column + 2; // Convert to tile coordinates
+    replace_meta_tile(player_x, 11, TILE_PLAYER, 1);
+    move_player_actor_to_tile(paint_player_id, player_x, 11);
+
+    // Position the exit sprite
+    position_exit_for_player(player_x, 11);
+
+    // Update the level code display
+    force_complete_level_code_display();
 }
 
 // ============================================================================

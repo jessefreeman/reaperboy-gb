@@ -49,13 +49,6 @@
             "id": "b021d8d6-30b9-4a1d-8123-42cdc98fcd69"
           },
           {
-            "command": "EVENT_ENABLE_EDITOR",
-            "args": {
-              "__collapse": true
-            },
-            "id": "a6ca7bb2-55d8-443c-aa74-27dce52018eb"
-          },
-          {
             "command": "EVENT_COPY_BKG_SUBMAP_TO_BKG_BASE",
             "args": {
               "sceneId": "e9e7c884-fcbd-43af-a95c-db0b8f941a3d",
@@ -138,6 +131,20 @@
               "__collapse": true
             },
             "id": "55715cb0-8ee2-4f37-b5ad-2c5579c59ec6"
+          },
+          {
+            "command": "EVENT_COMMENT",
+            "args": {
+              "text": "TODO Need to clean up the editor transition since it stutters too much when setting everything up."
+            },
+            "id": "ad34c7a6-4a43-48bc-b2de-66f142e55056"
+          },
+          {
+            "command": "EVENT_ENABLE_EDITOR",
+            "args": {
+              "__collapse": true
+            },
+            "id": "a6ca7bb2-55d8-443c-aa74-27dce52018eb"
           },
           {
             "command": "EVENT_ACTOR_ACTIVATE",
