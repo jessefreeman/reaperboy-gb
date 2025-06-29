@@ -26,6 +26,11 @@
 #define LEVEL_CODE_START_Y 6
 #define LEVEL_CODE_CHARS_TOTAL 24
 
+// Level code layout:
+// 0-15: Platform patterns (16 blocks)
+// 16: Player column position
+// 17-23: Enemy data (7 chars reserved)
+
 // Platform tile IDs
 #define PLATFORM_TILE_1 4
 #define PLATFORM_TILE_2 5
@@ -286,27 +291,31 @@ void display_selective_level_code(void) BANKED
         }
     }
 
-    // Display 8 characters of enemy/player data (positions 16-23)
+    // Display player column (position 16)
+    if (display_position_needs_update(16))
+    {
+        get_display_position(16, &display_x, &display_y);
+        display_char_at_position(current_level_code.player_column, display_x, display_y);
+    }
+
+    // Display enemy data (positions 17-23)
     UBYTE enemy_data[] = {
-        encode_enemy_positions(),         // Position 16: Enemy count + position checksum
-        encode_enemy_details_1(),         // Position 17: Compressed positions for first 3 enemies
-        encode_enemy_details_2(),         // Position 18: Enemy directions + type bits
-        current_level_code.player_column, // Position 19: Player starting column
-        // Additional encoded data for positions 20-23
+        encode_enemy_positions(),                                                                   // Position 17: Enemy count + position checksum
+        encode_enemy_details_1(),                                                                   // Position 18: Compressed positions for first 3 enemies
+        encode_enemy_details_2(),                                                                   // Position 19: Enemy directions + type bits
         (current_level_code.enemy_positions[3] != 255) ? current_level_code.enemy_positions[3] : 0, // Position 20
         (current_level_code.enemy_positions[4] != 255) ? current_level_code.enemy_positions[4] : 0, // Position 21
         (current_level_code.enemy_positions[5] != 255) ? current_level_code.enemy_positions[5] : 0, // Position 22
         (current_level_code.enemy_directions >> 3) & 0x07                                           // Position 23: Remaining direction bits
     };
 
-    for (UBYTE i = 0; i < 8; i++)
+    for (UBYTE i = 0; i < 7; i++)
     {
-        UBYTE pos = TOTAL_BLOCKS + i; // Positions 16-23
+        UBYTE pos = 17 + i; // Positions 17-23
         if (display_position_needs_update(pos))
         {
             get_display_position(pos, &display_x, &display_y);
-            UBYTE display_char = get_extended_display_char(enemy_data[i]);
-            display_char_at_position(display_char, display_x, display_y);
+            display_char_at_position(enemy_data[i], display_x, display_y);
         }
     }
 
@@ -333,27 +342,32 @@ void display_selective_level_code_fast(void) BANKED
         }
     }
 
-    // Display 8 characters of enemy/player data (positions 16-23)
+    // Display player column (position 16)
+    if (display_position_needs_update(16))
+    {
+        get_display_position(16, &display_x, &display_y);
+        UBYTE display_char = get_extended_display_char(current_level_code.player_column);
+        display_char_at_position(display_char, display_x, display_y);
+    }
+
+    // Display enemy data (positions 17-23)
     UBYTE enemy_data[] = {
-        encode_enemy_positions(),         // Position 16: Enemy count + position checksum
-        encode_enemy_details_1(),         // Position 17: Compressed positions for first 3 enemies
-        encode_enemy_details_2(),         // Position 18: Enemy directions + type bits
-        current_level_code.player_column, // Position 19: Player starting column
-        // Additional encoded data for positions 20-23
+        encode_enemy_positions(),                                                                   // Position 17: Enemy count + position checksum
+        encode_enemy_details_1(),                                                                   // Position 18: Compressed positions for first 3 enemies
+        encode_enemy_details_2(),                                                                   // Position 19: Enemy directions + type bits
         (current_level_code.enemy_positions[3] != 255) ? current_level_code.enemy_positions[3] : 0, // Position 20
         (current_level_code.enemy_positions[4] != 255) ? current_level_code.enemy_positions[4] : 0, // Position 21
         (current_level_code.enemy_positions[5] != 255) ? current_level_code.enemy_positions[5] : 0, // Position 22
         (current_level_code.enemy_directions >> 3) & 0x07                                           // Position 23: Remaining direction bits
     };
 
-    for (UBYTE i = 0; i < 8; i++)
+    for (UBYTE i = 0; i < 7; i++)
     {
-        UBYTE pos = TOTAL_BLOCKS + i; // Positions 16-23
+        UBYTE pos = 17 + i; // Positions 17-23
         if (display_position_needs_update(pos))
         {
             get_display_position(pos, &display_x, &display_y);
-            UBYTE display_char = get_extended_display_char(enemy_data[i]);
-            display_char_at_position(display_char, display_x, display_y);
+            display_char_at_position(enemy_data[i], display_x, display_y);
         }
     }
 
@@ -367,34 +381,37 @@ void force_complete_level_code_display(void) BANKED
     update_complete_level_code();
     clear_level_code_display();
 
+    // Declare display_x and display_y for use in this function
+    UBYTE display_x, display_y;
+
     // Display 16 platform patterns (positions 0-15)
     for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
-        UBYTE display_x, display_y;
         get_display_position(i, &display_x, &display_y);
         display_pattern_char(current_level_code.platform_patterns[i], display_x, display_y);
     }
 
-    // Display 8 characters of enemy/player data (positions 16-23)
+    // Display player column (position 16)
+    get_display_position(16, &display_x, &display_y);
+    UBYTE player_display_char = get_extended_display_char(current_level_code.player_column);
+    display_char_at_position(player_display_char, display_x, display_y);
+
+    // Display enemy data (positions 17-23)
     UBYTE enemy_data[] = {
-        encode_enemy_positions(),         // Position 16: Enemy count + position checksum
-        encode_enemy_details_1(),         // Position 17: Compressed positions for first 3 enemies
-        encode_enemy_details_2(),         // Position 18: Enemy directions + type bits
-        current_level_code.player_column, // Position 19: Player starting column
-        // Additional encoded data for positions 20-23
+        encode_enemy_positions(),                                                                   // Position 17: Enemy count + position checksum
+        encode_enemy_details_1(),                                                                   // Position 18: Compressed positions for first 3 enemies
+        encode_enemy_details_2(),                                                                   // Position 19: Enemy directions + type bits
         (current_level_code.enemy_positions[3] != 255) ? current_level_code.enemy_positions[3] : 0, // Position 20
         (current_level_code.enemy_positions[4] != 255) ? current_level_code.enemy_positions[4] : 0, // Position 21
         (current_level_code.enemy_positions[5] != 255) ? current_level_code.enemy_positions[5] : 0, // Position 22
         (current_level_code.enemy_directions >> 3) & 0x07                                           // Position 23: Remaining direction bits
     };
 
-    for (UBYTE i = 0; i < 8; i++)
+    for (UBYTE i = 0; i < 7; i++)
     {
-        UBYTE pos = TOTAL_BLOCKS + i; // Positions 16-23
-        UBYTE display_x, display_y;
+        UBYTE pos = 17 + i; // Positions 17-23
         get_display_position(pos, &display_x, &display_y);
-        UBYTE display_char = get_extended_display_char(enemy_data[i]);
-        display_char_at_position(display_char, display_x, display_y);
+        display_char_at_position(enemy_data[i], display_x, display_y);
     }
 
     // Initialize the cache after complete redraw
@@ -1191,7 +1208,7 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
             max_value = PLATFORM_PATTERN_COUNT - 1;
             new_value = (current_value + 1) % PLATFORM_PATTERN_COUNT;
         }
-        else if (char_index == 19)
+        else if (char_index == 16)
         {
             // Player column: 0-19
             max_value = 19;
@@ -1206,7 +1223,7 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
                 new_value = current_value + 1;
             }
         }
-        else if (char_index >= 20 && char_index <= 22)
+        else if (char_index >= 17 && char_index <= 22)
         {
             // Enemy positions: 0-19 (0 means no enemy)
             max_value = 19;
@@ -1707,144 +1724,29 @@ void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_le
 // Update level code data based on character position and new value
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED
 {
-    if (char_index >= LEVEL_CODE_CHARS_TOTAL)
-    {
-        return;
-    }
-
     if (char_index < TOTAL_BLOCKS)
     {
-        // Platform pattern positions (0-15)
+        // Platform pattern update
         if (new_value < PLATFORM_PATTERN_COUNT)
         {
-            // Store the old pattern for comparison
-            UBYTE old_pattern = current_level_code.platform_patterns[char_index];
-
-            // Apply the pattern directly - no validation restrictions
             current_level_code.platform_patterns[char_index] = new_value;
             apply_pattern_with_brush_logic(char_index, new_value);
-
-            // The comprehensive update is handled in apply_pattern_with_brush_logic
-            // so we don't need additional updates here
         }
     }
     else if (char_index == 16)
     {
-        // Position 16: Enemy position summary - this is complex to decode directly
-        // For now, we'll skip direct editing of encoded positions
-        // Could be enhanced later to support direct enemy count editing
-    }
-    else if (char_index == 17)
-    {
-        // Position 17: Compressed enemy positions - also complex
-        // Skip for now
-    }
-    else if (char_index == 18)
-    {
-        // Position 18: Enemy directions + type bits - complex
-        // Skip for now
-    }
-    else if (char_index == 19)
-    {
-        // Position 19: Player starting column (0-19)
+        // Player column update (now at char 16)
         if (new_value < 20)
         {
-            // Find the next valid player position starting from new_value
-            UBYTE valid_column = 255; // Initialize as invalid
-
-            // Check positions starting from new_value and wrapping around
-            for (UBYTE attempt = 0; attempt < 20; attempt++)
-            {
-                UBYTE test_column = (new_value + attempt) % 20;
-                UBYTE test_x = 2 + test_column;
-
-                // Use the same validation logic as paint system
-                if (can_paint_player(test_x, 11))
-                {
-                    valid_column = test_column;
-                    break;
-                }
-            }
-
-            // If we found a valid position, place the player there
-            if (valid_column != 255)
-            {
-                current_level_code.player_column = valid_column;
-
-                // Update player position in tilemap
-                // First, clear existing player
-                for (UBYTE col = 2; col < 22; col++)
-                {
-                    UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
-                    UBYTE tile_type = get_tile_type(tile);
-                    if (tile_type == BRUSH_TILE_PLAYER)
-                    {
-                        replace_meta_tile(col, 11, 0, 1);
-                    }
-                }
-
-                // Place player at valid position
-                UBYTE new_x = 2 + valid_column;
-                replace_meta_tile(new_x, 11, TILE_PLAYER, 1);
-
-                // Also move the player actor to the new position
-                move_player_actor_to_tile(paint_player_id, new_x, 11);
-            }
-            // If no valid position found, don't place the player anywhere
+            // Instead of directly updating the level code and tilemap, simulate a paint_player action
+            // This ensures all logic and display updates are consistent
+            paint_player(new_value + 2, 11); // x = col + 2, y = 11
         }
     }
-    else if (char_index >= 20 && char_index <= 22)
+    else if (char_index >= 17 && char_index <= 23)
     {
-        // Positions 20-22: Individual enemy positions (enemies 3-5)
-        UBYTE enemy_index = 3 + (char_index - 20);
-        if (enemy_index < MAX_ENEMIES)
-        {
-            if (new_value == 0)
-            {
-                // Value 0 means remove enemy
-                current_level_code.enemy_positions[enemy_index] = 255;
-
-                // Clear enemy from tilemap
-                for (UBYTE row = 12; row <= 18; row += 2)
-                {
-                    for (UBYTE col = 2; col < 22; col++)
-                    {
-                        UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, row)];
-                        UBYTE tile_type = get_tile_type(tile);
-                        if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
-                        {
-                            // Check if this is the enemy we want to remove
-                            // This is approximate since we don't track exact enemy-to-position mapping
-                            replace_meta_tile(col, row, 0, 1);
-                            break; // Remove first found enemy
-                        }
-                    }
-                }
-            }
-            else if (new_value < 20)
-            {
-                // Place enemy at specified column
-                current_level_code.enemy_positions[enemy_index] = new_value;
-
-                // Place enemy in tilemap (use default direction - right)
-                // Find a suitable row (start from row 12)
-                for (UBYTE row = 12; row <= 18; row += 2)
-                {
-                    UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(2 + new_value, row)];
-                    if (tile == 0) // Empty position
-                    {
-                        replace_meta_tile(2 + new_value, row, BRUSH_TILE_ENEMY_R, 1);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else if (char_index == 23)
-    {
-        // Position 23: Remaining enemy direction bits
-        // Update the upper bits of enemy_directions
-        current_level_code.enemy_directions = (current_level_code.enemy_directions & 0x07) | ((new_value & 0x07) << 3);
+        // Enemy data update (implement as needed)
+        // ...existing code or leave as is for now...
     }
 }
 

@@ -488,7 +488,10 @@ void paint_player(UBYTE x, UBYTE y) BANKED
     replace_meta_tile(x, y, TILE_PLAYER, 1); // Move player actor to this position with centering offset
     move_player_actor_to_tile(paint_player_id, x, y);
 
-    update_level_code_for_paint(x, y); // Smart update
+    // --- Ensure level code and display are updated after painting the player ---
+    extract_player_data();
+    mark_display_position_for_update(16); // Mark char 16 for display update
+    display_selective_level_code_fast();
 }
 
 void paint_enemy_right(UBYTE x, UBYTE y) BANKED
