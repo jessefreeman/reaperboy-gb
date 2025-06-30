@@ -53,6 +53,11 @@ void reconstruct_tilemap_from_level_code(void) BANKED;
 void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_left, UBYTE connected_right) BANKED;
 UBYTE has_adjacent_platform(UBYTE block_index, BYTE direction) BANKED;
 
+// Pattern validation functions (optimized for fixed system)
+UBYTE is_pattern_valid_for_position(UBYTE pattern_id, UBYTE block_x) BANKED;
+UBYTE get_next_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED;
+UBYTE get_previous_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED;
+
 // Pattern update control functions
 void set_suppress_pattern_updates(UBYTE suppress) BANKED;
 UBYTE get_suppress_pattern_updates(void) BANKED;

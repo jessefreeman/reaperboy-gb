@@ -541,3 +541,89 @@ void b_init_platform_system(void) BANKED { init_platform_system(); }
 void b_init_test_platform_patterns(void) BANKED { init_test_platform_patterns(); }
 void b_update_all_platform_patterns(void) BANKED { update_all_platform_patterns(); }
 void b_init_level_persistence(void) BANKED { init_level_persistence(); }
+
+// ============================================================================
+// PATTERN VALIDATION DATA (OPTIMIZED FOR FIXED SYSTEM)
+// ============================================================================
+
+// Invalid patterns for first column (block_x = 0) - patterns that have platforms at leftmost position
+const UBYTE INVALID_PATTERNS_FIRST_COLUMN[] = {2, 10, 14, 15, 17};
+#define INVALID_PATTERNS_FIRST_COLUMN_COUNT 5
+
+// Invalid patterns for last column (block_x = 3) - patterns that have platforms at rightmost position
+const UBYTE INVALID_PATTERNS_LAST_COLUMN[] = {1, 9, 14, 16, 18};
+#define INVALID_PATTERNS_LAST_COLUMN_COUNT 5
+
+// ============================================================================
+// PATTERN VALIDATION FUNCTIONS (OPTIMIZED)
+// ============================================================================
+
+// Fast validation using direct array lookup (optimized for fixed system)
+UBYTE is_pattern_valid_for_position(UBYTE pattern_id, UBYTE block_x) BANKED
+{
+    // First column (left edge) validation
+    if (block_x == 0)
+    {
+        for (UBYTE i = 0; i < INVALID_PATTERNS_FIRST_COLUMN_COUNT; i++)
+        {
+            if (INVALID_PATTERNS_FIRST_COLUMN[i] == pattern_id)
+                return 0;
+        }
+    }
+    // Last column (right edge) validation
+    else if (block_x == 3)
+    {
+        for (UBYTE i = 0; i < INVALID_PATTERNS_LAST_COLUMN_COUNT; i++)
+        {
+            if (INVALID_PATTERNS_LAST_COLUMN[i] == pattern_id)
+                return 0;
+        }
+    }
+    // Middle columns (block_x = 1,2) - all patterns valid
+    return 1;
+}
+
+// Get next valid pattern (optimized for fixed system)
+UBYTE get_next_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED
+{
+    UBYTE next_pattern = current_pattern;
+
+    // Find next valid pattern (max 21 iterations)
+    for (UBYTE i = 0; i < PLATFORM_PATTERN_COUNT; i++)
+    {
+        next_pattern++;
+        if (next_pattern >= PLATFORM_PATTERN_COUNT)
+            next_pattern = 0; // Wrap around
+
+        if (is_pattern_valid_for_position(next_pattern, block_x))
+        {
+            return next_pattern;
+        }
+    }
+
+    // Fallback (should never happen)
+    return 0;
+}
+
+// Get previous valid pattern (optimized for fixed system)
+UBYTE get_previous_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED
+{
+    UBYTE prev_pattern = current_pattern;
+
+    // Find previous valid pattern (max 21 iterations)
+    for (UBYTE i = 0; i < PLATFORM_PATTERN_COUNT; i++)
+    {
+        if (prev_pattern == 0)
+            prev_pattern = PLATFORM_PATTERN_COUNT - 1; // Wrap around
+        else
+            prev_pattern--;
+
+        if (is_pattern_valid_for_position(prev_pattern, block_x))
+        {
+            return prev_pattern;
+        }
+    }
+
+    // Fallback (should never happen)
+    return 0;
+}
