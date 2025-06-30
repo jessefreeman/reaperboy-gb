@@ -1252,6 +1252,12 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
         is_valid_platform_row(y))
     {
+        // Check if pattern updates are suppressed (during programmatic painting)
+        if (suppress_pattern_updates)
+        {
+            return; // Skip pattern updates during programmatic painting
+        }
+
         // Platform operations can affect multiple zones on the same row due to auto-completion
         // Update all zones on this row to be safe
         UBYTE row_index = (y - PLATFORM_Y_MIN) / SEGMENT_HEIGHT;
@@ -1259,6 +1265,12 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         for (UBYTE col = 0; col < SEGMENTS_PER_ROW; col++)
         {
             UBYTE zone_index = row_index * SEGMENTS_PER_ROW + col;
+
+            // CRITICAL: Check if this specific block is suppressed
+            if (is_block_suppressed(zone_index))
+            {
+                continue; // Skip this block if it's suppressed
+            }
 
             // Extract the current pattern for this zone
             UBYTE segment_x = 2 + col * SEGMENT_WIDTH;
@@ -1271,6 +1283,9 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
 
             // Mark this zone for display update
             mark_display_position_for_update(zone_index);
+
+            // Update neighbors if this zone has edge platforms
+            update_neighboring_block_codes(zone_index);
         }
 
         // Use fast selective update

@@ -163,6 +163,13 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
     UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
     UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
+    // VALIDATION: Check if pattern is valid for this position
+    if (!is_pattern_valid_for_position(pattern_id, block_x))
+    {
+        // Pattern is invalid for this position - do nothing
+        return;
+    }
+
     // Get the pattern data
     UBYTE pattern = PLATFORM_PATTERNS[pattern_id];
 
@@ -186,29 +193,6 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
     // Since platforms are only on the second row (y+1) of each segment, we only need to paint on that row
     UBYTE platform_y = segment_y + 1; // The actual platform row (odd row)
 
-    // Special handling for pattern 2 (single platform at leftmost position)
-    if (pattern_id == 2)
-    {
-        // Pattern 2 should create a single platform at the leftmost position of the segment
-        // Since paint() creates 2-tile platforms, we need to paint one position to the left
-        // in the neighboring segment so auto-completion creates the desired pattern
-
-        UBYTE block_x = block_index % SEGMENTS_PER_ROW;
-
-        // Only apply pattern 2 if we're not in the first column (where it's not valid)
-        if (block_x > 0)
-        {
-            // Paint one position to the left (in the neighboring segment)
-            UBYTE paint_x = segment_x - 1;
-            if (get_current_tile_type(paint_x, platform_y) == BRUSH_TILE_EMPTY)
-            {
-                paint(paint_x, platform_y);
-            }
-        }
-        // If block_x == 0 (first column), skip pattern 2 as it's not valid - do nothing
-        return;
-    }
-
     // Paint platforms by calling the paint function - this will handle all auto-completion logic
     for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
     {
@@ -222,6 +206,9 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
             }
         }
     }
+
+    // NOTE: No need to call update_single_block_code here since the parent function handles it
+    // and suppression may still be active
 }
 
 // ============================================================================
@@ -232,6 +219,10 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
 void update_single_block_code(UBYTE block_index) BANKED
 {
     if (block_index >= TOTAL_BLOCKS)
+        return;
+
+    // Respect surgical suppression - skip if this block is suppressed
+    if (is_block_suppressed(block_index))
         return;
 
     // Calculate segment position
@@ -626,4 +617,119 @@ UBYTE get_previous_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED
 
     // Fallback (should never happen)
     return 0;
+}
+
+// ============================================================================
+// SURGICAL SUPPRESSION SYSTEM (PREVENTS RACE CONDITIONS)
+// ============================================================================
+
+// Block-specific suppression flags (16 blocks = 16 bits in 2 bytes)
+UWORD suppressed_blocks = 0;
+
+// Suppress code updates for a specific block during painting
+void suppress_code_updates_for_block(UBYTE block_index) BANKED
+{
+    if (block_index < TOTAL_BLOCKS)
+    {
+        suppressed_blocks |= (1 << block_index);
+    }
+}
+
+// Re-enable code updates for a specific block
+void enable_code_updates_for_block(UBYTE block_index) BANKED
+{
+    if (block_index < TOTAL_BLOCKS)
+    {
+        suppressed_blocks &= ~(1 << block_index);
+    }
+}
+
+// Check if code updates are suppressed for a specific block
+UBYTE is_block_suppressed(UBYTE block_index) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS)
+        return 0;
+    return (suppressed_blocks & (1 << block_index)) != 0;
+}
+
+// Clear all suppression flags
+void clear_all_suppression(void) BANKED
+{
+    suppressed_blocks = 0;
+}
+
+// ============================================================================
+// COMPREHENSIVE PATTERN APPLICATION (SOLVES RACE CONDITIONS + VALIDATION)
+// ============================================================================
+
+// Apply a pattern with full validation and race condition prevention
+void apply_valid_pattern_to_block(UBYTE block_index, UBYTE pattern_id) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS || pattern_id >= PLATFORM_PATTERN_COUNT)
+    {
+        return;
+    }
+
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+
+    // If pattern is invalid for this position, auto-correct to next valid pattern
+    if (!is_pattern_valid_for_position(pattern_id, block_x))
+    {
+        pattern_id = get_next_valid_pattern(pattern_id, block_x);
+    }
+
+    // CRITICAL: Suppress code updates for this block during the entire operation
+    suppress_code_updates_for_block(block_index);
+
+    // Apply the pattern using brush logic (the tilemap changes will happen)
+    apply_pattern_with_brush_logic(block_index, pattern_id);
+
+    // Re-enable code updates for this block BEFORE setting the final pattern
+    enable_code_updates_for_block(block_index);
+
+    // Now set the intended pattern in level code - this ensures the display shows the correct pattern
+    // This must happen AFTER re-enabling updates to ensure the display gets updated
+    current_level_code.platform_patterns[block_index] = pattern_id;
+
+    // Update neighbors after our block is complete (they should not be suppressed)
+    update_neighboring_block_codes(block_index);
+
+    // Mark this position for display update to ensure it shows the correct pattern
+    mark_display_position_for_update(block_index);
+}
+
+// Increment to next valid pattern for a block (handles edge cases automatically)
+UBYTE increment_block_pattern(UBYTE block_index) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS)
+        return 0;
+
+    UBYTE current_pattern = current_level_code.platform_patterns[block_index];
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+
+    // Get next valid pattern (automatically skips invalid ones)
+    UBYTE new_pattern = get_next_valid_pattern(current_pattern, block_x);
+
+    // Apply the new pattern
+    apply_valid_pattern_to_block(block_index, new_pattern);
+
+    return new_pattern;
+}
+
+// Decrement to previous valid pattern for a block (handles edge cases automatically)
+UBYTE decrement_block_pattern(UBYTE block_index) BANKED
+{
+    if (block_index >= TOTAL_BLOCKS)
+        return 0;
+
+    UBYTE current_pattern = current_level_code.platform_patterns[block_index];
+    UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+
+    // Get previous valid pattern (automatically skips invalid ones)
+    UBYTE new_pattern = get_previous_valid_pattern(current_pattern, block_x);
+
+    // Apply the new pattern
+    apply_valid_pattern_to_block(block_index, new_pattern);
+
+    return new_pattern;
 }

@@ -14,6 +14,12 @@ extern const UBYTE PATTERN_TILE_MAP[];
 extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
 extern const UBYTE PATTERN_NEIGHBOR_UPDATE_FLAGS[];
 
+// Pattern validation arrays
+extern const UBYTE INVALID_PATTERNS_FIRST_COLUMN[];
+extern const UBYTE INVALID_PATTERNS_LAST_COLUMN[];
+#define INVALID_PATTERNS_FIRST_COLUMN_COUNT 5
+#define INVALID_PATTERNS_LAST_COLUMN_COUNT 5
+
 #define PLATFORM_PATTERN_COUNT 21
 
 // ============================================================================
@@ -53,10 +59,21 @@ void reconstruct_tilemap_from_level_code(void) BANKED;
 void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_left, UBYTE connected_right) BANKED;
 UBYTE has_adjacent_platform(UBYTE block_index, BYTE direction) BANKED;
 
-// Pattern validation functions (optimized for fixed system)
+// Surgical suppression system (prevents race conditions)
+void suppress_code_updates_for_block(UBYTE block_index) BANKED;
+void enable_code_updates_for_block(UBYTE block_index) BANKED;
+UBYTE is_block_suppressed(UBYTE block_index) BANKED;
+void clear_all_suppression(void) BANKED;
+
+// Pattern validation for position-specific constraints
 UBYTE is_pattern_valid_for_position(UBYTE pattern_id, UBYTE block_x) BANKED;
 UBYTE get_next_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED;
 UBYTE get_previous_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED;
+
+// Comprehensive pattern application (solves validation + race conditions)
+void apply_valid_pattern_to_block(UBYTE block_index, UBYTE pattern_id) BANKED;
+UBYTE increment_block_pattern(UBYTE block_index) BANKED;
+UBYTE decrement_block_pattern(UBYTE block_index) BANKED;
 
 // Pattern update control functions
 void set_suppress_pattern_updates(UBYTE suppress) BANKED;
