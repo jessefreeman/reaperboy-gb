@@ -25,28 +25,29 @@ extern UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED;
 // PLATFORM PATTERN DATA
 // ============================================================================
 
-const UWORD PLATFORM_PATTERNS[] = {
-    0b0000000000, // UID 0: Empty
-    0b0000000001, // UID 1: Single platform at position 4
-    0b0000010000, // UID 2: Single platform at position 3
-    0b0000000011, // UID 3: Two platforms at positions 3-4
-    0b0000011000, // UID 4: Two platforms at positions 2-3
-    0b0000000110, // UID 5: Two platforms at positions 2-3
-    0b0000001100, // UID 6: Two platforms at positions 1-2
-    0b0000000111, // UID 7: Three platforms at positions 2-4
-    0b0000011100, // UID 8: Three platforms at positions 1-3
-    0b0000001101, // UID 9: Gapped platforms at positions 1-2,4
-    0b0000010110, // UID 10: Gapped platforms at positions 1,3-4
-    0b0000001110, // UID 11: Three platforms at positions 1-3
-    0b0000001111, // UID 12: Four platforms at positions 1-4
-    0b0000011110, // UID 13: Four platforms at positions 1-4
-    0b0000010001, // UID 14: Two isolated platforms at positions 0,4
-    0b0000010011, // UID 15: Three platforms at positions 0,3-4
-    0b0000011001, // UID 16: Three platforms at positions 0,2-3
-    0b0000010111, // UID 17: Four platforms at positions 0,2-4
-    0b0000011101, // UID 18: Four platforms at positions 0-2,4
-    0b0000011011, // UID 19: Four platforms at positions 0-1,3-4
-    0b0000011111  // UID 20: Full platform coverage
+// Simplified 5-bit patterns (bottom 5 bits from original patterns)
+const UBYTE PLATFORM_PATTERNS[] = {
+    0b00000, // UID 0: Empty
+    0b00001, // UID 1: Single platform at position 4
+    0b10000, // UID 2: Single platform at position 3
+    0b00011, // UID 3: Two platforms at positions 3-4
+    0b11000, // UID 4: Two platforms at positions 2-3
+    0b00110, // UID 5: Two platforms at positions 2-3
+    0b01100, // UID 6: Two platforms at positions 1-2
+    0b00111, // UID 7: Three platforms at positions 2-4
+    0b11100, // UID 8: Three platforms at positions 1-3
+    0b01101, // UID 9: Gapped platforms at positions 1-2,4
+    0b10110, // UID 10: Gapped platforms at positions 1,3-4
+    0b01110, // UID 11: Three platforms at positions 1-3
+    0b01111, // UID 12: Four platforms at positions 1-4
+    0b11110, // UID 13: Four platforms at positions 1-4
+    0b10001, // UID 14: Two isolated platforms at positions 0,4
+    0b10011, // UID 15: Three platforms at positions 0,3-4
+    0b11001, // UID 16: Three platforms at positions 0,2-3
+    0b10111, // UID 17: Four platforms at positions 0,2-4
+    0b11101, // UID 18: Four platforms at positions 0-2,4
+    0b11011, // UID 19: Four platforms at positions 0-1,3-4
+    0b11111  // UID 20: Full platform coverage
 };
 
 // Character mapping for pattern display (0-9, A-K for patterns 0-20)
@@ -67,34 +68,29 @@ const UBYTE EXTENDED_PATTERN_TILE_MAP[] = {
 // CORE PATTERN EXTRACTION AND MATCHING
 // ============================================================================
 
-UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED
+// Simplified pattern extraction for single-row platforms
+UBYTE extract_chunk_pattern(UBYTE x, UBYTE y) BANKED
 {
-    UWORD pattern = 0;
-    *row0 = 0;
-    *row1 = 0;
+    UBYTE pattern = 0;
 
-    for (UBYTE i = 0; i < 5; i++)
+    // Since platforms are only rendered on the second row of each segment (odd rows),
+    // we only need to check y+1 (the platform row) of the segment
+    UBYTE platform_y = y + 1;
+
+    for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
     {
-        UBYTE top_tile = sram_map_data[METATILE_MAP_OFFSET(x + i, y)];
-        UBYTE bottom_tile = sram_map_data[METATILE_MAP_OFFSET(x + i, y + 1)];
+        UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(x + i, platform_y)];
 
-        // Top row (bits 9-5)
-        if (top_tile == PLATFORM_TILE_1 || top_tile == PLATFORM_TILE_2 || top_tile == PLATFORM_TILE_3)
+        if (tile == PLATFORM_TILE_1 || tile == PLATFORM_TILE_2 || tile == PLATFORM_TILE_3)
         {
-            pattern |= (1 << (9 - i));
-            *row0 |= (1 << (4 - i));
-        }
-        // Bottom row (bits 4-0)
-        if (bottom_tile == PLATFORM_TILE_1 || bottom_tile == PLATFORM_TILE_2 || bottom_tile == PLATFORM_TILE_3)
-        {
-            pattern |= (1 << (4 - i));
-            *row1 |= (1 << (4 - i));
+            pattern |= (1 << (4 - i)); // Set bit for this position (bit 4 = position 0, bit 0 = position 4)
         }
     }
+
     return pattern;
 }
 
-UWORD match_platform_pattern(UWORD pattern) BANKED
+UBYTE match_platform_pattern(UBYTE pattern) BANKED
 {
     for (UBYTE i = 0; i < PLATFORM_PATTERN_COUNT; i++)
     {
@@ -120,11 +116,10 @@ void extract_platform_data(void) BANKED
             UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
             UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
-            UBYTE row0, row1;
-            UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
-            UWORD pattern_id = match_platform_pattern(pattern);
+            UBYTE pattern = extract_chunk_pattern(segment_x, segment_y);
+            UBYTE pattern_id = match_platform_pattern(pattern);
 
-            current_level_code.platform_patterns[block_index] = (UBYTE)pattern_id;
+            current_level_code.platform_patterns[block_index] = pattern_id;
         }
     }
 
@@ -151,7 +146,7 @@ void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED
     UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
     // Get the pattern data
-    UWORD pattern = PLATFORM_PATTERNS[pattern_id];
+    UBYTE pattern = PLATFORM_PATTERNS[pattern_id];
 
     // Clear the segment first
     for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
@@ -181,7 +176,7 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
     UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
     // Get the pattern data
-    UWORD pattern = PLATFORM_PATTERNS[pattern_id];
+    UBYTE pattern = PLATFORM_PATTERNS[pattern_id];
 
     // First, clear any existing platform tiles in this segment
     for (UBYTE row = 0; row < SEGMENT_HEIGHT; row++)
@@ -200,27 +195,19 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
     }
 
     // Now apply the pattern by simulating manual painting at each position that should have a platform
-    for (UBYTE row = 0; row < SEGMENT_HEIGHT; row++)
+    // Since platforms are only on the second row (y+1) of each segment, we only need to paint on that row
+    UBYTE platform_y = segment_y + 1; // The actual platform row (odd row)
+
+    // Paint platforms by calling the paint function - this will handle all auto-completion logic
+    for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
     {
-        // Extract row pattern (top row: bits 9-5, bottom row: bits 4-0)
-        UBYTE row_pattern = (row == 0) ? ((pattern >> 5) & 0x1F) : (pattern & 0x1F);
-
-        if (row_pattern == 0)
-            continue; // Skip empty rows
-
-        UBYTE current_y = segment_y + row;
-
-        // Paint platforms by calling the paint function - this will handle all auto-completion logic
-        for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
+        if (pattern & (1 << (4 - i))) // Check if this position should have a platform
         {
-            if (row_pattern & (1 << (4 - i))) // Check if this position should have a platform
+            UBYTE tile_x = segment_x + i;
+            // Only paint if the tile is currently empty (to avoid interfering with auto-completion)
+            if (get_current_tile_type(tile_x, platform_y) == BRUSH_TILE_EMPTY)
             {
-                UBYTE tile_x = segment_x + i;
-                // Only paint if the tile is currently empty (to avoid interfering with auto-completion)
-                if (get_current_tile_type(tile_x, current_y) == BRUSH_TILE_EMPTY)
-                {
-                    paint(tile_x, current_y);
-                }
+                paint(tile_x, platform_y);
             }
         }
     }
@@ -243,11 +230,10 @@ void update_single_block_code(UBYTE block_index) BANKED
     UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
     // Extract the current pattern from the tilemap
-    UBYTE row0, row1;
-    UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
-    UWORD pattern_id = match_platform_pattern(pattern);
+    UBYTE pattern = extract_chunk_pattern(segment_x, segment_y);
+    UBYTE pattern_id = match_platform_pattern(pattern);
 
-    current_level_code.platform_patterns[block_index] = (UBYTE)pattern_id;
+    current_level_code.platform_patterns[block_index] = pattern_id;
 }
 
 // Update level codes for blocks adjacent to the given block that may have been affected by auto-completion
@@ -352,12 +338,11 @@ void validate_final_pattern_match(UBYTE block_index, UBYTE intended_pattern_id) 
     UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
     UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
-    UBYTE row0, row1;
-    UWORD actual_pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
-    UWORD actual_pattern_id = match_platform_pattern(actual_pattern);
+    UBYTE actual_pattern = extract_chunk_pattern(segment_x, segment_y);
+    UBYTE actual_pattern_id = match_platform_pattern(actual_pattern);
 
     // Update the level code to reflect what was actually painted
-    current_level_code.platform_patterns[block_index] = (UBYTE)actual_pattern_id;
+    current_level_code.platform_patterns[block_index] = actual_pattern_id;
 
     // If the actual pattern doesn't match the intended pattern,
     // it means the painting system modified it (due to length limits, etc.)
@@ -412,7 +397,7 @@ UBYTE has_adjacent_platform(UBYTE block_index, BYTE direction) BANKED
 }
 
 // Apply pattern with proper end cap logic considering neighboring segments
-void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UWORD pattern, UBYTE block_index) BANKED
+void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UBYTE pattern, UBYTE block_index) BANKED
 {
     // This function applies a pattern with proper platform end caps
     // considering neighboring blocks for seamless platform connections
@@ -420,14 +405,10 @@ void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UWORD pattern,
     UBYTE has_left_neighbor = has_adjacent_platform(block_index, -1);
     UBYTE has_right_neighbor = has_adjacent_platform(block_index, +1);
 
-    // Apply the pattern row by row
-    for (UBYTE row = 0; row < SEGMENT_HEIGHT; row++)
-    {
-        UBYTE row_pattern = (row == 0) ? ((pattern >> 5) & 0x1F) : (pattern & 0x1F);
-        UBYTE current_y = segment_y + row;
+    // Since platforms are only on the second row (y+1) of each segment, apply only to that row
+    UBYTE platform_y = segment_y + 1; // The actual platform row (odd row)
 
-        apply_row_platforms(segment_x, current_y, row_pattern, has_left_neighbor, has_right_neighbor);
-    }
+    apply_row_platforms(segment_x, platform_y, pattern, has_left_neighbor, has_right_neighbor);
 }
 
 // Apply platforms for a single row with proper end cap logic

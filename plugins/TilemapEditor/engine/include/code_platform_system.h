@@ -8,8 +8,8 @@
 // PLATFORM PATTERN DATA AND CONSTANTS
 // ============================================================================
 
-// Platform patterns array
-extern const UWORD PLATFORM_PATTERNS[];
+// Platform patterns array (simplified to 5-bit patterns for single-row platforms)
+extern const UBYTE PLATFORM_PATTERNS[];
 extern const UBYTE PATTERN_TILE_MAP[];
 extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
 
@@ -23,9 +23,9 @@ extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
 void init_platform_system(void) BANKED;
 void init_test_platform_patterns(void) BANKED;
 
-// Core pattern extraction and matching
-UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
-UWORD match_platform_pattern(UWORD pattern) BANKED;
+// Core pattern extraction and matching (simplified for single-row platforms)
+UBYTE extract_chunk_pattern(UBYTE x, UBYTE y) BANKED;
+UBYTE match_platform_pattern(UBYTE pattern) BANKED;
 
 // Platform data extraction
 void extract_platform_data(void) BANKED;
@@ -34,7 +34,7 @@ void update_all_platform_patterns(void) BANKED;
 // Tilemap application functions
 void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED;
 void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED;
-void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UWORD pattern, UBYTE block_index) BANKED;
+void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UBYTE pattern, UBYTE block_index) BANKED;
 
 // Block management functions
 void update_single_block_code(UBYTE block_index) BANKED;

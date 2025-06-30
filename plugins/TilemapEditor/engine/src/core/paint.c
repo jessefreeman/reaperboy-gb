@@ -18,8 +18,8 @@ extern void reconstruct_tilemap_from_level_code(void) BANKED;
 extern void mark_display_position_for_update(UBYTE position) BANKED;
 extern void display_complete_level_code(void) BANKED;
 extern void display_selective_level_code_fast(void) BANKED;
-extern UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
-extern UWORD match_platform_pattern(UWORD pattern) BANKED;
+extern UBYTE extract_chunk_pattern(UBYTE x, UBYTE y) BANKED;
+extern UBYTE match_platform_pattern(UBYTE pattern) BANKED;
 extern UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
 
 // External reference to level code structure
@@ -1264,11 +1264,10 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
             UBYTE segment_x = 2 + col * SEGMENT_WIDTH;
             UBYTE segment_y = PLATFORM_Y_MIN + row_index * SEGMENT_HEIGHT;
 
-            UBYTE row0, row1;
-            UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
-            UWORD pattern_id = match_platform_pattern(pattern);
+            UBYTE pattern = extract_chunk_pattern(segment_x, segment_y);
+            UBYTE pattern_id = match_platform_pattern(pattern);
 
-            current_level_code.platform_patterns[zone_index] = (UBYTE)pattern_id;
+            current_level_code.platform_patterns[zone_index] = pattern_id;
 
             // Mark this zone for display update
             mark_display_position_for_update(zone_index);
