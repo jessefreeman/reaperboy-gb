@@ -358,3 +358,35 @@ void vm_init_test_enemy_patterns(SCRIPT_CTX *THIS) BANKED
     (void)THIS;
     init_test_enemy_patterns();
 }
+
+// ============================================================================
+// CHARACTER EDITING HANDLERS
+// ============================================================================
+
+// Handle enemy data edit from level code
+void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
+{
+    // Handle enemy data changes when level code is edited
+    // This could update enemy positions, types, or directions
+    // Implementation depends on how enemy data is encoded in the level code
+    (void)char_index; // Avoid unused parameter warning
+    (void)new_value;  // Avoid unused parameter warning
+
+    // TODO: Implement enemy data editing logic based on encoding system
+    // For now, just trigger a re-extraction of enemy data
+    extract_enemy_data();
+}
+
+// Update all enemy patterns
+void update_enemy_patterns(void) BANKED
+{
+    // Update enemy patterns when platform layouts change
+    extract_enemy_data();
+}
+
+// Validate enemy positions after platform changes
+void validate_enemy_positions_after_platform_change(void) BANKED
+{
+    // Validate that enemy positions are still valid after platform changes
+    extract_enemy_data();
+}

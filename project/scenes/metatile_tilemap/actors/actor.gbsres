@@ -1,0 +1,122 @@
+{
+  "_resourceType": "actor",
+  "id": "1f72c5c2-1da9-4261-8295-00c2f95b9999",
+  "name": "",
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "82796c4a-1e4d-4906-bbdc-5044d61c099a",
+  "prefabId": "",
+  "direction": "down",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "paletteId": "",
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "prefabScriptOverrides": {},
+  "symbol": "actor_9",
+  "script": [],
+  "startScript": [],
+  "updateScript": [
+    {
+      "command": "EVENT_ACTOR_GET_POSITION",
+      "args": {
+        "actorId": "$self$",
+        "vectorX": "L0",
+        "vectorY": "L1",
+        "__comment": true
+      },
+      "id": "b3c74b2a-0163-4285-9b19-dca03618c055"
+    },
+    {
+      "command": "EVENT_SET_VALUE",
+      "args": {
+        "variable": "L1",
+        "value": {
+          "type": "min",
+          "valueA": {
+            "type": "variable",
+            "value": "L1"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        "__comment": true
+      },
+      "id": "9ac67c88-4bd6-4d87-a49f-4f480fa464ce"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_POSITION",
+      "args": {
+        "actorId": "$self$",
+        "x": {
+          "type": "property",
+          "target": "$self$",
+          "property": "pxpos"
+        },
+        "y": {
+          "type": "sub",
+          "valueA": {
+            "type": "property",
+            "target": "$self$",
+            "property": "pypos"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        "__comment": false,
+        "units": "pixels"
+      },
+      "id": "d08ce16f-bb0b-47b1-b4a9-d16ae9c91a81"
+    },
+    {
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "lt",
+          "valueA": {
+            "type": "property",
+            "target": "$self$",
+            "property": "pypos"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "__collapseElse": true
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_ACTOR_SET_POSITION",
+            "args": {
+              "actorId": "$self$",
+              "x": {
+                "type": "number",
+                "value": 16
+              },
+              "y": {
+                "type": "number",
+                "value": 14
+              }
+            },
+            "id": "21dcff12-e594-446d-929c-262305ba3cb8"
+          }
+        ],
+        "false": []
+      },
+      "id": "2eb18395-374a-4c2c-aeb5-d70691273ebd"
+    }
+  ],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": [],
+  "x": 16,
+  "y": 14,
+  "_index": 9
+}

@@ -1,0 +1,76 @@
+{
+  "_resourceType": "script",
+  "id": "f5f45c31-95a0-4650-b47a-781f70cc07e3",
+  "name": "SCRIPT_ON_DEATH",
+  "description": "",
+  "variables": {},
+  "actors": {
+    "0": {
+      "id": "0",
+      "name": "A_GHOST_ACTOR"
+    }
+  },
+  "symbol": "script_4",
+  "script": [
+    {
+      "command": "EVENT_ACTOR_DEACTIVATE",
+      "args": {
+        "actorId": "$self$"
+      },
+      "id": "ba22540d-454e-4fed-97b2-59e739b63d85"
+    },
+    {
+      "command": "EVENT_COMMENT",
+      "args": {
+        "text": "TODO need to check if tile is an exit"
+      },
+      "id": "0ef97b71-fff2-4fed-a09a-0b264e4764c8"
+    },
+    {
+      "command": "EVENT_REPLACE_META_TILE",
+      "args": {
+        "x": {
+          "type": "property",
+          "target": "player",
+          "property": "xpos"
+        },
+        "y": {
+          "type": "property",
+          "target": "player",
+          "property": "ypos"
+        },
+        "metatile_id": {
+          "type": "number",
+          "value": 7
+        },
+        "commit": true
+      },
+      "id": "2be73f85-e49e-445b-86d3-46448f3d5c6a"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_POSITION",
+      "args": {
+        "actorId": "0",
+        "x": {
+          "type": "property",
+          "target": "player",
+          "property": "xpos"
+        },
+        "y": {
+          "type": "property",
+          "target": "player",
+          "property": "ypos"
+        },
+        "units": "pixels"
+      },
+      "id": "2949cdc1-f1be-4fa1-8641-6f1fb8608aed"
+    },
+    {
+      "command": "EVENT_ACTOR_ACTIVATE",
+      "args": {
+        "actorId": "0"
+      },
+      "id": "92e01412-74f1-4b59-b7c0-208f0c2f7b6f"
+    }
+  ]
+}

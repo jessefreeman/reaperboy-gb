@@ -244,3 +244,34 @@ void vm_debug_show_valid_positions(SCRIPT_CTX *THIS) BANKED
             *(UWORD *)VM_REF_TO_PTR(FN_ARG3) = valid_player_columns[2];
     }
 }
+
+// ============================================================================
+// CHARACTER EDITING HANDLERS
+// ============================================================================
+
+// Handle player position edit from level code
+void handle_player_position_edit(UBYTE new_value) BANKED
+{
+    // Update player position when level code changes
+    if (new_value < 20) // Valid column range 0-19
+    {
+        current_level_code.player_column = new_value;
+
+        // Update the tilemap to reflect the new player position
+        // Clear old player position
+        for (UBYTE col = 2; col < 22; col++)
+        {
+            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
+            UBYTE tile_type = get_tile_type(tile);
+            if (tile_type == BRUSH_TILE_PLAYER)
+            {
+                replace_meta_tile(col, 11, 0, 1); // Clear old position
+            }
+        }
+
+        // Set new player position
+        UBYTE new_col = 2 + new_value; // Convert to tilemap coordinate
+        // Use appropriate player tile - assuming there's a player tile constant
+        replace_meta_tile(new_col, 11, 1, 1); // Place player at new position
+    }
+}

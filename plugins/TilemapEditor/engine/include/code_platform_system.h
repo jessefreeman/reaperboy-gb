@@ -12,12 +12,16 @@
 extern const UBYTE PLATFORM_PATTERNS[];
 extern const UBYTE PATTERN_TILE_MAP[];
 extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
+extern const UBYTE PATTERN_NEIGHBOR_UPDATE_FLAGS[];
 
 #define PLATFORM_PATTERN_COUNT 21
 
 // ============================================================================
 // PLATFORM SYSTEM FUNCTIONS
 // ============================================================================
+
+// Flag to suppress pattern updates during programmatic painting
+extern UBYTE suppress_pattern_updates;
 
 // System initialization
 void init_platform_system(void) BANKED;
@@ -48,5 +52,15 @@ void apply_row_platforms(UBYTE base_x, UBYTE y, UBYTE row_pattern, UBYTE has_lef
 void reconstruct_tilemap_from_level_code(void) BANKED;
 void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_left, UBYTE connected_right) BANKED;
 UBYTE has_adjacent_platform(UBYTE block_index, BYTE direction) BANKED;
+
+// Pattern update control functions
+void set_suppress_pattern_updates(UBYTE suppress) BANKED;
+UBYTE get_suppress_pattern_updates(void) BANKED;
+
+// Banked function wrappers for VM system access (for functions defined in platform system only)
+void b_init_platform_system(void) BANKED;
+void b_init_test_platform_patterns(void) BANKED;
+void b_update_all_platform_patterns(void) BANKED;
+void b_init_level_persistence(void) BANKED;
 
 #endif // CODE_PLATFORM_SYSTEM_H

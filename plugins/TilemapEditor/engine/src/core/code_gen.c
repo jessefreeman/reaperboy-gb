@@ -29,8 +29,9 @@
 // Initialize the entire level code system
 void init_level_code_system(void) BANKED
 {
-    // Initialize core level code system
+    // Initialize all subsystems
     init_level_code();
+    // Note: other system init functions are called from their respective modules as needed
 
     // Set up initial state
     clear_level_code_display();

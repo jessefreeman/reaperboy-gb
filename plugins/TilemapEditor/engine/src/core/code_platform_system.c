@@ -10,18 +10,6 @@
 #include "paint.h"
 
 // ============================================================================
-// EXTERNAL FUNCTION DECLARATIONS
-// ============================================================================
-
-// Functions from code_level_core.c
-extern void mark_display_position_for_update(UBYTE position) BANKED;
-extern void display_selective_level_code_fast(void) BANKED;
-
-// Functions from paint.c
-extern void rebuild_platform_row(UBYTE y) BANKED;
-extern UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED;
-
-// ============================================================================
 // PLATFORM PATTERN DATA
 // ============================================================================
 
@@ -197,6 +185,29 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED
     // Now apply the pattern by simulating manual painting at each position that should have a platform
     // Since platforms are only on the second row (y+1) of each segment, we only need to paint on that row
     UBYTE platform_y = segment_y + 1; // The actual platform row (odd row)
+
+    // Special handling for pattern 2 (single platform at leftmost position)
+    if (pattern_id == 2)
+    {
+        // Pattern 2 should create a single platform at the leftmost position of the segment
+        // Since paint() creates 2-tile platforms, we need to paint one position to the left
+        // in the neighboring segment so auto-completion creates the desired pattern
+
+        UBYTE block_x = block_index % SEGMENTS_PER_ROW;
+
+        // Only apply pattern 2 if we're not in the first column (where it's not valid)
+        if (block_x > 0)
+        {
+            // Paint one position to the left (in the neighboring segment)
+            UBYTE paint_x = segment_x - 1;
+            if (get_current_tile_type(paint_x, platform_y) == BRUSH_TILE_EMPTY)
+            {
+                paint(paint_x, platform_y);
+            }
+        }
+        // If block_x == 0 (first column), skip pattern 2 as it's not valid - do nothing
+        return;
+    }
 
     // Paint platforms by calling the paint function - this will handle all auto-completion logic
     for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
@@ -491,3 +502,42 @@ void place_platform_run(UBYTE start_x, UBYTE y, UBYTE length, UBYTE connected_le
         replace_meta_tile(start_x + i, y, tile_type, 1);
     }
 }
+
+// ============================================================================
+// SYSTEM INITIALIZATION
+// ============================================================================
+
+// Initialize the platform system
+void init_platform_system(void) BANKED
+{
+    // Platform system initialization if needed
+}
+
+// Initialize test platform patterns
+void init_test_platform_patterns(void) BANKED
+{
+    // Test pattern initialization if needed
+}
+
+// Update all platform patterns
+void update_all_platform_patterns(void) BANKED
+{
+    // Update all platform patterns
+    extract_platform_data();
+}
+
+// Initialize level persistence
+void init_level_persistence(void) BANKED
+{
+    // Level persistence initialization if needed
+}
+
+// ============================================================================
+// END OF PLATFORM SYSTEM
+// ============================================================================
+
+// Banked function wrappers for VM system access (for functions defined in platform system only)
+void b_init_platform_system(void) BANKED { init_platform_system(); }
+void b_init_test_platform_patterns(void) BANKED { init_test_platform_patterns(); }
+void b_update_all_platform_patterns(void) BANKED { update_all_platform_patterns(); }
+void b_init_level_persistence(void) BANKED { init_level_persistence(); }
