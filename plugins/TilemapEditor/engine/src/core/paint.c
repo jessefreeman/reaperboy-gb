@@ -6,19 +6,21 @@
 #include "meta_tiles.h"
 #include "tile_utils.h"
 #include "code_gen.h"
+#include "code_level_core.h"
+#include "code_platform_system.h"
+#include "code_player_system.h"
+#include "code_enemy_system.h"
 
-// Forward declarations for level code functions
-void extract_enemy_data(void) BANKED;
-void extract_player_data(void) BANKED;
-void display_selective_level_code_fast(void) BANKED;
-void force_complete_level_code_display(void) BANKED;
-void update_complete_level_code(void) BANKED;
-void reconstruct_tilemap_from_level_code(void) BANKED;
-void mark_display_position_for_update(UBYTE position) BANKED;
-void display_complete_level_code(void) BANKED;
-UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
-UWORD match_platform_pattern(UWORD pattern) BANKED;
-UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
+// External actor ID declarations
+extern UBYTE paint_player_id;
+extern UBYTE paint_exit_id;
+extern void reconstruct_tilemap_from_level_code(void) BANKED;
+extern void mark_display_position_for_update(UBYTE position) BANKED;
+extern void display_complete_level_code(void) BANKED;
+extern void display_selective_level_code_fast(void) BANKED;
+extern UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
+extern UWORD match_platform_pattern(UWORD pattern) BANKED;
+extern UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
 
 // External reference to level code structure
 extern level_code_t current_level_code;
@@ -47,18 +49,11 @@ void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 // CORE CONSTANTS - Aligned with code_gen.c
 // ============================================================================
 
-#define PLATFORM_X_MIN 2
-#define PLATFORM_X_MAX 21
-#define PLATFORM_Y_MIN 12
-#define PLATFORM_Y_MAX 19
+// Platform-specific constants not in core headers
 #define PLATFORM_MIN_VERTICAL_GAP 1
 #define PLATFORM_MAX_LENGTH 8
-#define MAX_ENEMIES 5
 
-// Segment layout constants for level code display
-#define SEGMENTS_PER_ROW 5
-#define SEGMENT_WIDTH 5
-#define SEGMENT_HEIGHT 2
+// Note: Other constants now defined in code_level_core.h
 
 // ============================================================================
 // OPTIMIZED UTILITY FUNCTIONS
@@ -1237,9 +1232,7 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
 
     // For enemy operations, update enemy data
     UBYTE current_tile_type = get_current_tile_type(x, y);
-    if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R ||
-        // Check if this was an enemy operation by looking at context
-        (y >= PLATFORM_Y_MIN && y <= PLATFORM_Y_MAX && y != 11))
+    if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         // For any enemy-related operation, extract enemy data and update display
         extract_enemy_data();
@@ -1259,16 +1252,17 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         x >= PLATFORM_X_MIN && x <= PLATFORM_X_MAX &&
         is_valid_platform_row(y))
     {
-        // Get the zone index for this position
-        UBYTE zone_index = get_zone_index_from_tile(x, y);
-        if (zone_index != 255)
-        {
-            // Mark only the specific zone position for update
-            mark_display_position_for_update(zone_index);
+        // Platform operations can affect multiple zones on the same row due to auto-completion
+        // Update all zones on this row to be safe
+        UBYTE row_index = (y - PLATFORM_Y_MIN) / SEGMENT_HEIGHT;
 
-            // Also need to extract platform data for this zone and update the display
-            UBYTE segment_x = 2 + (zone_index % SEGMENTS_PER_ROW) * SEGMENT_WIDTH;
-            UBYTE segment_y = PLATFORM_Y_MIN + (zone_index / SEGMENTS_PER_ROW) * SEGMENT_HEIGHT;
+        for (UBYTE col = 0; col < SEGMENTS_PER_ROW; col++)
+        {
+            UBYTE zone_index = row_index * SEGMENTS_PER_ROW + col;
+
+            // Extract the current pattern for this zone
+            UBYTE segment_x = 2 + col * SEGMENT_WIDTH;
+            UBYTE segment_y = PLATFORM_Y_MIN + row_index * SEGMENT_HEIGHT;
 
             UBYTE row0, row1;
             UWORD pattern = extract_chunk_pattern(segment_x, segment_y, &row0, &row1);
@@ -1276,10 +1270,13 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
 
             current_level_code.platform_patterns[zone_index] = (UBYTE)pattern_id;
 
-            // Use fast selective update that doesn't re-extract everything
-            display_selective_level_code_fast();
-            return;
+            // Mark this zone for display update
+            mark_display_position_for_update(zone_index);
         }
+
+        // Use fast selective update
+        display_selective_level_code_fast();
+        return;
     }
 
     // Fallback to complete update for other cases
