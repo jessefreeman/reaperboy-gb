@@ -7,8 +7,19 @@
 #include "tile_utils.h"
 #include "paint.h"
 
+// ############################################################################
+// REFACTORING SECTIONS - This file will be split into the following modules:
+// 
+// 1. level_code_core.c/.h    - Core level code logic and display system
+// 2. platform_system.c/.h   - Platform pattern management  
+// 3. player_system.c/.h     - Player positioning and validation
+// 4. enemy_system.c/.h      - Enemy management and encoding
+// 5. level_persistence.c/.h - Save/load functionality
+// 6. code_gen.c/.h          - Main coordinator (much smaller)
+// ############################################################################
+
 // ============================================================================
-// CORE CONSTANTS - Consolidated and clearly defined
+// SHARED CONSTANTS AND DATA - Will move to level_code_core.h
 // ============================================================================
 
 #define PLATFORM_Y_MIN 12
@@ -45,8 +56,9 @@
 #define VAR_LEVEL_CODE_PART_6 5 // Platform pattern 15 (1×5 bits = 5 bits)
 
 // ============================================================================
-// PLATFORM PATTERN DATA - Core pattern matching system
+// PLATFORM SYSTEM - Will move to platform_system.c/.h
 // ============================================================================
+// Platform pattern data, extraction, matching, and application functions
 
 const UWORD PLATFORM_PATTERNS[] = {
     0b0000000000, // UID 0: Empty
@@ -112,11 +124,17 @@ void validate_all_block_patterns(void) BANKED;
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
 // ============================================================================
-// GLOBAL VARIABLE DEFINITIONS
+// LEVEL CODE CORE SYSTEM - Will move to level_code_core.c/.h  
 // ============================================================================
+// Main level code structure, display system, selective updates, and encoding
 
 // Main level code data structure instance
 level_code_t current_level_code;
+
+// ============================================================================
+// PLAYER SYSTEM - Will move to player_system.c/.h
+// ============================================================================
+// Player positioning, valid position tracking, and validation functions
 
 // Valid player position tracking
 UBYTE valid_player_columns[20];
@@ -425,8 +443,9 @@ void force_complete_level_code_display(void) BANKED
 }
 
 // ============================================================================
-// CORE PATTERN EXTRACTION AND MATCHING
+// PLATFORM SYSTEM FUNCTIONS - Will move to platform_system.c/.h
 // ============================================================================
+// Core pattern extraction, matching, and tilemap application
 
 UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED
 {
@@ -468,8 +487,9 @@ UWORD match_platform_pattern(UWORD pattern) BANKED
 }
 
 // ============================================================================
-// ENEMY TYPE DETECTION - Support for different enemy types
+// ENEMY SYSTEM - Will move to enemy_system.c/.h
 // ============================================================================
+// Enemy type detection, data extraction, and encoding functions
 
 UBYTE detect_enemy_type(UBYTE tile_type) BANKED
 {
@@ -488,9 +508,10 @@ UBYTE detect_enemy_type(UBYTE tile_type) BANKED
     }
 }
 
+// ============================================================================ 
+// LEVEL CODE CORE SYSTEM FUNCTIONS - Will move to level_code_core.c/.h
 // ============================================================================
-// LEVEL DATA EXTRACTION - Unified system
-// ============================================================================
+// Main level code initialization and unified update function
 
 void init_level_code(void) BANKED
 {
@@ -516,6 +537,10 @@ void init_level_code(void) BANKED
     }
 }
 
+// ----------------------------------------------------------------------------
+// PLATFORM SYSTEM EXTRACTION - Will move to platform_system.c/.h
+// ----------------------------------------------------------------------------
+
 void extract_platform_data(void) BANKED
 {
     for (UBYTE block_y = 0; block_y < 4; block_y++)
@@ -537,6 +562,10 @@ void extract_platform_data(void) BANKED
     // Update valid player positions after extracting platform patterns
     update_valid_player_positions();
 }
+
+// ----------------------------------------------------------------------------
+// ENEMY SYSTEM EXTRACTION - Will move to enemy_system.c/.h  
+// ----------------------------------------------------------------------------
 
 void extract_enemy_data(void) BANKED
 {
@@ -579,6 +608,10 @@ void extract_enemy_data(void) BANKED
     }
 }
 
+// ----------------------------------------------------------------------------
+// PLAYER SYSTEM EXTRACTION - Will move to player_system.c/.h
+// ----------------------------------------------------------------------------
+
 void extract_player_data(void) BANKED
 {
     for (UBYTE col = 2; col < 22; col++)
@@ -595,6 +628,10 @@ void extract_player_data(void) BANKED
     current_level_code.player_column = 0; // Default to column 0
 }
 
+// ----------------------------------------------------------------------------
+// LEVEL CODE CORE COORDINATION - Will stay in level_code_core.c/.h
+// ----------------------------------------------------------------------------
+
 void update_complete_level_code(void) BANKED
 {
     extract_platform_data();
@@ -603,8 +640,9 @@ void update_complete_level_code(void) BANKED
 }
 
 // ============================================================================
-// COMPACT ENCODING SYSTEM - 24 character display
+// ENEMY SYSTEM ENCODING - Will move to enemy_system.c/.h
 // ============================================================================
+// Compact encoding functions for enemy data in 24-character display
 
 // Encode enemy positions using a checksum-based approach
 UBYTE encode_enemy_positions(void) BANKED
@@ -690,8 +728,9 @@ UBYTE encode_enemy_directions(void) BANKED
 }
 
 // ============================================================================
-// CHARACTER DISPLAY FUNCTIONS - Simplified and consolidated
+// LEVEL CODE CORE DISPLAY FUNCTIONS - Will move to level_code_core.c/.h
 // ============================================================================
+// Character display, rendering, and UI functions
 
 UBYTE get_extended_display_char(UBYTE value) BANKED
 {
@@ -755,8 +794,9 @@ void display_complete_level_code(void) BANKED
 }
 
 // ============================================================================
-// MAIN API FUNCTIONS - Clean and simple
+// MAIN COORDINATOR FUNCTIONS - Will remain in main code_gen.c/.h
 // ============================================================================
+// Main API functions that coordinate between different systems
 
 void draw_segment_ids(void) BANKED
 {
@@ -807,8 +847,9 @@ UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED
 }
 
 // ============================================================================
-// VM WRAPPER FUNCTIONS - Minimal and focused
+// MAIN COORDINATOR VM WRAPPERS - Will remain in main code_gen.c/.h
 // ============================================================================
+// VM wrapper functions for main coordination and script integration
 
 void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED
 {
@@ -862,10 +903,15 @@ void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED
 }
 
 // ============================================================================
-// DEBUG AND TEST FUNCTIONS
+// DEBUG AND TEST FUNCTIONS - Will distribute to appropriate modules  
 // ============================================================================
+// Debug functions for testing individual systems
 
 #ifdef DEBUG_BUILD
+
+// ----------------------------------------------------------------------------
+// Enemy System Debug Functions - Will move to enemy_system.c/.h
+// ----------------------------------------------------------------------------
 
 void test_enemy_encoding(void) BANKED
 {
@@ -915,6 +961,10 @@ void vm_get_enemy_info(SCRIPT_CTX *THIS) BANKED
     *(UWORD *)VM_REF_TO_PTR(FN_ARG2) = current_level_code.enemy_directions;
     *(UWORD *)VM_REF_TO_PTR(FN_ARG3) = current_level_code.enemy_types;
 }
+
+// ----------------------------------------------------------------------------
+// Player System Debug Functions - Will move to player_system.c/.h
+// ----------------------------------------------------------------------------
 
 // Test function to verify valid player position system works correctly
 void test_valid_player_positions(void) BANKED
@@ -1066,8 +1116,9 @@ void validate_enemy_encoding(void) BANKED
 }
 
 // ============================================================================
-// PERSISTENT STORAGE - GB Studio Variables
+// LEVEL PERSISTENCE SYSTEM - Will move to level_persistence.c/.h  
 // ============================================================================
+// Save/load functionality for level codes using variables and SRAM
 
 // Convert display character back to numeric value
 UBYTE char_to_value(UBYTE display_char) BANKED
@@ -1462,6 +1513,10 @@ UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED
 
     return (char_index < LEVEL_CODE_CHARS_TOTAL) ? char_index : 255;
 }
+
+// ----------------------------------------------------------------------------
+// PLATFORM SYSTEM TILEMAP APPLICATION - Will move to platform_system.c/.h
+// ----------------------------------------------------------------------------
 
 // Apply pattern changes to the actual tilemap
 void apply_pattern_to_tilemap(UBYTE block_index, UBYTE pattern_id) BANKED
@@ -1970,8 +2025,9 @@ void validate_all_block_patterns(void) BANKED
 }
 
 // ============================================================================
-// VALID PLAYER POSITION SYSTEM - Only allow player in columns with platforms
+// PLAYER SYSTEM POSITION FUNCTIONS - Will move to player_system.c/.h
 // ============================================================================
+// Valid player position system - Only allow player in columns with platforms
 
 // The player can be placed in any of 20 possible columns (0-19), but only
 // if there's a platform below them. This system tracks which columns are valid.
@@ -2111,4 +2167,19 @@ void update_exit_position_after_platform_change(void) BANKED
     position_exit_for_player(player_x, player_y);
 }
 
-// ============================================================================
+// ############################################################################
+// END OF REFACTORING SECTIONS
+// ############################################################################
+//
+// REFACTORING SUMMARY:
+// This file contains code that will be split into 6 modules:
+//
+// 1. level_code_core.c/.h    - Core level code logic, display system, encoding
+// 2. platform_system.c/.h   - Platform patterns, extraction, application
+// 3. player_system.c/.h     - Player positioning and validation
+// 4. enemy_system.c/.h      - Enemy management and encoding  
+// 5. level_persistence.c/.h - Save/load functionality
+// 6. code_gen.c/.h          - Main coordinator (reduced size)
+//
+// Each section is marked with appropriate comments indicating its destination.
+// ############################################################################

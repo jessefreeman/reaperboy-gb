@@ -6,4 +6,5 @@ cache/
 *.icloud
 
 user_settings.gbsres
-.print_output.tmp.txt
+*.tmp.txt
+
