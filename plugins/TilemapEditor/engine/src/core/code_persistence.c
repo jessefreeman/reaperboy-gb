@@ -18,6 +18,7 @@
 // Explicitly declare functions that might not be properly resolved
 extern void clear_existing_player_on_row_11(void) BANKED;
 extern void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
+extern void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
 extern UBYTE paint_player_id;
 
 // ============================================================================
@@ -274,6 +275,9 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
             replace_meta_tile(player_x, player_y, TILE_PLAYER, 1);
             // Move player actor to new position
             move_player_actor_to_tile(paint_player_id, player_x, player_y);
+
+            // Position the exit sprite based on the new player position
+            position_exit_for_player(player_x, player_y);
         }
     }
     else if (char_index >= 17 && char_index <= 23)
