@@ -249,10 +249,9 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
 {
     if (char_index < TOTAL_BLOCKS)
     {
-        // Platform pattern character
-        current_level_code.platform_patterns[char_index] = new_value;
-
-        // Apply the new pattern to the tilemap
+        // Platform pattern character - apply the new pattern to the tilemap
+        // The paint() calls within apply_pattern_with_brush_logic will automatically
+        // update the level code through update_level_code_for_paint()
         apply_pattern_with_brush_logic(char_index, new_value);
 
         // Update valid player positions since platform changed

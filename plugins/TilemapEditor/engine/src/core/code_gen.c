@@ -67,11 +67,11 @@ void handle_platform_change(UBYTE block_index, UBYTE pattern_id) BANKED
 void handle_level_code_edit(UBYTE char_index, UBYTE new_value) BANKED
 {
     // Use the general update function from persistence module
+    // This will call apply_pattern_with_brush_logic() which uses paint() calls
+    // The paint() calls automatically handle level code and display updates
     update_level_code_from_character_edit(char_index, new_value);
 
-    // Update the display
-    mark_display_position_for_update(char_index);
-    display_selective_level_code();
+    // No additional display updates needed - paint() calls handle everything
 }
 
 // Zone management functions (placeholder implementations)
