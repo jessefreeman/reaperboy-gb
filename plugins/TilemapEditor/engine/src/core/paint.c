@@ -1106,17 +1106,11 @@ void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED
         exit_x = exit_x - 1;
     }
 
-    // Clear any existing exit tiles from the map
+    // Clear any existing exit tiles from the map (to clean up old painted tiles)
     clear_existing_exit_tiles();
 
-    // Position the exit actor
+    // Position the exit actor only - no background tile painting
     move_actor_to_tile(paint_exit_id, exit_x, exit_y);
-
-    // Place the exit tiles (2x2 exit sprite)
-    replace_meta_tile(exit_x, exit_y, TILE_EXIT_BOTTOM_LEFT, 1);
-    replace_meta_tile(exit_x + 1, exit_y, TILE_EXIT_BOTTOM_RIGHT, 1);
-    replace_meta_tile(exit_x, exit_y - 1, TILE_EXIT_TOP_LEFT, 1);
-    replace_meta_tile(exit_x + 1, exit_y - 1, TILE_EXIT_TOP_RIGHT, 1);
 }
 
 void clear_existing_exit_tiles(void) BANKED
