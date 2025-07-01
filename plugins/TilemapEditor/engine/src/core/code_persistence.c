@@ -252,15 +252,34 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
     if (char_index < TOTAL_BLOCKS)
     {
         // Platform pattern character - apply the new pattern to the tilemap
-        // The paint() calls within apply_pattern_with_brush_logic will automatically
-        // update the level code through update_level_code_for_paint()
+
+        // SUPPRESS display updates during pattern application to prevent
+        // intermediate pattern states from showing up in the level code
+        set_suppress_display_updates(1);
+        suppress_code_updates_for_block(char_index);
+
+        // Apply the pattern using brush logic
         apply_pattern_with_brush_logic(char_index, new_value);
+
+        // Re-enable updates for this specific block
+        enable_code_updates_for_block(char_index);
 
         // Update valid player positions since platform changed
         update_valid_player_positions();
 
         // Ensure player is still in a valid position
         position_player_at_valid_location();
+
+        // Now update the level code for the target block and its neighbors
+        // This ensures the final pattern shows up correctly
+        update_single_block_code(char_index);
+        update_neighboring_block_codes(char_index);
+
+        // Re-enable global display updates
+        set_suppress_display_updates(0);
+
+        // Finally, update the display to show the correct final state
+        display_selective_level_code_fast();
     }
     else if (char_index == 16)
     {
