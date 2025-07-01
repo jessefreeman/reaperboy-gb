@@ -276,66 +276,6 @@ void update_exit_position_after_platform_change(void) BANKED
     position_exit_for_player(player_x, player_y);
 }
 
-// ============================================================================
-// DEBUG FUNCTIONS
-// ============================================================================
-
-// Debug function to print platform tracking state
-void debug_print_platform_tracking(void) BANKED
-{
-    // This would print to console or set variables for script debugging
-    // For now, just ensure the tracking arrays are accessible for inspection
-}
-
-// Debug function to manually test platform detection
-void debug_test_platform_detection(void) BANKED
-{
-    // Manually scan and report what platforms are found in ANY row
-    for (UBYTE row = 0; row < 24; row++) // Check all possible rows
-    {
-        for (UBYTE col = 2; col < 22; col++)
-        {
-            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, row)];
-            UBYTE tile_type = get_tile_type(tile);
-
-            if (tile_type == BRUSH_TILE_PLATFORM)
-            {
-                UBYTE level_col = col - 2; // Convert to 0-19 range
-                // Platform found at level_col
-                // This could be logged or stored in variables for debugging
-            }
-        }
-    }
-}
-
-// Debug function to display current valid player positions
-void debug_show_valid_positions(void) BANKED
-{
-    update_valid_player_positions();
-
-    // This could be used to display valid positions on screen or store in variables
-    // for script access. For now, just ensure the function works.
-}
-
-// TEMPORARY DEBUG: Force all positions to be valid for testing
-void debug_allow_all_player_positions(void) BANKED
-{
-    valid_player_count = 20;
-    for (UBYTE i = 0; i < 20; i++)
-    {
-        valid_player_columns[i] = i;
-        column_has_platform[i] = 1;
-    }
-}
-
-// TEMPORARY DEBUG: Show current tracking state
-void debug_show_tracking_state(void) BANKED
-{
-    // This function can be called to examine the current state
-    // You can set breakpoints here or output to variables
-    // valid_player_count, column_has_platform[], valid_player_columns[]
-}
-
 // Test function to verify valid player position system works correctly
 void test_valid_player_positions(void) BANKED
 {
@@ -367,34 +307,6 @@ void test_valid_player_positions(void) BANKED
 
     next_pos = get_next_valid_player_position(next_pos);
     // next_pos should wrap back to 4
-}
-
-// ============================================================================
-// VM WRAPPER FUNCTIONS
-// ============================================================================
-
-void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    test_valid_player_positions();
-}
-
-// VM wrapper for debugging valid positions
-void vm_debug_show_valid_positions(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    debug_show_valid_positions();
-
-    // Store count and first few valid positions in script variables for debugging
-    *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = valid_player_count;
-    if (valid_player_count > 0)
-    {
-        *(UWORD *)VM_REF_TO_PTR(FN_ARG1) = valid_player_columns[0];
-        if (valid_player_count > 1)
-            *(UWORD *)VM_REF_TO_PTR(FN_ARG2) = valid_player_columns[1];
-        if (valid_player_count > 2)
-            *(UWORD *)VM_REF_TO_PTR(FN_ARG3) = valid_player_columns[2];
-    }
 }
 
 // ============================================================================

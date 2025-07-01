@@ -40,16 +40,8 @@ void update_exit_position_after_platform_change(void) BANKED;
 void update_player_system(void) BANKED;
 
 // Debug functions
-void debug_show_valid_positions(void) BANKED;
-void test_valid_player_positions(void) BANKED;
-void debug_print_platform_tracking(void) BANKED;
-void debug_test_platform_detection(void) BANKED;
-void debug_allow_all_player_positions(void) BANKED;
-void debug_show_tracking_state(void) BANKED;
 
-// VM wrapper functions
-void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED;
-void vm_debug_show_valid_positions(SCRIPT_CTX *THIS) BANKED;
+void test_valid_player_positions(void) BANKED;
 
 // Character editing handlers
 void handle_player_position_edit(UBYTE new_value) BANKED;
