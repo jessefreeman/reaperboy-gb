@@ -220,6 +220,16 @@
       "id": "a5dc9d98-277b-43cd-99c2-56484d0b6eff__L5",
       "name": "L_NEXT_COLUMN",
       "symbol": "var_l_next_column"
+    },
+    {
+      "id": "1f72c5c2-1da9-4261-8295-00c2f95b9999__L0",
+      "name": "L_NEW_X_POS",
+      "symbol": "var_l_new_x_pos_0"
+    },
+    {
+      "id": "1f72c5c2-1da9-4261-8295-00c2f95b9999__L1",
+      "name": "L_NEW_Y_POS",
+      "symbol": "var_l_new_y_pos"
     }
   ],
   "constants": [
