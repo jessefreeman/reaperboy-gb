@@ -13,8 +13,12 @@
 // PLAYER SYSTEM DATA
 // ============================================================================
 
-// Valid player position tracking
-UBYTE valid_player_columns[20];
+// External data declarations for cross-bank access
+extern const UBYTE PLATFORM_PATTERNS[];
+
+// Valid player position tracking - paint-system tied approach
+UBYTE column_has_platform[20];  // 1 if column has at least one platform, 0 if not
+UBYTE valid_player_columns[20]; // Cached list of valid columns for cycling
 UBYTE valid_player_count = 0;
 
 // ============================================================================
@@ -38,49 +42,63 @@ void extract_player_data(void) BANKED
 }
 
 // ============================================================================
-// VALID POSITION MANAGEMENT
+// VALID POSITION MANAGEMENT - PAINT SYSTEM INTEGRATION
 // ============================================================================
 
-// Update the list of valid player positions based on current platform patterns
-void update_valid_player_positions(void) BANKED
+// Initialize the column platform tracking
+void init_column_platform_tracking(void) BANKED
+{
+    // Clear all tracking arrays
+    for (UBYTE col = 0; col < 20; col++)
+    {
+        column_has_platform[col] = 0;
+    }
+    valid_player_count = 0;
+
+    // Scan current level for existing platforms and populate the tracking
+    refresh_column_platform_tracking();
+}
+
+// Refresh the entire column tracking by scanning current level
+void refresh_column_platform_tracking(void) BANKED
+{
+    // Clear existing tracking
+    for (UBYTE col = 0; col < 20; col++)
+    {
+        column_has_platform[col] = 0;
+    }
+
+    // Scan ALL rows and columns (2-21 in tilemap, 0-19 in level code) for ANY platform tiles
+    for (UBYTE row = 0; row < 24; row++) // Check all possible rows
+    {
+        for (UBYTE col = 2; col < 22; col++)
+        {
+            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, row)];
+            UBYTE tile_type = get_tile_type(tile);
+
+            if (tile_type == BRUSH_TILE_PLATFORM)
+            {
+                UBYTE level_col = col - 2; // Convert to 0-19 range
+                if (level_col < 20)
+                {
+                    column_has_platform[level_col] = 1; // Mark this column as having a platform
+                }
+            }
+        }
+    }
+
+    // Rebuild the valid player positions list
+    rebuild_valid_player_list();
+}
+
+// Rebuild the cached list of valid player positions for cycling
+void rebuild_valid_player_list(void) BANKED
 {
     valid_player_count = 0;
 
-    // Check each column (0-19) to see if it has a platform below
     for (UBYTE col = 0; col < 20; col++)
     {
-        UBYTE has_platform = 0;
-
-        // Check all 4 rows for platforms in this column
-        for (UBYTE row = 0; row < 4; row++)
-        {
-            UBYTE block_index = row * SEGMENTS_PER_ROW + (col / SEGMENT_WIDTH);
-
-            // Make sure we don't go out of bounds
-            if (block_index >= TOTAL_BLOCKS)
-                continue;
-
-            UBYTE pattern_id = current_level_code.platform_patterns[block_index];
-            if (pattern_id >= PLATFORM_PATTERN_COUNT)
-                continue;
-
-            UWORD pattern = PLATFORM_PATTERNS[pattern_id];
-
-            // Calculate position within the 5-tile segment
-            UBYTE pos_in_segment = col % SEGMENT_WIDTH;
-
-            // Check both rows of the segment (top row: bits 9-5, bottom row: bits 4-0)
-            UBYTE top_row_mask = 1 << (9 - pos_in_segment);
-            UBYTE bottom_row_mask = 1 << (4 - pos_in_segment);
-
-            if ((pattern & top_row_mask) || (pattern & bottom_row_mask))
-            {
-                has_platform = 1;
-                break;
-            }
-        }
-
-        if (has_platform && valid_player_count < 20)
+        if (column_has_platform[col])
         {
             valid_player_columns[valid_player_count] = col;
             valid_player_count++;
@@ -90,9 +108,61 @@ void update_valid_player_positions(void) BANKED
     // Ensure we always have at least one valid position (column 0)
     if (valid_player_count == 0)
     {
+        column_has_platform[0] = 1; // Force column 0 to be valid
         valid_player_columns[0] = 0;
         valid_player_count = 1;
     }
+}
+
+// Update column tracking when a platform is painted at a specific position
+void update_column_platform_painted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED
+{
+    // Convert to level column (0-19 range)
+    UBYTE level_col = tilemap_col - 2;
+    if (level_col < 20)
+    {
+        // Simply mark this column as having a platform (regardless of row)
+        if (!column_has_platform[level_col])
+        {
+            column_has_platform[level_col] = 1;
+            rebuild_valid_player_list();
+        }
+    }
+}
+
+// Update column tracking when a platform is deleted from a specific position
+void update_column_platform_deleted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED
+{
+    // Convert to level column (0-19 range)
+    UBYTE level_col = tilemap_col - 2;
+    if (level_col < 20)
+    {
+        // Check if this column still has ANY platforms after deletion (scan all rows)
+        UBYTE still_has_platform = 0;
+        for (UBYTE row = 0; row < 24; row++) // Check all possible rows
+        {
+            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(tilemap_col, row)];
+            UBYTE tile_type = get_tile_type(tile);
+            if (tile_type == BRUSH_TILE_PLATFORM)
+            {
+                still_has_platform = 1;
+                break;
+            }
+        }
+
+        // If no platforms remain in this column, mark it as invalid
+        if (!still_has_platform && column_has_platform[level_col])
+        {
+            column_has_platform[level_col] = 0;
+            rebuild_valid_player_list();
+        }
+    }
+}
+
+// Legacy function for compatibility - now just calls refresh
+void update_valid_player_positions(void) BANKED
+{
+    refresh_column_platform_tracking();
 }
 
 // Check if a column is a valid player position
@@ -111,8 +181,14 @@ UBYTE is_valid_player_position(UBYTE column) BANKED
 // Get the next valid player position after the current one (with wraparound)
 UBYTE get_next_valid_player_position(UBYTE current_position) BANKED
 {
+    // Ensure we have valid positions to work with
     if (valid_player_count == 0)
-        return 0;
+    {
+        // Force refresh if no valid positions
+        refresh_column_platform_tracking();
+        if (valid_player_count == 0)
+            return 0;
+    }
 
     // Find current position in the valid list
     for (UBYTE i = 0; i < valid_player_count; i++)
@@ -131,8 +207,14 @@ UBYTE get_next_valid_player_position(UBYTE current_position) BANKED
 // Get the previous valid player position before the current one (with wraparound)
 UBYTE get_previous_valid_player_position(UBYTE current_position) BANKED
 {
+    // Ensure we have valid positions to work with
     if (valid_player_count == 0)
-        return 0;
+    {
+        // Force refresh if no valid positions
+        refresh_column_platform_tracking();
+        if (valid_player_count == 0)
+            return 0;
+    }
 
     // Find current position in the valid list
     for (UBYTE i = 0; i < valid_player_count; i++)
@@ -198,6 +280,34 @@ void update_exit_position_after_platform_change(void) BANKED
 // DEBUG FUNCTIONS
 // ============================================================================
 
+// Debug function to print platform tracking state
+void debug_print_platform_tracking(void) BANKED
+{
+    // This would print to console or set variables for script debugging
+    // For now, just ensure the tracking arrays are accessible for inspection
+}
+
+// Debug function to manually test platform detection
+void debug_test_platform_detection(void) BANKED
+{
+    // Manually scan and report what platforms are found in ANY row
+    for (UBYTE row = 0; row < 24; row++) // Check all possible rows
+    {
+        for (UBYTE col = 2; col < 22; col++)
+        {
+            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, row)];
+            UBYTE tile_type = get_tile_type(tile);
+
+            if (tile_type == BRUSH_TILE_PLATFORM)
+            {
+                UBYTE level_col = col - 2; // Convert to 0-19 range
+                // Platform found at level_col
+                // This could be logged or stored in variables for debugging
+            }
+        }
+    }
+}
+
 // Debug function to display current valid player positions
 void debug_show_valid_positions(void) BANKED
 {
@@ -205,6 +315,25 @@ void debug_show_valid_positions(void) BANKED
 
     // This could be used to display valid positions on screen or store in variables
     // for script access. For now, just ensure the function works.
+}
+
+// TEMPORARY DEBUG: Force all positions to be valid for testing
+void debug_allow_all_player_positions(void) BANKED
+{
+    valid_player_count = 20;
+    for (UBYTE i = 0; i < 20; i++)
+    {
+        valid_player_columns[i] = i;
+        column_has_platform[i] = 1;
+    }
+}
+
+// TEMPORARY DEBUG: Show current tracking state
+void debug_show_tracking_state(void) BANKED
+{
+    // This function can be called to examine the current state
+    // You can set breakpoints here or output to variables
+    // valid_player_count, column_has_platform[], valid_player_columns[]
 }
 
 // Test function to verify valid player position system works correctly
@@ -278,23 +407,28 @@ void handle_player_position_edit(UBYTE new_value) BANKED
     // Update player position when level code changes
     if (new_value < 20) // Valid column range 0-19
     {
-        current_level_code.player_column = new_value;
-
-        // Update the tilemap to reflect the new player position
-        // Clear old player position
-        for (UBYTE col = 2; col < 22; col++)
+        // Check if the new position is valid (has a platform)
+        if (is_valid_player_position(new_value))
         {
-            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
-            UBYTE tile_type = get_tile_type(tile);
-            if (tile_type == BRUSH_TILE_PLAYER)
-            {
-                replace_meta_tile(col, 11, 0, 1); // Clear old position
-            }
-        }
+            current_level_code.player_column = new_value;
 
-        // Set new player position
-        UBYTE new_col = 2 + new_value; // Convert to tilemap coordinate
-        // Use appropriate player tile - assuming there's a player tile constant
-        replace_meta_tile(new_col, 11, 1, 1); // Place player at new position
+            // Update the tilemap to reflect the new player position
+            // Clear old player position
+            for (UBYTE col = 2; col < 22; col++)
+            {
+                UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(col, 11)];
+                UBYTE tile_type = get_tile_type(tile);
+                if (tile_type == BRUSH_TILE_PLAYER)
+                {
+                    replace_meta_tile(col, 11, 0, 1); // Clear old position
+                }
+            }
+
+            // Set new player position
+            UBYTE new_col = 2 + new_value; // Convert to tilemap coordinate
+            // Use appropriate player tile - assuming there's a player tile constant
+            replace_meta_tile(new_col, 11, 1, 1); // Place player at new position
+        }
+        // If new position is not valid, don't change the player position
     }
 }

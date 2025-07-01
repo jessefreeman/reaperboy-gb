@@ -373,6 +373,12 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         else if (char_index == 16)
         {
             // Player column: cycle only through valid positions (columns with platforms)
+            // First, extract the current platform data to ensure we have fresh data
+            extract_platform_data();
+
+            // Then update valid positions based on current platform patterns
+            update_valid_player_positions();
+
             UBYTE current_col = char_to_value(current_tile);
             UBYTE next_col = get_next_valid_player_position(current_col);
             new_value = next_col;
@@ -467,6 +473,12 @@ void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
         else if (char_index == 16)
         {
             // Player column: cycle only through valid positions (columns with platforms) in reverse
+            // First, extract the current platform data to ensure we have fresh data
+            extract_platform_data();
+
+            // Then update valid positions based on current platform patterns
+            update_valid_player_positions();
+
             UBYTE current_col = char_to_value(current_tile);
             UBYTE prev_col = get_previous_valid_player_position(current_col);
             new_value = prev_col;

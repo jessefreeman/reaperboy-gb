@@ -802,6 +802,10 @@ void paint(UBYTE x, UBYTE y) BANKED
         remove_enemies_above_platform(x, y);
         replace_meta_tile(x, y, TILE_EMPTY, 1);
         rebuild_platform_row(y);
+
+        // Update player position tracking when platform is deleted
+        update_column_platform_deleted(x, y);
+
         update_level_code_for_paint(x, y); // Smart update
         return;
     }
@@ -828,6 +832,9 @@ void paint(UBYTE x, UBYTE y) BANKED
 
         // Connect to existing platform
         replace_meta_tile(x, y, TILE_PLATFORM_MIDDLE, 1);
+
+        // Update player position tracking when platform is painted
+        update_column_platform_painted(x, y);
     }
     else if (x < PLATFORM_X_MAX && right == BRUSH_TILE_EMPTY &&
              !check_platform_vertical_conflict(x + 1, y))
@@ -841,6 +848,10 @@ void paint(UBYTE x, UBYTE y) BANKED
         // Create new 2-tile platform
         replace_meta_tile(x, y, TILE_PLATFORM_LEFT, 1);
         replace_meta_tile(x + 1, y, TILE_PLATFORM_RIGHT, 1);
+
+        // Update player position tracking when platforms are painted
+        update_column_platform_painted(x, y);
+        update_column_platform_painted(x + 1, y);
     }
     else
     {
@@ -1038,6 +1049,9 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
 
     // Reset the FIFO enemy pool
     reset_enemy_pool();
+
+    // Initialize the player position tracking system
+    init_column_platform_tracking();
 
     // Check if map is empty and initialize with default level if needed
     if (is_map_empty())

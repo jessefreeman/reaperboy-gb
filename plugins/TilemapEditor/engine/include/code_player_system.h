@@ -9,6 +9,7 @@
 // ============================================================================
 
 // Valid player position tracking
+extern UBYTE column_has_platform[20];
 extern UBYTE valid_player_columns[20];
 extern UBYTE valid_player_count;
 
@@ -23,6 +24,11 @@ void init_player_system(void) BANKED;
 void extract_player_data(void) BANKED;
 
 // Valid position management
+void init_column_platform_tracking(void) BANKED;
+void refresh_column_platform_tracking(void) BANKED;
+void rebuild_valid_player_list(void) BANKED;
+void update_column_platform_painted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED;
+void update_column_platform_deleted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED;
 void update_valid_player_positions(void) BANKED;
 UBYTE is_valid_player_position(UBYTE column) BANKED;
 UBYTE get_next_valid_player_position(UBYTE current_position) BANKED;
@@ -36,6 +42,10 @@ void update_player_system(void) BANKED;
 // Debug functions
 void debug_show_valid_positions(void) BANKED;
 void test_valid_player_positions(void) BANKED;
+void debug_print_platform_tracking(void) BANKED;
+void debug_test_platform_detection(void) BANKED;
+void debug_allow_all_player_positions(void) BANKED;
+void debug_show_tracking_state(void) BANKED;
 
 // VM wrapper functions
 void vm_test_valid_player_positions(SCRIPT_CTX *THIS) BANKED;
