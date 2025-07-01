@@ -89,4 +89,56 @@ void clear_level_code_display(void) BANKED;
 // Utility functions
 UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED;
 
+// Helper function for enemy data display
+UBYTE get_enemy_display_char(UBYTE value, UBYTE char_position) BANKED;
+
+// ============================================================================
+// LEVEL CODE EDITING FUNCTIONS
+// ============================================================================
+
+// Handle level code character edits
+void handle_level_code_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
+void vm_handle_level_code_character_edit(SCRIPT_CTX *THIS) BANKED;
+
+// Testing functions
+void test_level_code_character_editing(void) BANKED;
+void vm_test_level_code_character_editing(SCRIPT_CTX *THIS) BANKED;
+
+// New bidirectional testing functions
+void test_level_code_editing_system(void) BANKED;
+void vm_test_level_code_editing_system(SCRIPT_CTX *THIS) BANKED;
+void test_increment_enemy_position_17(void) BANKED;
+void vm_test_increment_enemy_position_17(SCRIPT_CTX *THIS) BANKED;
+
+// Player actor management
+void update_player_actor_position(void) BANKED;
+
+// External function from platform system
+extern void reconstruct_tilemap_from_level_code(void) BANKED;
+
+// ============================================================================
+// BIDIRECTIONAL LEVEL CODE EDITING FUNCTIONS
+// ============================================================================
+
+// External change tracking
+void mark_level_code_position_changed(UBYTE position, UBYTE new_value) BANKED;
+void process_level_code_external_changes(void) BANKED;
+
+// VM functions for level code editing
+void vm_set_level_code_display_value(SCRIPT_CTX *THIS) BANKED;
+void vm_increment_level_code_value(SCRIPT_CTX *THIS) BANKED;
+void vm_decrement_level_code_value(SCRIPT_CTX *THIS) BANKED;
+
+// ============================================================================
+// DIRECT LEVEL CODE EDITING VM FUNCTIONS
+// ============================================================================
+
+// Easy test functions
+void test_set_enemy_17_to_value_11(void) BANKED;
+void test_increment_enemy_17(void) BANKED;
+void test_set_enemy_direction_left(void) BANKED;
+void vm_test_set_enemy_17_to_value_11(SCRIPT_CTX *THIS) BANKED;
+void vm_test_increment_enemy_17(SCRIPT_CTX *THIS) BANKED;
+void vm_test_set_enemy_direction_left(SCRIPT_CTX *THIS) BANKED;
+
 #endif // CODE_LEVEL_CORE_H

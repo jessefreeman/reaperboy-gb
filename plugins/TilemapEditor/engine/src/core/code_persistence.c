@@ -302,9 +302,11 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
     }
     else if (char_index >= 17 && char_index <= 23)
     {
-        // Enemy data - this is complex since it's encoded
-        // For now, just trigger a complete update
-        update_complete_level_code();
+        // Enemy data characters - use the enemy system to handle the edit
+        handle_enemy_data_edit(char_index, new_value);
+
+        // Update the display to show the changes
+        display_selective_level_code_fast();
     }
 }
 

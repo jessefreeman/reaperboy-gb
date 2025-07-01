@@ -38,7 +38,7 @@
         "closeButton": "a",
         "closeDelayTime": 0.5,
         "closeDelayFrames": 30,
-        "__comment": false
+        "__comment": true
       },
       "id": "40216667-c735-489b-903e-ac827c8f7ae5"
     }
@@ -47,7 +47,8 @@
     {
       "command": "EVENT_ACTOR_COLLISIONS_DISABLE",
       "args": {
-        "actorId": "$self$"
+        "actorId": "$self$",
+        "__comment": true
       },
       "id": "7026bc4b-8bbb-465f-8082-92f12e5e931b"
     },
@@ -57,7 +58,7 @@
         "actorId": "$self$",
         "spriteStateId": "",
         "loopAnim": false,
-        "__comment": false
+        "__comment": true
       },
       "id": "87eca0c8-3667-4945-9618-edf9491df875"
     },
@@ -69,7 +70,7 @@
           "type": "number",
           "value": 1
         },
-        "__comment": false
+        "__comment": true
       },
       "id": "f00b073b-ec75-4c2c-8a2d-baba604e4751"
     }
@@ -84,7 +85,8 @@
         },
         "__collapseElse": true,
         "__disableElse": true,
-        "__label": "Test if edit mode was triggered"
+        "__label": "Test if edit mode was triggered",
+        "__comment": true
       },
       "children": {
         "true": [
@@ -116,7 +118,8 @@
           }
         },
         "__collapseElse": true,
-        "__collapse": true
+        "__collapse": true,
+        "__comment": true
       },
       "children": {
         "true": [

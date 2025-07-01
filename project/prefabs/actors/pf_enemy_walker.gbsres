@@ -166,7 +166,17 @@
       "id": "c6147c56-44fd-40f6-96ac-b15d3c0be3e6"
     }
   ],
-  "startScript": [],
+  "startScript": [
+    {
+      "command": "EVENT_ACTOR_SET_STATE",
+      "args": {
+        "actorId": "$self$",
+        "spriteStateId": "",
+        "loopAnim": true
+      },
+      "id": "2b505a17-3d75-41d2-840a-4a84fcce5f49"
+    }
+  ],
   "updateScript": [
     {
       "command": "EVENT_GROUP",

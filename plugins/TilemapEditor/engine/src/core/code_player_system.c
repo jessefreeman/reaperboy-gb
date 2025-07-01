@@ -117,6 +117,8 @@ void rebuild_valid_player_list(void) BANKED
 // Update column tracking when a platform is painted at a specific position
 void update_column_platform_painted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED
 {
+    (void)tilemap_row; // Suppress unused parameter warning
+
     // Convert to level column (0-19 range)
     UBYTE level_col = tilemap_col - 2;
     if (level_col < 20)
@@ -133,6 +135,8 @@ void update_column_platform_painted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED
 // Update column tracking when a platform is deleted from a specific position
 void update_column_platform_deleted(UBYTE tilemap_col, UBYTE tilemap_row) BANKED
 {
+    (void)tilemap_row; // Suppress unused parameter warning
+
     // Convert to level column (0-19 range)
     UBYTE level_col = tilemap_col - 2;
     if (level_col < 20)

@@ -1,84 +1,93 @@
-# Enemy Encoding Refactor - Level Code System
-
 ## Overview
 
-This document describes the finalized enemy encoding system for the level code, using a pattern-based approach. There are **13 unique enemy patterns** (including the empty pattern), each with a unique ID. Each pattern variation is either a prime pattern or its horizontal flip. Enemies can only be placed on the top row (5 tiles) of each block.
+This document describes the updated enemy-encoding system for the 24-character level code, using a 7-character scheme to pack each enemy’s position (row & column parity) and direction.
 
 ## Character Set
 
-* **Available characters**: 36 total (0-9, A-Z)
-* **Encoding range**: 0-35 values per character
+* **Available symbols**: 36 total (0–9, A–Z)
+* **Position alphabet (41 symbols)**: reserve `0` for “no enemy”, then `1–9`, `A–Z`, `!@#$%` → 41 values
+* **Base-32 alphabet**: `0–9, A–V` (32 symbols)
 
-## Level Code Structure (24 characters total)
+## Level Code Structure (24 characters)
 
-* **Characters 0-15**: Platform patterns (16 blocks, 5x2 each)
-* **Character 16**: Player column position (0-19)
-* **Characters 17-21**: Enemy pattern data (5 characters, one per block row)
-* **Character 22**: Enemy direction bitmask (1 character, 5 bits used)
-* **Character 23**: Reserved for future use (validation, expansion, or padding)
+| Chars | Purpose                                  |
+| :---: | :--------------------------------------- |
+|  0–15 | Platform patterns (16 blocks)            |
+|   16  | Player column (0–19)                     |
+| 17–21 | Enemy positions (5 chars, POS41)         |
+|   22  | Odd-column parity mask (1 char, base-32) |
+|   23  | Direction mask (1 char, base-32)         |
 
-## Enemy Pattern Encoding
+## Enemy Position Encoding
 
-### 13 Unique Enemy Patterns
+We map each enemy onto 4 rows × 20 columns by anchoring to even-column slots and tracking odd parity:
 
-Each pattern is a 5-bit mask (e.g. `0b00001`) for the top row of a block. Patterns with two variations are horizontally flipped versions of each other and get unique IDs.
+1. **Anchor columns**: even columns `0,2,…,18` → 10 anchors.
+2. **Index calculation**:
 
-| Pattern ID | Pattern (binary) | Description                    |
-| ---------- | ---------------- | ------------------------------ |
-| 0          | 00000            | Empty                          |
-| 1          | 00001            | Rightmost                      |
-| 2          | 10000            | Leftmost (flip of 1)           |
-| 3          | 00010            | 2nd from right                 |
-| 4          | 01000            | 2nd from left (flip of 3)      |
-| 5          | 00100            | Center                         |
-| 6          | 00101            | Center + rightmost             |
-| 7          | 10100            | Center + leftmost (flip 6)     |
-| 8          | 01010            | 2nd from left + 2nd right      |
-| 9          | 10101            | Left, center, right            |
-| 10         | 10001            | Ends only                      |
-| 11         | 01001            | 2nd left + rightmost           |
-| 12         | 10010            | Leftmost + 2nd right (flip 11) |
+   ```c
+   // for enemy k at (row: 0–3, col: 0–19)
+   uint8_t anchor = col/2;              // 0–9
+   uint8_t idx    = 1 + row*10 + anchor; // 1–40
+   code[17 + k]   = POS41[idx];         // '0'=none, '1'–'9','A'–'Z','!','#','$','%'
+   ```
+3. **Empty slot**: if no enemy, use `code[17+k] = '0'`.
 
-* Patterns with only one variation (e.g., 00000, 00100, 01010, 10101, 10001) are their own flip.
-* Each pattern is mapped to a unique character (0–9, A–C) for encoding.
+## Odd-Column Parity Mask (Char 22)
 
-### Pattern Table Example
+One bit per enemy k (bit 0→enemy 0 ... bit 4→enemy 4):
 
 ```c
-const uint8_t ENEMY_PATTERNS[13] = {
-  0b00000, // 0
-  0b00001, // 1
-  0b10000, // 2
-  0b00010, // 3
-  0b01000, // 4
-  0b00100, // 5
-  0b00101, // 6
-  0b10100, // 7
-  0b01010, // 8
-  0b10101, // 9
-  0b10001, // A
-  0b01001, // B
-  0b10010  // C
-};
+uint8_t oddMask = 0;
+for(int k=0; k<5; ++k) {
+  if (enemies[k].col & 1) oddMask |= (1<<k);
+}
+code[22] = BASE32[oddMask];  // '0'–'V'
 ```
 
-### Encoding/Decoding Workflow
+## Direction Mask (Char 23)
 
-* **To encode**: For each enemy pattern slot, compare the top row of the block as a 5-bit mask to the table, assign its unique ID (0–C), and encode as a character.
-* **To decode**: Map character (0–C) to pattern ID and retrieve the 5-bit mask.
-* **Directions**: Use a single character as a 5-bit bitmask for enemy directions (bit 0 = first enemy, bit 1 = second, etc.; 0 = right, 1 = left). The bitmask value (0-31) should be encoded as a single character (0-9, A-V) in base-32 encoding.
-* **Reserved code char**: Character 23 can be used for future features, validation (e.g. checksum), or versioning.
+One bit per enemy k: 0=right, 1=left.
 
-### Example
+```c
+uint8_t dirMask = 0;
+for(int k=0; k<5; ++k) {
+  if (enemies[k].dir == LEFT) dirMask |= (1<<k);
+}
+code[23] = BASE32[dirMask];  // '0'–'V'
+```
 
-* Level code chars 17–21: Enemy patterns (e.g., "01347")
-* Level code char 22: Direction bitmask (e.g., "A" for binary `01010`)
-* Level code char 23: Reserved (set to "0" or used for future features)
+## Decoding Workflow
+
+1. **Read positions** (chars 17–21):
+
+   ```c
+   int idx = findIndex(POS41, code[17+k]); // 0–40
+   if (idx == 0) continue;                 // no enemy
+   uint8_t v      = idx - 1;
+   row    = v / 10;
+   anchor = v % 10;
+   ```
+2. **Read oddMask**: `oddMask = invBASE32(code[22]);`
+3. **Read dirMask**: `dirMask = invBASE32(code[23]);`
+4. **Recover column and direction**:
+
+   ```c
+   col = anchor*2 + ((oddMask>>k)&1);
+   dir = (dirMask>>k)&1;  // 0=right,1=left
+   ```
 
 ## Implementation Notes
 
-* Store patterns as `uint8_t` bitmasks instead of strings for faster comparison and simpler bitwise logic.
-* Validate character ranges during decoding to catch errors.
-* Consider using char 23 as a checksum or version byte to detect corrupt or incompatible codes.
-* Keep direction encoding consistent (e.g. use base-32 mapping table) to avoid confusion.
-* This design supports easy extension and robust error checking.
+* Define:
+
+  ```c
+  const char *POS41 = "0"                    // no enemy
+                       "123456789"            // 1–9
+                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ" // 10–35
+                       "!@#$%";               // 36–40
+  const char *BASE32 = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+  ```
+* Implement `findIndex()` and `invBASE32()` to map chars back to values.
+* Validate `idx≤40`, `oddMask<32`, `dirMask<32`.
+* Char 23 can double as a version byte or checksum if desired.

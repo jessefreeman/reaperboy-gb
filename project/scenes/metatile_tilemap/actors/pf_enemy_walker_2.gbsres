@@ -13,7 +13,14 @@
   "isPinned": false,
   "persistent": false,
   "collisionGroup": "",
-  "prefabScriptOverrides": {},
+  "prefabScriptOverrides": {
+    "2b505a17-3d75-41d2-840a-4a84fcce5f49": {
+      "id": "2b505a17-3d75-41d2-840a-4a84fcce5f49",
+      "args": {
+        "spriteStateId": "debug_1"
+      }
+    }
+  },
   "symbol": "actor_7",
   "script": [],
   "startScript": [],
