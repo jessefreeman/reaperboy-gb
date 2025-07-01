@@ -1253,7 +1253,7 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         is_valid_platform_row(y))
     {
         // Check if pattern updates are suppressed (during programmatic painting)
-        if (suppress_pattern_updates)
+        if (get_suppress_display_updates())
         {
             return; // Skip pattern updates during programmatic painting
         }
@@ -1288,9 +1288,18 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
             update_neighboring_block_codes(zone_index);
         }
 
-        // Use fast selective update
-        display_selective_level_code_fast();
+        // Use fast selective update (only if display updates are not suppressed)
+        if (!get_suppress_display_updates())
+        {
+            display_selective_level_code_fast();
+        }
         return;
+    }
+
+    // Check if display updates are globally suppressed (during pattern application)
+    if (get_suppress_display_updates())
+    {
+        return; // Skip display updates during pattern application
     }
 
     // Fallback to complete update for other cases

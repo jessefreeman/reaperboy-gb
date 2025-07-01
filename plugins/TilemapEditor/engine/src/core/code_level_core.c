@@ -9,6 +9,10 @@
 #include "code_enemy_system.h"
 #include "tile_utils.h"
 
+// External data declarations for cross-bank access
+extern const UBYTE PATTERN_TILE_MAP[];
+extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
+
 // ============================================================================
 // GLOBAL VARIABLE DEFINITIONS
 // ============================================================================
@@ -403,8 +407,9 @@ void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED
 
 void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED
 {
-    UBYTE tile_index = (value < PLATFORM_PATTERN_COUNT) ? PATTERN_TILE_MAP[value] : PATTERN_TILE_MAP[0];
-    replace_meta_tile(x, y, tile_index, 1);
+    // Convert numeric value to display character, then use same mapping as other chars
+    UBYTE display_char = get_extended_display_char(value);
+    display_char_at_position(display_char, x, y);
 }
 
 void clear_level_code_display(void) BANKED

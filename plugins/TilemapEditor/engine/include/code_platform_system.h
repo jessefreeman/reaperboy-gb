@@ -26,9 +26,6 @@ extern const UBYTE INVALID_PATTERNS_LAST_COLUMN[];
 // PLATFORM SYSTEM FUNCTIONS
 // ============================================================================
 
-// Flag to suppress pattern updates during programmatic painting
-extern UBYTE suppress_pattern_updates;
-
 // System initialization
 void init_platform_system(void) BANKED;
 void init_test_platform_patterns(void) BANKED;
@@ -65,6 +62,10 @@ void enable_code_updates_for_block(UBYTE block_index) BANKED;
 UBYTE is_block_suppressed(UBYTE block_index) BANKED;
 void clear_all_suppression(void) BANKED;
 
+// Global display suppression control (prevents flicker during pattern application)
+void set_suppress_display_updates(UBYTE suppress) BANKED;
+UBYTE get_suppress_display_updates(void) BANKED;
+
 // Pattern validation for position-specific constraints
 UBYTE is_pattern_valid_for_position(UBYTE pattern_id, UBYTE block_x) BANKED;
 UBYTE get_next_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED;
@@ -74,10 +75,6 @@ UBYTE get_previous_valid_pattern(UBYTE current_pattern, UBYTE block_x) BANKED;
 void apply_valid_pattern_to_block(UBYTE block_index, UBYTE pattern_id) BANKED;
 UBYTE increment_block_pattern(UBYTE block_index) BANKED;
 UBYTE decrement_block_pattern(UBYTE block_index) BANKED;
-
-// Pattern update control functions
-void set_suppress_pattern_updates(UBYTE suppress) BANKED;
-UBYTE get_suppress_pattern_updates(void) BANKED;
 
 // Banked function wrappers for VM system access (for functions defined in platform system only)
 void b_init_platform_system(void) BANKED;

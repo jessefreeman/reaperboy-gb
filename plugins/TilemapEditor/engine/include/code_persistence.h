@@ -52,6 +52,7 @@ void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED;
 
 // Advanced character editing
 void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED;
+void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED;
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
 #endif // CODE_PERSISTENCE_H

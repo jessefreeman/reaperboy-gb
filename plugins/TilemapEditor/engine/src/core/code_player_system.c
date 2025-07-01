@@ -128,6 +128,29 @@ UBYTE get_next_valid_player_position(UBYTE current_position) BANKED
     return valid_player_columns[0];
 }
 
+// Get the previous valid player position before the current one (with wraparound)
+UBYTE get_previous_valid_player_position(UBYTE current_position) BANKED
+{
+    if (valid_player_count == 0)
+        return 0;
+
+    // Find current position in the valid list
+    for (UBYTE i = 0; i < valid_player_count; i++)
+    {
+        if (valid_player_columns[i] == current_position)
+        {
+            // Return previous position (with wraparound)
+            if (i == 0)
+                return valid_player_columns[valid_player_count - 1]; // Wrap to last
+            else
+                return valid_player_columns[i - 1];
+        }
+    }
+
+    // Current position not found in valid list, return last valid position
+    return valid_player_columns[valid_player_count - 1];
+}
+
 // ============================================================================
 // POSITION UTILITY FUNCTIONS
 // ============================================================================

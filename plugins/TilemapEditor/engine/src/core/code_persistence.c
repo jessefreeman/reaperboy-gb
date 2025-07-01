@@ -1,4 +1,4 @@
-#pragma bank 254
+#pragma bank 251
 
 #include <gbdk/platform.h>
 #include "vm.h"
@@ -6,6 +6,7 @@
 #include "code_persistence.h"
 #include "code_level_core.h"
 #include "code_platform_system.h"
+#include "code_platform_system_ext.h"
 #include "code_player_system.h"
 #include "code_enemy_system.h"
 #include "tile_utils.h"
@@ -347,9 +348,8 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         UBYTE max_value;
         if (char_index < TOTAL_BLOCKS)
         {
-            // Platform patterns: cycle through 0 to PLATFORM_PATTERN_COUNT-1
-            max_value = PLATFORM_PATTERN_COUNT - 1;
-            new_value = (current_value + 1) % PLATFORM_PATTERN_COUNT;
+            // Platform patterns: use position-aware validation to get next valid pattern
+            new_value = get_next_valid_pattern_for_char(char_index, current_value);
         }
         else if (char_index == 16)
         {
@@ -416,6 +416,98 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
             else
             {
                 new_tile = current_tile + 1;
+            }
+
+            // Set the new tile using replace_meta_tile to update both map data and visual display
+            replace_meta_tile(x, y, new_tile, 1);
+        }
+    }
+}
+
+// Reverse character cycling function (for backward navigation)
+void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
+{
+    UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+
+    // First, check if this position is within the level code display area
+    UBYTE char_index = get_char_index_from_display_position(x, y);
+
+    if (char_index != 255)
+    {
+        // This is a level code character position
+        UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
+        UBYTE current_value = char_to_value(current_tile);
+        UBYTE new_value;
+
+        if (char_index < TOTAL_BLOCKS)
+        {
+            // Platform patterns: use position-aware validation to get previous valid pattern
+            new_value = get_previous_valid_pattern_for_char(char_index, current_value);
+        }
+        else if (char_index == 16)
+        {
+            // Player column: cycle only through valid positions (columns with platforms) in reverse
+            UBYTE current_col = char_to_value(current_tile);
+            UBYTE prev_col = get_previous_valid_player_position(current_col);
+            new_value = prev_col;
+        }
+        else if (char_index >= 17 && char_index <= 22)
+        {
+            // Enemy positions: 0-19 (0 means no enemy) - cycle in reverse
+            UBYTE max_value = 19;
+
+            if (current_value == 0)
+            {
+                new_value = max_value; // Wrap to max
+            }
+            else
+            {
+                new_value = current_value - 1;
+            }
+        }
+        else
+        {
+            // Other encoded values: 0-34 - cycle in reverse
+            UBYTE max_value = 34;
+
+            if (current_value == 0)
+            {
+                new_value = max_value; // Wrap to max
+            }
+            else
+            {
+                new_value = current_value - 1;
+            }
+        }
+
+        // Update the level code data and tilemap
+        update_level_code_from_character_edit(char_index, new_value);
+
+        // Update the display character
+        UBYTE display_char = get_extended_display_char(new_value);
+        display_char_at_position(display_char, x, y);
+
+        // Mark this position as updated to prevent flicker
+        mark_display_position_for_update(char_index);
+    }
+    else
+    {
+        // This is not a level code position, use original character cycling logic (reverse)
+        UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
+        UBYTE new_tile = current_tile;
+
+        // Check if current tile is in the character range (TILE_CHAR_FIRST to TILE_CHAR_LAST)
+        if (current_tile >= TILE_CHAR_FIRST && current_tile <= TILE_CHAR_LAST)
+        {
+            // Going backward - decrement the character
+            if (current_tile == TILE_CHAR_FIRST) // If at '0' (48), wrap to 'Z' (83)
+            {
+                new_tile = TILE_CHAR_LAST;
+            }
+            else
+            {
+                new_tile = current_tile - 1;
             }
 
             // Set the new tile using replace_meta_tile to update both map data and visual display

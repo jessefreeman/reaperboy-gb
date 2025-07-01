@@ -26,6 +26,7 @@ void extract_player_data(void) BANKED;
 void update_valid_player_positions(void) BANKED;
 UBYTE is_valid_player_position(UBYTE column) BANKED;
 UBYTE get_next_valid_player_position(UBYTE current_position) BANKED;
+UBYTE get_previous_valid_player_position(UBYTE current_position) BANKED;
 
 // Position utility functions
 void position_player_at_valid_location(void) BANKED;
