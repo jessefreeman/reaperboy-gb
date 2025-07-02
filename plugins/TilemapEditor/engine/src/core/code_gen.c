@@ -149,27 +149,6 @@ void vm_clear_level_code_display(SCRIPT_CTX *THIS) BANKED
     clear_level_code_display();
 }
 
-// VM wrapper for test initialization
-void vm_init_test_patterns(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    init_test_enemy_patterns();
-}
-
-// VM wrapper for cycling enemy patterns (testing)
-void vm_test_cycle_enemy_patterns(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    test_cycle_enemy_patterns();
-}
-
-// VM wrapper for cycling enemy directions (testing)
-void vm_test_cycle_enemy_directions(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    test_cycle_enemy_directions();
-}
-
 // ============================================================================
 // LEGACY COMPATIBILITY FUNCTIONS - Maintain backward compatibility
 // ============================================================================
@@ -197,21 +176,3 @@ void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED
     THIS; // Suppress unreferenced parameter warning
     draw_segment_ids();
 }
-
-// ############################################################################
-// END OF REFACTORED CODE_GEN.C - Main Coordinator
-// ############################################################################
-//
-// This file now serves as a lightweight coordination layer that:
-// 1. Initializes and coordinates all subsystems
-// 2. Provides high-level operations that span multiple systems
-// 3. Offers VM wrapper functions for GB Studio integration
-// 4. Maintains backward compatibility with existing scripts
-//
-// All detailed implementation has been moved to specialized modules:
-// - level_code_core.c/.h    - Core display and encoding logic
-// - platform_system.c/.h   - Platform pattern management
-// - player_system.c/.h     - Player positioning and validation
-// - enemy_system.c/.h      - Enemy management and encoding
-// - level_persistence.c/.h - Save/load functionality
-// ############################################################################
