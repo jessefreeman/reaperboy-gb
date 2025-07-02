@@ -18,18 +18,6 @@
 // UTILITY FUNCTIONS
 // ============================================================================
 
-// Validate a POS41 value (0-40, or 255 if invalid)
-UBYTE validate_pos41_value(UBYTE value) BANKED
-{
-    return (value <= 40) ? value : 255;
-}
-
-// Validate a BASE32 value (0-31, or 255 if invalid)
-UBYTE validate_base32_value(UBYTE value) BANKED
-{
-    return (value <= 31) ? value : 255;
-}
-
 // Get the row (0-3) for an enemy at a given position index
 UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 {
@@ -191,10 +179,6 @@ UBYTE encode_enemy_directions(void) BANKED
 }
 
 // Compatibility alias
-UBYTE encode_enemy_bitmask(void) BANKED
-{
-    return encode_enemy_positions();
-}
 
 // ============================================================================
 // ENEMY DECODING FUNCTIONS (for level code editing)
@@ -451,12 +435,3 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
 
     paint_enemy_slots_used[enemy_index] = 1;
 }
-
-// Clear all enemy actors from the screen
-// void clear_all_enemy_actors(void) BANKED
-// {
-//     for (UBYTE i = 0; i < MAX_ENEMIES; i++)
-//     {
-//         clear_enemy_actor(i);
-//     }
-// }

@@ -35,7 +35,6 @@ UBYTE encode_enemy_position_4(void) BANKED; // Character 20
 UBYTE encode_enemy_position_5(void) BANKED; // Character 21
 UBYTE encode_odd_mask_value(void) BANKED;   // Character 22
 UBYTE encode_enemy_directions(void) BANKED; // Character 23
-UBYTE encode_enemy_bitmask(void) BANKED;    // Compatibility alias
 
 // ============================================================================
 // LEVEL CODE EDITING SUPPORT
@@ -47,9 +46,7 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED;
 // UTILITY FUNCTIONS
 // ============================================================================
 
-// Value validation and tile mapping
-UBYTE validate_pos41_value(UBYTE value) BANKED;
-UBYTE validate_base32_value(UBYTE value) BANKED;
+// Tile mapping
 UBYTE get_pos41_display_tile(UBYTE value) BANKED;
 UBYTE get_base32_display_tile(UBYTE value) BANKED;
 UBYTE enemy_char_to_value(UBYTE tile_id) BANKED;
@@ -63,7 +60,6 @@ UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED;
 
 void clear_enemy_actor(UBYTE enemy_index) BANKED;
 void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYTE direction) BANKED;
-// void clear_all_enemy_actors(void) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS

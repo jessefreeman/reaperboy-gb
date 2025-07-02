@@ -25,6 +25,14 @@ extern UBYTE paint_player_id;
 // ============================================================================
 // CHARACTER CONVERSION UTILITIES
 // ============================================================================
+// Tile mapping for POS41 system:
+// - Values 0-9 map to tiles 48-57 (ASCII characters '0'-'9')
+// - Values 10-35 map to tiles 58-83 (ASCII characters 'A'-'Z')
+// - Values 36-40 map to tiles 84-88 (ASCII characters '!', '@', '#', '$', '%')
+//
+// Tile mapping for BASE32 system:
+// - Values 0-9 map to tiles 48-57 (ASCII characters '0'-'9')
+// - Values 10-31 map to tiles 58-79 (ASCII characters 'A'-'V')
 
 // Convert display character back to numeric value
 UBYTE char_to_value(UBYTE display_char) BANKED
@@ -36,6 +44,26 @@ UBYTE char_to_value(UBYTE display_char) BANKED
     else if (display_char >= 58 && display_char <= 83) // 'A'-'Z' (tiles 58-83)
     {
         return (display_char - 58) + 10;
+    }
+    else if (display_char == 84) // Special character ! (tile 84)
+    {
+        return 36;
+    }
+    else if (display_char == 85) // Special character @ (tile 85)
+    {
+        return 37;
+    }
+    else if (display_char == 86) // Special character # (tile 86)
+    {
+        return 38;
+    }
+    else if (display_char == 87) // Special character $ (tile 87)
+    {
+        return 39;
+    }
+    else if (display_char == 88) // Special character % (tile 88)
+    {
+        return 40;
     }
     return 0; // Default for invalid characters
 }
