@@ -4,6 +4,31 @@
 
 The monolithic `code_gen.c` file has been successfully refactored into a clean, modular architecture. All cleanup tasks have been completed and verified.
 
+## Latest Update: Unified Numeric Value System
+
+The final refactoring step has been completed to implement a unified numeric value system throughout the codebase. All unnecessary conversions between numeric values and character representations have been eliminated, resulting in a cleaner and more maintainable system.
+
+### Key Improvements
+
+1. **Removed Character-Based Mapping Arrays**
+
+   - Eliminated `POS41_TILE_MAP` and `BASE32_TILE_MAP` from `code_enemy_system.c`
+   - Removed references and declarations from header files
+
+2. **Centralized Mapping Logic**
+
+   - Implemented `pos41_value_to_tile_id()` and `base32_value_to_tile_id()` in `code_level_core.c`
+   - Created a single source of truth for all value-to-tile-ID mapping
+
+3. **Simplified Enemy System**
+   - Updated enemy system to use the centralized mapping functions
+   - Eliminated duplicate mapping logic and code
+4. **Architecture Benefits**
+   - Direct operations on numeric values throughout the system
+   - Simplified data flow and fewer conversions
+   - Improved maintainability with centralized mapping logic
+   - Better code organization with clearer responsibilities
+
 ## Final Architecture
 
 ### Core Modules

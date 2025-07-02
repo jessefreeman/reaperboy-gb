@@ -88,6 +88,10 @@ void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED;
 void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED;
 void clear_level_code_display(void) BANKED;
 
+// Tile mapping functions
+UBYTE pos41_value_to_tile_id(UBYTE value) BANKED;
+UBYTE base32_value_to_tile_id(UBYTE value) BANKED;
+
 // Utility functions
 UBYTE get_char_index_from_display_position(UBYTE x, UBYTE y) BANKED;
 

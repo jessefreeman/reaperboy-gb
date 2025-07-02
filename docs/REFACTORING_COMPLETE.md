@@ -4,6 +4,33 @@
 
 Successfully refactored the monolithic `code_gen.c` file (2185 lines) into a modular architecture with 6 focused modules. The original file has been preserved as `code_gen_original.c` for reference.
 
+## Latest Update: Unified Numeric Value System
+
+The refactoring has been completed to eliminate all unnecessary conversions between numeric values and character representations. The system now operates directly on simple numeric values (e.g., 0-40 for enemies, 0-31 for platform patterns), and maps these directly to metatile IDs for display using a unified system.
+
+### Key Changes
+
+1. **Removed Character-Based Arrays**:
+
+   - Eliminated `POS41_TILE_MAP` and `BASE32_TILE_MAP` arrays from `code_enemy_system.c`
+   - Removed external array declarations from `code_enemy_system.h`
+
+2. **Centralized Mapping in `code_level_core.c`**:
+
+   - Implemented `pos41_value_to_tile_id()` and `base32_value_to_tile_id()` functions that directly map numeric values to tile IDs
+   - Added function prototypes to `code_level_core.h` to make them accessible to other modules
+
+3. **Updated Enemy System**:
+   - Modified `get_pos41_display_tile()` and `get_base32_display_tile()` to use the centralized mapping functions
+   - Updated `enemy_char_to_value()` to use the centralized mapping functions for lookups
+
+### Benefits
+
+1. **Simplified Logic**: The system now operates directly on numeric values throughout, eliminating the need for conversions between numbers and characters.
+2. **Unified Mapping**: All tile ID mapping is now handled by a single, central mechanism in `code_level_core.c`.
+3. **Reduced Code Duplication**: Removed duplicate mapping arrays and consolidated mapping logic.
+4. **Improved Maintainability**: Changes to the mapping system can now be made in a single location.
+
 ## New Modular Structure
 
 ### 1. Core Files Created

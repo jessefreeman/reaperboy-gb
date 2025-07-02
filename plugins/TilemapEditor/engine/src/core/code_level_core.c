@@ -420,23 +420,64 @@ UBYTE get_enemy_display_char(UBYTE value, UBYTE char_position) BANKED
 // Helper function to convert POS41 value directly to tile ID
 UBYTE pos41_value_to_tile_id(UBYTE value) BANKED
 {
+    // Use the same mapping logic as display_char_at_position
     if (value > 40)
         return 48; // Default to '0' tile
 
-    // Use the POS41_TILE_MAP from the enemy system
-    extern const UBYTE POS41_TILE_MAP[];
-    return POS41_TILE_MAP[value];
+    // Values 0-9 map to tiles 48-57
+    if (value < 10)
+    {
+        return 48 + value;
+    }
+    // Values 10-35 map to tiles 58-83 (A-Z)
+    else if (value < 36)
+    {
+        return 58 + (value - 10);
+    }
+    // Special values 36-40 map to tiles 84-88 (!, @, #, $, %)
+    else if (value == 36)
+    {
+        return 84;
+    }
+    else if (value == 37)
+    {
+        return 85;
+    }
+    else if (value == 38)
+    {
+        return 86;
+    }
+    else if (value == 39)
+    {
+        return 87;
+    }
+    else if (value == 40)
+    {
+        return 88;
+    }
+
+    return 48; // Default to '0' tile
 }
 
 // Helper function to convert BASE32 value directly to tile ID
 UBYTE base32_value_to_tile_id(UBYTE value) BANKED
 {
+    // BASE32 uses the same mapping for 0-31 as POS41 does for 0-31
     if (value > 31)
         return 48; // Default to '0' tile
 
-    // Use the BASE32_TILE_MAP from the enemy system
-    extern const UBYTE BASE32_TILE_MAP[];
-    return BASE32_TILE_MAP[value];
+    // Values 0-9 map to tiles 48-57
+    if (value < 10)
+    {
+        return 48 + value;
+    }
+    // Values 10-31 map to tiles 58-79 (first 22 characters of A-Z)
+    else if (value < 32)
+    {
+        return 58 + (value - 10);
+    }
+
+    return 48; // Default to '0' tile
 }
 
 void display_char_at_position(UBYTE value, UBYTE x, UBYTE y) BANKED

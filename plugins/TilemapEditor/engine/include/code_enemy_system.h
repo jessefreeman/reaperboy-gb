@@ -5,14 +5,8 @@
 #include "code_level_core.h"
 
 // ============================================================================
-// ENEMY ENCODING SYSTEM
+// ENEMY NUMERIC SYSTEM
 // ============================================================================
-
-// Character set constants
-extern const char POS41[];  // 41-character position alphabet
-extern const char BASE32[]; // 32-character base alphabet
-extern const UBYTE POS41_TILE_MAP[];
-extern const UBYTE BASE32_TILE_MAP[];
 
 // ============================================================================
 // CORE ENEMY FUNCTIONS
@@ -21,14 +15,14 @@ extern const UBYTE BASE32_TILE_MAP[];
 // Data extraction from tilemap
 void extract_enemy_data(void) BANKED;
 
-// Encoding functions
-char encode_enemy_position(UBYTE enemy_index) BANKED;
-char encode_odd_mask(void) BANKED;
-char encode_direction_mask(void) BANKED;
+// Encoding functions - all return numeric values directly
+UBYTE encode_enemy_position(UBYTE enemy_index) BANKED;
+UBYTE encode_odd_mask(void) BANKED;
+UBYTE encode_direction_mask(void) BANKED;
 
 // Decoding functions for level code editing
-void decode_enemy_position(UBYTE enemy_index, char pos_char, UBYTE odd_bit, UBYTE dir_bit) BANKED;
-void decode_enemy_data_from_level_code(const char *enemy_chars) BANKED;
+void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UBYTE dir_bit) BANKED;
+void decode_enemy_data_from_values(const UBYTE *enemy_values) BANKED;
 
 // ============================================================================
 // LEVEL CODE INTERFACE FUNCTIONS (called by code_level_core.c)
@@ -53,11 +47,11 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED;
 // UTILITY FUNCTIONS
 // ============================================================================
 
-// Character set utilities
-UBYTE find_pos41_index(char c) BANKED;
-UBYTE find_base32_index(char c) BANKED;
-UBYTE get_pos41_display_tile(char c) BANKED;
-UBYTE get_base32_display_tile(char c) BANKED;
+// Value validation and tile mapping
+UBYTE validate_pos41_value(UBYTE value) BANKED;
+UBYTE validate_base32_value(UBYTE value) BANKED;
+UBYTE get_pos41_display_tile(UBYTE value) BANKED;
+UBYTE get_base32_display_tile(UBYTE value) BANKED;
 UBYTE enemy_char_to_value(UBYTE tile_id) BANKED;
 
 // Row detection
