@@ -25,7 +25,7 @@ const UBYTE POS41_TILE_MAP[] = {
     58, 59, 60, 61, 62, 63, 64, 65, 66, 67, // 'A'-'J' (tiles 58-67)
     68, 69, 70, 71, 72, 73, 74, 75, 76, 77, // 'K'-'T' (tiles 68-77)
     78, 79, 80, 81, 82, 83,                 // 'U'-'Z' (tiles 78-83)
-    84, 85, 86, 87, 88                      // '!@#$%' (tiles 84-88) - Extended beyond Z
+    84, 85, 86, 87, 88                      // Extended characters at (4,5)-(8,5) in metatile sheet
 };
 
 const UBYTE BASE32_TILE_MAP[] = {
@@ -40,7 +40,11 @@ const UBYTE BASE32_TILE_MAP[] = {
 // ============================================================================
 
 // Maps enemy index to row (0-3). This defines which row each enemy is assigned to.
-const UBYTE ENEMY_ROW_MAP[MAX_ENEMIES] = {0, 1, 2, 3, 0}; // 5 enemies: 0→row0, 1→row1, 2→row2, 3→row3, 4→row0
+// MAX_ENEMIES is 6 from system, but we only use 5 for level code encoding
+const UBYTE ENEMY_ROW_MAP[MAX_ENEMIES] = {0, 1, 2, 3, 0, 1}; // 6 enemies: 0→row0, 1→row1, 2→row2, 3→row3, 4→row0, 5→row1
+
+// Level code enemy system constants
+#define LEVEL_CODE_MAX_ENEMIES 5 // Level code only handles 5 enemies (characters 17-21)
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -80,7 +84,7 @@ void extract_enemy_data(void) BANKED
     current_level_code.enemy_directions = 0;
     current_level_code.enemy_types = 0;
 
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255; // 255 = no enemy
     }
@@ -98,7 +102,7 @@ void extract_enemy_data(void) BANKED
             UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(tilemap_x, actual_y)];
             UBYTE tile_type = get_tile_type(tile);
 
-            if ((tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R) && enemy_count < MAX_ENEMIES)
+            if ((tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R) && enemy_count < LEVEL_CODE_MAX_ENEMIES)
             {
                 // Store the game coordinate column (0-19)
                 current_level_code.enemy_positions[enemy_count] = col;
@@ -128,7 +132,7 @@ void extract_enemy_data(void) BANKED
 // Get the row (0-3) for an enemy at a given position index
 UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 {
-    if (enemy_index >= MAX_ENEMIES)
+    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
         return 255; // Invalid enemy index
 
     return ENEMY_ROW_MAP[enemy_index];
@@ -137,7 +141,7 @@ UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 // Encode enemy position using new POS41 system
 char encode_enemy_position(UBYTE enemy_index) BANKED
 {
-    if (enemy_index >= MAX_ENEMIES || current_level_code.enemy_positions[enemy_index] == 255)
+    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES || current_level_code.enemy_positions[enemy_index] == 255)
     {
         return POS41[0]; // '0' = no enemy
     }
@@ -160,7 +164,7 @@ char encode_odd_mask(void) BANKED
 {
     UBYTE odd_mask = 0;
 
-    for (UBYTE k = 0; k < MAX_ENEMIES; k++)
+    for (UBYTE k = 0; k < LEVEL_CODE_MAX_ENEMIES; k++)
     {
         if (current_level_code.enemy_positions[k] != 255)
         {
@@ -189,7 +193,7 @@ char encode_direction_mask(void) BANKED
 // Decode enemy position from POS41 character
 void decode_enemy_position(UBYTE enemy_index, char pos_char, UBYTE odd_bit, UBYTE dir_bit) BANKED
 {
-    if (enemy_index >= MAX_ENEMIES)
+    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
         return;
 
     // Clear previous enemy placement if it exists
@@ -292,7 +296,7 @@ void decode_enemy_data_from_level_code(const char *enemy_chars) BANKED
 
     // Clear enemy data
     current_level_code.enemy_directions = 0;
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255;
     }
@@ -488,7 +492,7 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
 void test_new_enemy_encoding(void) BANKED
 {
     // Clear existing data
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255;
     }
@@ -537,7 +541,7 @@ void validate_enemy_encoding_roundtrip(void) BANKED
     enemy_chars[6] = encode_direction_mask();
 
     // Clear current state
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255;
     }
@@ -636,7 +640,11 @@ void vm_increment_enemy_level_code_char(SCRIPT_CTX *THIS) BANKED
             current_val = encode_enemy_position_5();
             break;
         }
-        max_val = 40; // POS41 range
+        max_val = 40; // POS41 range (0-40)
+
+        // Ensure current value is in valid range
+        if (current_val > 40)
+            current_val = 0;
     }
     else // Mask characters (22-23)
     {
@@ -688,7 +696,11 @@ void vm_decrement_enemy_level_code_char(SCRIPT_CTX *THIS) BANKED
             current_val = encode_enemy_position_5();
             break;
         }
-        max_val = 40; // POS41 range
+        max_val = 40; // POS41 range (0-40)
+
+        // Ensure current value is in valid range
+        if (current_val > 40)
+            current_val = 0;
     }
     else // Mask characters (22-23)
     {
@@ -757,7 +769,7 @@ UBYTE extract_enemy_pattern_for_block_row(UBYTE row) BANKED
     if (row >= 4)
         return 0;
 
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         if (current_level_code.enemy_positions[i] != 255)
         {

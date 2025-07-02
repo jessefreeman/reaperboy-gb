@@ -17,7 +17,9 @@
 #define SEGMENT_WIDTH 5
 #define SEGMENT_HEIGHT 2
 #define TOTAL_BLOCKS 16
-#define MAX_ENEMIES 5
+
+// Enemy system constants
+#define MAX_ENEMIES 6 // Maximum number of enemy actors supported by the system
 
 // Level code display settings - 24 character display system
 #define LEVEL_CODE_START_X 5
@@ -51,9 +53,9 @@ typedef struct
 {
     UBYTE platform_patterns[TOTAL_BLOCKS]; // 16 platform pattern IDs (0-15)
     UBYTE player_column;                   // Player starting column (0-19)
-    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255 = empty)
     UBYTE enemy_directions;                // Bitmask for enemy facing directions
     UBYTE enemy_types;                     // Bitmask for enemy types (walker/jumper)
+    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255 = empty) - must be last
 } level_code_t;
 
 // Main level code data structure - shared across all modules
@@ -140,5 +142,8 @@ void test_set_enemy_direction_left(void) BANKED;
 void vm_test_set_enemy_17_to_value_11(SCRIPT_CTX *THIS) BANKED;
 void vm_test_increment_enemy_17(SCRIPT_CTX *THIS) BANKED;
 void vm_test_set_enemy_direction_left(SCRIPT_CTX *THIS) BANKED;
+
+// Sync function for level code display values
+void sync_level_code_display_values(void) BANKED;
 
 #endif // CODE_LEVEL_CORE_H

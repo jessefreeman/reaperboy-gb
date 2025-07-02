@@ -21,6 +21,11 @@ extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
 // Main level code data structure instance
 level_code_t current_level_code;
 
+// Track external changes to level code display values
+UBYTE level_code_display_values[LEVEL_CODE_CHARS_TOTAL];
+UBYTE level_code_display_changed[LEVEL_CODE_CHARS_TOTAL];
+UBYTE level_code_display_initialized = 0;
+
 // ============================================================================
 // SELECTIVE UPDATE SYSTEM - Prevents flicker by only updating changed chars
 // ============================================================================
@@ -368,6 +373,9 @@ void force_complete_level_code_display(void) BANKED
 // Main level code display function
 void display_complete_level_code(void) BANKED
 {
+    // Sync display values with current game state
+    sync_level_code_display_values();
+
     // Use selective update to prevent flicker
     display_selective_level_code();
 }
@@ -451,6 +459,28 @@ UBYTE get_enemy_display_char(UBYTE value, UBYTE char_position) BANKED
     return '0'; // Default fallback
 }
 
+// Helper function to convert POS41 value directly to tile ID
+UBYTE pos41_value_to_tile_id(UBYTE value) BANKED
+{
+    if (value > 40)
+        return 48; // Default to '0' tile
+
+    // Use the POS41_TILE_MAP from the enemy system
+    extern const UBYTE POS41_TILE_MAP[];
+    return POS41_TILE_MAP[value];
+}
+
+// Helper function to convert BASE32 value directly to tile ID
+UBYTE base32_value_to_tile_id(UBYTE value) BANKED
+{
+    if (value > 31)
+        return 48; // Default to '0' tile
+
+    // Use the BASE32_TILE_MAP from the enemy system
+    extern const UBYTE BASE32_TILE_MAP[];
+    return BASE32_TILE_MAP[value];
+}
+
 void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED
 {
     UBYTE tile_index;
@@ -466,23 +496,23 @@ void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED
     }
     else if (display_char == '!')
     {
-        tile_index = 33; // '!' symbol
+        tile_index = 84; // Extended character at (4,5) in metatile sheet
     }
     else if (display_char == '@')
     {
-        tile_index = 64; // '@' symbol
+        tile_index = 85; // Extended character at (5,5) in metatile sheet
     }
     else if (display_char == '#')
     {
-        tile_index = 35; // '#' symbol
+        tile_index = 86; // Extended character at (6,5) in metatile sheet
     }
     else if (display_char == '$')
     {
-        tile_index = 36; // '$' symbol
+        tile_index = 87; // Extended character at (7,5) in metatile sheet
     }
     else if (display_char == '%')
     {
-        tile_index = 37; // '%' symbol
+        tile_index = 88; // Extended character at (8,5) in metatile sheet
     }
     else
     {
@@ -644,18 +674,15 @@ void vm_increment_level_code_value(SCRIPT_CTX *THIS) BANKED
     if (position >= 17 && position <= 21)
     {
         // Enemy position characters (POS41 system: 0-40)
-        if (position == 17)
-            current_value = encode_enemy_positions();
-        else if (position == 18)
-            current_value = encode_enemy_details_1();
-        else if (position == 19)
-            current_value = encode_enemy_details_2();
-        else if (position == 20)
-            current_value = encode_enemy_position_4();
-        else if (position == 21)
-            current_value = encode_enemy_position_5();
+        // Use the stored display value instead of re-encoding
+        current_value = level_code_display_values[position];
 
-        current_value = (current_value + 1) % 41; // Cycle 0-40
+        // Ensure current_value is in valid range
+        if (current_value > 40)
+            current_value = 0;
+
+        // Increment with wrap-around: 0→1→2→...→40→0
+        current_value = (current_value + 1) % 41;
     }
     else if (position == 22 || position == 23)
     {
@@ -698,16 +725,12 @@ void vm_decrement_level_code_value(SCRIPT_CTX *THIS) BANKED
     if (position >= 17 && position <= 21)
     {
         // Enemy position characters (POS41 system: 0-40)
-        if (position == 17)
-            current_value = encode_enemy_positions();
-        else if (position == 18)
-            current_value = encode_enemy_details_1();
-        else if (position == 19)
-            current_value = encode_enemy_details_2();
-        else if (position == 20)
-            current_value = encode_enemy_position_4();
-        else if (position == 21)
-            current_value = encode_enemy_position_5();
+        // Use the stored display value instead of re-encoding
+        current_value = level_code_display_values[position];
+
+        // Ensure current_value is in valid range
+        if (current_value > 40)
+            current_value = 0;
 
         max_value = 40;
     }
@@ -751,10 +774,7 @@ void vm_decrement_level_code_value(SCRIPT_CTX *THIS) BANKED
 // BIDIRECTIONAL LEVEL CODE SYSTEM
 // ============================================================================
 
-// Track external changes to level code display values
-UBYTE level_code_display_values[LEVEL_CODE_CHARS_TOTAL];
-UBYTE level_code_display_changed[LEVEL_CODE_CHARS_TOTAL];
-UBYTE level_code_display_initialized = 0;
+// External changes to level code display values are tracked above in globals
 
 // Mark a level code position as externally changed
 void mark_level_code_position_changed(UBYTE position, UBYTE new_value) BANKED
@@ -805,6 +825,30 @@ void process_level_code_external_changes(void) BANKED
             mark_display_position_for_update(i);
         }
     }
+}
+
+// Synchronize level_code_display_values with current game state
+void sync_level_code_display_values(void) BANKED
+{
+    // Sync enemy position characters (17-21)
+    level_code_display_values[17] = encode_enemy_positions();
+    level_code_display_values[18] = encode_enemy_details_1();
+    level_code_display_values[19] = encode_enemy_details_2();
+    level_code_display_values[20] = encode_enemy_position_4();
+    level_code_display_values[21] = encode_enemy_position_5();
+
+    // Sync enemy mask characters (22-23)
+    level_code_display_values[22] = encode_odd_mask_value();
+    level_code_display_values[23] = encode_enemy_directions();
+
+    // Sync platform patterns (0-15)
+    for (UBYTE i = 0; i < 16; i++)
+    {
+        level_code_display_values[i] = current_level_code.platform_patterns[i];
+    }
+
+    // Sync player position (16)
+    level_code_display_values[16] = current_level_code.player_column;
 }
 
 // ============================================================================
@@ -981,4 +1025,25 @@ void example_decrement_enemy_2_position(void) BANKED
 void example_set_all_enemies_face_right(void) BANKED
 {
     set_all_enemies_direction(0);
+}
+
+// Optimized display function for enemy characters
+void display_enemy_char_at_position(UBYTE value, UBYTE char_position, UBYTE x, UBYTE y) BANKED
+{
+    UBYTE tile_id;
+
+    if (char_position >= 17 && char_position <= 21) // POS41 characters
+    {
+        tile_id = pos41_value_to_tile_id(value);
+    }
+    else if (char_position == 22 || char_position == 23) // BASE32 characters
+    {
+        tile_id = base32_value_to_tile_id(value);
+    }
+    else
+    {
+        tile_id = 48; // Default to '0'
+    }
+
+    replace_meta_tile(x, y, tile_id, 1);
 }
