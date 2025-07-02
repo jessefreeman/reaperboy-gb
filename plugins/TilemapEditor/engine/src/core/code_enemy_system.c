@@ -401,9 +401,15 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
 
     if (rel_index < 5) // Position characters (17-21)
     {
-        if (new_value <= 40) // Valid POS41 range
+        // Allow values beyond 40 for debugging
+        if (new_value < 41) // Valid POS41 range
         {
             enemy_chars[rel_index] = POS41[new_value];
+        }
+        else
+        {
+            // Debug: For values beyond the POS41 range, use the last character
+            enemy_chars[rel_index] = POS41[40];
         }
     }
     else // Mask characters (22-23)

@@ -367,21 +367,22 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
             UBYTE next_col = get_next_valid_player_position(current_col);
             new_value = next_col;
         }
-        // else if (char_index >= 17 && char_index <= 21)
-        // {
-        //     // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
-        //     max_value = 48;
+        else if (char_index >= 17 && char_index <= 21)
+        {
+            // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
+            max_value = 48; // Allow up to 48 for testing
 
-        //     // Cycle to next value
-        //     // if (current_value >= max_value)
-        //     // {
-        //     //     new_value = 0; // Wrap to 0
-        //     // }
-        //     // else
-        //     // {
-        //     new_value = current_value + 1;
-        //     // }
-        // }
+            // Cycle to next value - prevent wrapping for debugging
+            if (current_value < 48)
+            {
+                new_value = current_value + 1;
+            }
+            else
+            {
+                // Stay at max value
+                new_value = current_value;
+            }
+        }
         else if (char_index == 22 || char_index == 23)
         {
             // Enemy mask values (BASE32 system): 0-31
@@ -413,15 +414,8 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
             }
         }
 
-        // Update the level code data and tilemap
-        update_level_code_from_character_edit(char_index, new_value);
-
-        // Update the display character
-        UBYTE display_char = get_extended_display_char(new_value);
-        display_char_at_position(display_char, x, y);
-
-        // Mark this position as updated to prevent flicker
-        mark_display_position_for_update(char_index);
+        // Update the display using our helper function (directly uses numeric values)
+        update_display_with_value(char_index, new_value, x, y);
     }
     else
     {
@@ -525,15 +519,8 @@ void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
             }
         }
 
-        // Update the level code data and tilemap
-        update_level_code_from_character_edit(char_index, new_value);
-
-        // Update the display character
-        UBYTE display_char = get_extended_display_char(new_value);
-        display_char_at_position(display_char, x, y);
-
-        // Mark this position as updated to prevent flicker
-        mark_display_position_for_update(char_index);
+        // Update the display using our helper function (directly uses numeric values)
+        update_display_with_value(char_index, new_value, x, y);
     }
     else
     {
@@ -558,4 +545,17 @@ void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
             replace_meta_tile(x, y, new_tile, 1);
         }
     }
+}
+
+// Update the display character directly with numeric value
+void update_display_with_value(UBYTE char_index, UBYTE value, UBYTE x, UBYTE y) BANKED
+{
+    // Update the level code data and tilemap
+    update_level_code_from_character_edit(char_index, value);
+
+    // Update the display directly with numeric value (no character conversion)
+    display_char_at_position(value, x, y);
+
+    // Mark this position as updated to prevent flicker
+    mark_display_position_for_update(char_index);
 }

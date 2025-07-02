@@ -51,4 +51,7 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED;
 void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED;
 void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BANKED;
 
+// Helper function to update display with numeric value
+void update_display_with_value(UBYTE char_index, UBYTE value, UBYTE x, UBYTE y) BANKED;
+
 #endif // CODE_PERSISTENCE_H

@@ -294,8 +294,8 @@ void display_selective_level_code_fast(void) BANKED
     if (display_position_needs_update(16))
     {
         get_display_position(16, &display_x, &display_y);
-        UBYTE display_char = get_extended_display_char(current_level_code.player_column);
-        display_char_at_position(display_char, display_x, display_y);
+        // Pass the numeric value directly to display_char_at_position
+        display_char_at_position(current_level_code.player_column, display_x, display_y);
     }
 
     // Display enemy data (positions 17-23) - NEW SIMPLIFIED ENCODING
@@ -342,8 +342,8 @@ void force_complete_level_code_display(void) BANKED
 
     // Display player column (position 16)
     get_display_position(16, &display_x, &display_y);
-    UBYTE player_display_char = get_extended_display_char(current_level_code.player_column);
-    display_char_at_position(player_display_char, display_x, display_y);
+    // Pass the numeric value directly to display_char_at_position
+    display_char_at_position(current_level_code.player_column, display_x, display_y);
 
     // Display enemy data (positions 17-23) - NEW SIMPLIFIED ENCODING
     UBYTE enemy_data[] = {
@@ -384,79 +384,37 @@ void display_complete_level_code(void) BANKED
 // CHARACTER DISPLAY FUNCTIONS
 // ============================================================================
 
+// This function is kept for backward compatibility but now simply returns the value directly
+// since display_char_at_position handles the mapping to metatile ID
 UBYTE get_extended_display_char(UBYTE value) BANKED
 {
-    // Handle standard 0-34 range (for platform patterns and player position)
-    if (value < 10)
+    // Simply validate the range and return the value
+    if (value <= 48) // Allow extended range
     {
-        return '0' + value;
+        return value;
     }
-    else if (value < 36)
-    {
-        return 'A' + (value - 10);
-    }
-    else if (value == 36)
-    {
-        return '!';
-    }
-    else if (value == 37)
-    {
-        return '@';
-    }
-    else if (value == 38)
-    {
-        return '#';
-    }
-    else if (value == 39)
-    {
-        return '$';
-    }
-    else if (value == 40)
-    {
-        return '%';
-    }
-    return '0'; // Default for invalid values
+    return 0; // Default for invalid values
 }
 
-// Helper function to convert enemy encoding value to display character
+// Helper function to validate and prepare enemy values for display
 UBYTE get_enemy_display_char(UBYTE value, UBYTE char_position) BANKED
 {
     // For enemy position characters (17-21), use POS41 system (0-40)
     if (char_position >= 17 && char_position <= 21)
     {
+        // Validate POS41 range
         if (value > 40)
             value = 0; // Safety check
-
-        if (value == 0)
-            return '0';
-        else if (value <= 9)
-            return '0' + value;
-        else if (value <= 35)
-            return 'A' + (value - 10);
-        else if (value == 36)
-            return '!';
-        else if (value == 37)
-            return '@';
-        else if (value == 38)
-            return '#';
-        else if (value == 39)
-            return '$';
-        else if (value == 40)
-            return '%';
     }
     // For mask characters (22-23), use BASE32 system (0-31)
     else if (char_position == 22 || char_position == 23)
     {
+        // Validate BASE32 range
         if (value > 31)
             value = 0; // Safety check
-
-        if (value <= 9)
-            return '0' + value;
-        else if (value <= 31)
-            return 'A' + (value - 10);
     }
 
-    return '0'; // Default fallback
+    return value; // Return validated value directly
 }
 
 // Helper function to convert POS41 value directly to tile ID
@@ -481,42 +439,52 @@ UBYTE base32_value_to_tile_id(UBYTE value) BANKED
     return BASE32_TILE_MAP[value];
 }
 
-void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED
+void display_char_at_position(UBYTE value, UBYTE x, UBYTE y) BANKED
 {
+    // Direct mapping from value to metatile ID
     UBYTE tile_index;
 
-    if (display_char >= '0' && display_char <= '9')
+    // Values 0-9 map to tiles 48-57
+    if (value < 10)
     {
-        tile_index = 48 + (display_char - '0');
+        tile_index = 48 + value;
     }
-    else if (display_char >= 'A' && display_char <= 'Z')
+    // Values 10-35 map to tiles 58-83 (A-Z)
+    else if (value < 36)
     {
-        UBYTE letter_offset = display_char - 'A';
-        tile_index = 58 + letter_offset;
+        tile_index = 58 + (value - 10);
     }
-    else if (display_char == '!')
+    // Special values 36-40 map to tiles 84-88 (!, @, #, $, %)
+    else if (value == 36)
     {
-        tile_index = 84; // Extended character at (4,5) in metatile sheet
+        tile_index = 84;
     }
-    else if (display_char == '@')
+    else if (value == 37)
     {
-        tile_index = 85; // Extended character at (5,5) in metatile sheet
+        tile_index = 85;
     }
-    else if (display_char == '#')
+    else if (value == 38)
     {
-        tile_index = 86; // Extended character at (6,5) in metatile sheet
+        tile_index = 86;
     }
-    else if (display_char == '$')
+    else if (value == 39)
     {
-        tile_index = 87; // Extended character at (7,5) in metatile sheet
+        tile_index = 87;
     }
-    else if (display_char == '%')
+    else if (value == 40)
     {
-        tile_index = 88; // Extended character at (8,5) in metatile sheet
+        tile_index = 88;
+    }
+    else if (value <= 48) // Extended range support
+    {
+        // For extended values, we'll still map them to visible tiles
+        // This keeps debug functionality
+        tile_index = 89 + (value - 41); // Use additional tiles if available
     }
     else
     {
-        tile_index = 48; // Default to '0'
+        // Default fallback
+        tile_index = 48; // Default to '0' tile
     }
 
     replace_meta_tile(x, y, tile_index, 1);
@@ -524,9 +492,9 @@ void display_char_at_position(UBYTE display_char, UBYTE x, UBYTE y) BANKED
 
 void display_pattern_char(UBYTE value, UBYTE x, UBYTE y) BANKED
 {
-    // Convert numeric value to display character, then use same mapping as other chars
-    UBYTE display_char = get_extended_display_char(value);
-    display_char_at_position(display_char, x, y);
+    // Pass the value directly to display_char_at_position
+    // which now handles the direct mapping to metatile ID
+    display_char_at_position(value, x, y);
 }
 
 void clear_level_code_display(void) BANKED
