@@ -359,19 +359,19 @@ void decode_enemy_data_from_level_code(const char *enemy_chars) BANKED
     }
 
     // Clear and re-place enemy actors based on new positions
-    clear_all_enemy_actors();
-    for (UBYTE k = 0; k < 5; k++)
-    {
-        if (current_level_code.enemy_positions[k] != 255)
-        {
-            UBYTE row = get_enemy_row_from_position(k);
-            UBYTE col = current_level_code.enemy_positions[k];
-            UBYTE tilemap_x = PLATFORM_X_MIN + col;
-            UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-            UBYTE dir_bit = (current_level_code.enemy_directions >> k) & 1;
-            place_enemy_actor(k, tilemap_x, actual_y, dir_bit);
-        }
-    }
+    // clear_all_enemy_actors();
+    // for (UBYTE k = 0; k < 5; k++)
+    // {
+    //     if (current_level_code.enemy_positions[k] != 255)
+    //     {
+    //         UBYTE row = get_enemy_row_from_position(k);
+    //         UBYTE col = current_level_code.enemy_positions[k];
+    //         UBYTE tilemap_x = PLATFORM_X_MIN + col;
+    //         UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
+    //         UBYTE dir_bit = (current_level_code.enemy_directions >> k) & 1;
+    //         place_enemy_actor(k, tilemap_x, actual_y, dir_bit);
+    //     }
+    // }
 }
 
 // ============================================================================
@@ -515,17 +515,10 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
 }
 
 // Clear all enemy actors from the screen
-void clear_all_enemy_actors(void) BANKED
-{
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
-    {
-        clear_enemy_actor(i);
-    }
-}
-
-// ============================================================================
-// VM WRAPPER FUNCTIONS
-// ============================================================================
-
-// No VM functions needed - all enemy operations are handled through
-// handle_enemy_data_edit() called from code_level_core.c
+// void clear_all_enemy_actors(void) BANKED
+// {
+//     for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+//     {
+//         clear_enemy_actor(i);
+//     }
+// }

@@ -367,21 +367,21 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
             UBYTE next_col = get_next_valid_player_position(current_col);
             new_value = next_col;
         }
-        else if (char_index >= 17 && char_index <= 21)
-        {
-            // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
-            max_value = 40;
+        // else if (char_index >= 17 && char_index <= 21)
+        // {
+        //     // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
+        //     max_value = 48;
 
-            // Cycle to next value
-            if (current_value >= max_value)
-            {
-                new_value = 0; // Wrap to 0
-            }
-            else
-            {
-                new_value = current_value + 1;
-            }
-        }
+        //     // Cycle to next value
+        //     // if (current_value >= max_value)
+        //     // {
+        //     //     new_value = 0; // Wrap to 0
+        //     // }
+        //     // else
+        //     // {
+        //     new_value = current_value + 1;
+        //     // }
+        // }
         else if (char_index == 22 || char_index == 23)
         {
             // Enemy mask values (BASE32 system): 0-31
