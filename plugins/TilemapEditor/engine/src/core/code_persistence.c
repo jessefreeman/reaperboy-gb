@@ -331,24 +331,6 @@ void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED
     *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = has_data;
 }
 
-// VM wrapper functions for SRAM storage
-void vm_save_level_code_sram(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    save_level_code_to_sram();
-}
-
-void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED
-{
-    UBYTE success = load_level_code_from_sram();
-    *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = success;
-    if (success)
-    {
-        reconstruct_tilemap_from_level_code(); // Apply patterns to tilemap using brush logic
-        force_complete_level_code_display();   // Force complete redraw after loading
-    }
-}
-
 // Advanced character cycling function
 void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
 {

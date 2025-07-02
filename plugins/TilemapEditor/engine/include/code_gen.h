@@ -35,10 +35,6 @@ UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
 // VM WRAPPER FUNCTIONS - Coordination entry points for GB Studio scripts
 // ============================================================================
 
-// Main coordination VM wrappers
-void vm_save_level_code(SCRIPT_CTX *THIS) BANKED;
-void vm_load_level_code(SCRIPT_CTX *THIS) BANKED;
-
 // Test VM wrappers
 void vm_init_test_patterns(SCRIPT_CTX *THIS) BANKED;
 void vm_test_cycle_enemy_patterns(SCRIPT_CTX *THIS) BANKED;

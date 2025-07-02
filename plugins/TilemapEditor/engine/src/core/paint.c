@@ -902,82 +902,8 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
 }
 
 // ============================================================================
-// MAP SETUP - Streamlined actor placement
+// VM WRAPPER FUNCTIONS - Essential only
 // ============================================================================
-
-void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED
-{
-    (void)idx;
-
-    uint16_t varId = *(uint16_t *)VM_REF_TO_PTR(FN_ARG0);
-    UBYTE playerId = 0;
-    UBYTE exitId = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
-    UBYTE enemies[5] = {
-        *(UBYTE *)VM_REF_TO_PTR(FN_ARG2), *(UBYTE *)VM_REF_TO_PTR(FN_ARG3),
-        *(UBYTE *)VM_REF_TO_PTR(FN_ARG4), *(UBYTE *)VM_REF_TO_PTR(FN_ARG5),
-        *(UBYTE *)VM_REF_TO_PTR(FN_ARG6)};
-
-    UBYTE enemy_count = 0, playerPlaced = 0, exitPlaced = 0;
-    UBYTE playerX = 0, playerRow = 0;
-
-    // Single pass through the map
-    for (UBYTE yy = 10; yy <= 19 && !(playerPlaced && exitPlaced && enemy_count >= 5); ++yy)
-    {
-        for (UBYTE xx = 2; xx < 22 && !(playerPlaced && exitPlaced && enemy_count >= 5); ++xx)
-        {
-            UBYTE tid = sram_map_data[METATILE_MAP_OFFSET(xx, yy)];
-            UBYTE tt = get_tile_type(tid); // Place player
-            if (!playerPlaced && tt == BRUSH_TILE_PLAYER)
-            {
-                actor_t *p = &actors[playerId];
-                p->pos.x = TO_FP(xx * 8);
-                p->pos.y = TO_FP(0);
-                activate_actor(p);
-                replace_meta_tile(xx, yy, TILE_EMPTY, 1);
-                playerPlaced = 1;
-                playerX = xx;
-                playerRow = yy;
-                continue;
-            }
-
-            // Place exit (after player is placed)
-            // if (playerPlaced && !exitPlaced && xx == playerX && yy > playerRow && tt == BRUSH_TILE_PLATFORM)
-            // {
-            //     UBYTE placeX = (tid == TILE_PLATFORM_RIGHT) ? xx - 1 : xx;
-            //     actor_t *ex = &actors[exitId];
-            //     ex->pos.x = TO_FP(placeX * 8);
-            //     ex->pos.y = TO_FP((yy - 1) * 8);
-            //     activate_actor(ex);
-
-            //     // Place exit tiles
-            //     replace_meta_tile(placeX, yy - 1, TILE_EXIT_BOTTOM_LEFT, 1);
-            //     replace_meta_tile(placeX + 1, yy - 1, TILE_EXIT_BOTTOM_RIGHT, 1);
-            //     replace_meta_tile(placeX, yy - 2, TILE_EXIT_TOP_LEFT, 1);
-            //     replace_meta_tile(placeX + 1, yy - 2, TILE_EXIT_TOP_RIGHT, 1);
-            //     exitPlaced = 1;
-            // } // Place enemies
-            if (enemy_count < 5 && (tt == BRUSH_TILE_ENEMY_R || tt == BRUSH_TILE_ENEMY_L))
-            {
-                actor_t *e = &actors[enemies[enemy_count]];
-                INT16 fx = (tt == BRUSH_TILE_ENEMY_L) ? (xx * 8 - 8) : (xx * 8);
-                e->pos.x = TO_FP(fx);
-                e->pos.y = TO_FP(yy * 8);
-                actor_set_dir(e, tt == BRUSH_TILE_ENEMY_R ? DIRECTION_RIGHT : DIRECTION_LEFT, TRUE);
-                activate_actor(e);
-                replace_meta_tile(xx, yy, TILE_EMPTY, 1);
-                enemy_count++;
-            }
-        }
-    }
-
-    // Deactivate unused enemy actors
-    for (UBYTE ec = enemy_count; ec < 5; ++ec)
-    {
-        deactivate_actor(&actors[enemies[ec]]);
-    }
-
-    script_memory[varId] = enemy_count;
-}
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS - Essential only

@@ -94,21 +94,6 @@ UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED
 // VM WRAPPER FUNCTIONS - Entry points for GB Studio scripts
 // ============================================================================
 
-// VM wrapper for saving level code
-void vm_save_level_code(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    save_level_code_to_variables();
-}
-
-// VM wrapper for loading level code
-void vm_load_level_code(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    load_level_code_from_variables();
-    regenerate_complete_level();
-}
-
 // ============================================================================
 // LEGACY COMPATIBILITY FUNCTIONS - Maintain backward compatibility
 // ============================================================================

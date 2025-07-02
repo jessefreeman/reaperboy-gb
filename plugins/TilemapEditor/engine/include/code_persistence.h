@@ -44,11 +44,7 @@ UBYTE load_level_code_from_sram(void) BANKED;
 UBYTE calculate_level_code_checksum(sram_level_code_t *data) BANKED;
 
 // VM wrapper functions
-void vm_save_level_code(SCRIPT_CTX *THIS) BANKED;
-void vm_load_level_code(SCRIPT_CTX *THIS) BANKED;
 void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED;
-void vm_save_level_code_sram(SCRIPT_CTX *THIS) BANKED;
-void vm_load_level_code_sram(SCRIPT_CTX *THIS) BANKED;
 
 // Advanced character editing
 void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED;

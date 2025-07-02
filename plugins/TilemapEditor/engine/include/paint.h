@@ -92,7 +92,6 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED;
 void vm_paint(SCRIPT_CTX *THIS) BANKED;
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS) BANKED;
 void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED;
-void vm_setup_map(SCRIPT_CTX *THIS, INT16 idx) OLDCALL BANKED;
 
 // ============================================================================
 // EXIT POSITIONING FUNCTIONS
