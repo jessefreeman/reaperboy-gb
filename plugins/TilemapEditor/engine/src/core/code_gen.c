@@ -26,18 +26,6 @@
 // COORDINATION FUNCTIONS - High-level operations that use multiple systems
 // ============================================================================
 
-// Initialize the entire level code system
-void init_level_code_system(void) BANKED
-{
-    // Initialize all subsystems
-    init_level_code();
-    // Note: other system init functions are called from their respective modules as needed
-
-    // Set up initial state
-    clear_level_code_display();
-    update_complete_level_code();
-}
-
 // Complete level regeneration - coordinates all systems
 void regenerate_complete_level(void) BANKED
 {
@@ -106,20 +94,6 @@ UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED
 // VM WRAPPER FUNCTIONS - Entry points for GB Studio scripts
 // ============================================================================
 
-// VM wrapper for level code initialization
-void vm_init_level_code_system(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    init_level_code_system();
-}
-
-// VM wrapper for complete level regeneration
-void vm_regenerate_complete_level(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    regenerate_complete_level();
-}
-
 // VM wrapper for saving level code
 void vm_save_level_code(SCRIPT_CTX *THIS) BANKED
 {
@@ -133,20 +107,6 @@ void vm_load_level_code(SCRIPT_CTX *THIS) BANKED
     THIS; // Suppress unreferenced parameter warning
     load_level_code_from_variables();
     regenerate_complete_level();
-}
-
-// VM wrapper for displaying level code
-void vm_display_level_code(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    update_complete_level_code();
-}
-
-// VM wrapper for clearing level code display
-void vm_clear_level_code_display(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    clear_level_code_display();
 }
 
 // ============================================================================

@@ -14,7 +14,7 @@
 // Position alphabet (41 symbols): '0' = no enemy, then 1-40 for positions
 const char POS41[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%";
 
-// Base-32 alphabet for masks (32 symbols): 0-31 values  
+// Base-32 alphabet for masks (32 symbols): 0-31 values
 const char BASE32[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 
 // Tile mappings for display
@@ -338,8 +338,10 @@ void decode_enemy_data_from_level_code(const char *enemy_chars) BANKED
     UBYTE odd_mask = find_base32_index(enemy_chars[5]); // Character 22
     UBYTE dir_mask = find_base32_index(enemy_chars[6]); // Character 23
 
-    if (odd_mask == 255) odd_mask = 0;
-    if (dir_mask == 255) dir_mask = 0;
+    if (odd_mask == 255)
+        odd_mask = 0;
+    if (dir_mask == 255)
+        dir_mask = 0;
 
     // Clear enemy data
     current_level_code.enemy_directions = 0;
@@ -525,25 +527,5 @@ void clear_all_enemy_actors(void) BANKED
 // VM WRAPPER FUNCTIONS
 // ============================================================================
 
-void vm_extract_enemy_data(SCRIPT_CTX *THIS) BANKED
-{
-    (void)THIS;
-    extract_enemy_data();
-}
-
-void vm_get_enemy_encoding_info(SCRIPT_CTX *THIS) BANKED
-{
-    // Store current enemy encoding results in script variables
-    *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = encode_enemy_positions();  // Character 17
-    *(UWORD *)VM_REF_TO_PTR(FN_ARG1) = encode_enemy_details_1();  // Character 18
-    *(UWORD *)VM_REF_TO_PTR(FN_ARG2) = encode_enemy_details_2();  // Character 19
-    *(UWORD *)VM_REF_TO_PTR(FN_ARG3) = encode_enemy_position_4(); // Character 20
-
-    // Additional info if needed
-    if (FN_ARG4 != 0)
-        *(UWORD *)VM_REF_TO_PTR(FN_ARG4) = encode_enemy_position_5(); // Character 21
-    if (FN_ARG5 != 0)
-        *(UWORD *)VM_REF_TO_PTR(FN_ARG5) = encode_odd_mask_value(); // Character 22
-    if (FN_ARG6 != 0)
-        *(UWORD *)VM_REF_TO_PTR(FN_ARG6) = encode_enemy_directions(); // Character 23
-}
+// No VM functions needed - all enemy operations are handled through
+// handle_enemy_data_edit() called from code_level_core.c

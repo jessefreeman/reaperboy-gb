@@ -75,7 +75,7 @@ void clear_all_enemy_actors(void) BANKED;
 // VM WRAPPER FUNCTIONS
 // ============================================================================
 
-void vm_extract_enemy_data(SCRIPT_CTX *THIS) BANKED;
-void vm_get_enemy_encoding_info(SCRIPT_CTX *THIS) BANKED;
+// No VM functions needed - all enemy operations are handled through
+// handle_enemy_data_edit() called from code_level_core.c
 
 #endif // CODE_ENEMY_SYSTEM_H

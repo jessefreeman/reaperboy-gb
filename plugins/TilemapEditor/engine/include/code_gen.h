@@ -22,7 +22,6 @@
 // ============================================================================
 
 // Main coordination functions
-void init_level_code_system(void) BANKED;
 void regenerate_complete_level(void) BANKED;
 void handle_platform_change(UBYTE block_index, UBYTE pattern_id) BANKED;
 void handle_level_code_edit(UBYTE char_index, UBYTE new_value) BANKED;
@@ -37,12 +36,8 @@ UBYTE get_zone_index_from_tile(UBYTE x, UBYTE y) BANKED;
 // ============================================================================
 
 // Main coordination VM wrappers
-void vm_init_level_code_system(SCRIPT_CTX *THIS) BANKED;
-void vm_regenerate_complete_level(SCRIPT_CTX *THIS) BANKED;
 void vm_save_level_code(SCRIPT_CTX *THIS) BANKED;
 void vm_load_level_code(SCRIPT_CTX *THIS) BANKED;
-void vm_display_level_code(SCRIPT_CTX *THIS) BANKED;
-void vm_clear_level_code_display(SCRIPT_CTX *THIS) BANKED;
 
 // Test VM wrappers
 void vm_init_test_patterns(SCRIPT_CTX *THIS) BANKED;
