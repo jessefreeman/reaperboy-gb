@@ -153,26 +153,26 @@ void vm_clear_level_code_display(SCRIPT_CTX *THIS) BANKED
 // LEGACY COMPATIBILITY FUNCTIONS - Maintain backward compatibility
 // ============================================================================
 
-// Legacy function names that may be called from existing scripts
-void display_level_code(void) BANKED
-{
-    update_complete_level_code();
-}
+// // Legacy function names that may be called from existing scripts
+// void display_level_code(void) BANKED
+// {
+//     update_complete_level_code();
+// }
 
-void save_current_level_code(void) BANKED
-{
-    save_level_code_to_variables();
-}
+// void save_current_level_code(void) BANKED
+// {
+//     save_level_code_to_variables();
+// }
 
-void load_saved_level_code(void) BANKED
-{
-    load_level_code_from_variables();
-    regenerate_complete_level();
-}
+// void load_saved_level_code(void) BANKED
+// {
+//     load_level_code_from_variables();
+//     regenerate_complete_level();
+// }
 
-// Missing VM wrapper function
-void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED
-{
-    THIS; // Suppress unreferenced parameter warning
-    draw_segment_ids();
-}
+// // Missing VM wrapper function
+// void vm_draw_segment_ids(SCRIPT_CTX *THIS) BANKED
+// {
+//     THIS; // Suppress unreferenced parameter warning
+//     draw_segment_ids();
+// }

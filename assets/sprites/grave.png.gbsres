@@ -11,73 +11,73 @@
       "flipLeft": false,
       "animations": [
         {
-          "id": "fc813d9a-cd71-4845-8b8e-590c5392013f",
+          "id": "cb4c8c11-4cd6-45e6-8836-40b991282781",
           "frames": [
             {
-              "id": "78c2c1a6-0bd5-4f7e-aae8-0f7affd79e6a",
+              "id": "0e02b304-5395-4f64-b640-cb0f0f4c7fde",
               "tiles": []
             }
           ]
         },
         {
-          "id": "0ba4497f-a563-4093-bf78-7658ba6f2cd6",
+          "id": "cbaa11e0-6a75-4e65-bc0d-ac187b3f60f5",
           "frames": [
             {
-              "id": "62364a6b-f43c-4787-86af-60fc09344a28",
+              "id": "65ba7021-2e06-44cc-b27a-5f5624820ce2",
               "tiles": []
             }
           ]
         },
         {
-          "id": "8d8d3c4f-6129-433c-a11a-5f062e369f17",
+          "id": "9e2688b3-0860-4c0f-b0df-c5cd17c77d12",
           "frames": [
             {
-              "id": "d8d89a0d-87d1-43e1-9571-74342ae92581",
+              "id": "2f7e6676-b67a-4a8b-9e1a-0297ad9768d8",
               "tiles": []
             }
           ]
         },
         {
-          "id": "1aae1e09-9380-4a24-93f1-89fca5be5fc2",
+          "id": "2ced8063-6e6c-40ab-953d-2207d28f1727",
           "frames": [
             {
-              "id": "0dc45ca4-4ece-417d-828a-0d157d079fbd",
+              "id": "6b993ef0-5c56-46f9-9d93-af843ed93b16",
               "tiles": []
             }
           ]
         },
         {
-          "id": "81cafa7a-39e3-46c1-a4c8-3cfabab2231f",
+          "id": "8a777fd2-672b-4a3a-ae72-74d4d945a4cf",
           "frames": [
             {
-              "id": "d248a859-0e8e-4c15-aff1-3c642e44c9fe",
+              "id": "c402f5b6-48ce-4076-b252-11d03ac03b85",
               "tiles": []
             }
           ]
         },
         {
-          "id": "92029c54-eb39-4633-bafc-dc4fee8fb555",
+          "id": "39662c0b-3c2c-4c8f-a163-90641996b96d",
           "frames": [
             {
-              "id": "9fbb8923-d367-424a-a0e2-d80e7bd95b1e",
+              "id": "fad395b2-2ec6-4f61-8c27-484e4857f6b0",
               "tiles": []
             }
           ]
         },
         {
-          "id": "260a4127-35de-4673-a9cb-b27df6e2156e",
+          "id": "9dad13c0-60c1-4335-a79b-32329803ec3f",
           "frames": [
             {
-              "id": "963fd65c-741e-42f2-9a15-7be05f697ee2",
+              "id": "238c88a5-8888-4217-855f-53be6beb6bc2",
               "tiles": []
             }
           ]
         },
         {
-          "id": "d2834226-1e91-4078-8b31-79201019e91c",
+          "id": "e5f77b78-3d56-467e-ad2a-83a5ac9de68f",
           "frames": [
             {
-              "id": "3d6e26c8-b8cf-4bab-bf73-9f1a1717b6f7",
+              "id": "46041814-529f-465f-97c3-7b845f4f101f",
               "tiles": []
             }
           ]

@@ -7,7 +7,7 @@
   "actors": {
     "0": {
       "id": "0",
-      "name": "A_SELECTOR"
+      "name": "Actor A"
     }
   },
   "symbol": "script_7",
@@ -39,20 +39,12 @@
             "id": "f72bf403-7ff0-4a2c-abe9-39f831c06a5a"
           },
           {
-            "command": "EVENT_DRAW_SEGMENTS",
-            "args": {
-              "patternVar": "9",
-              "variantVar": "10",
-              "__collapse": true
-            },
-            "id": "54411b8c-067b-4bc1-9d57-cd19bc0c8435"
-          },
-          {
             "command": "EVENT_CALL_CUSTOM_EVENT",
             "args": {
               "customEventId": "f032a278-b946-4a11-850a-f5e6e1a1bf9c",
               "$actor[0]$": "0",
-              "__collapse": true
+              "__collapse": true,
+              "__comment": false
             },
             "id": "160cc248-8122-4e5e-a064-495b5379c9cc"
           }
@@ -70,7 +62,7 @@
                 "value": "4"
               },
               "debug_var": "27",
-              "__collapse": true
+              "__collapse": false
             },
             "id": "023b80d1-44f5-44a3-8a7f-d44d6a58efbb"
           }
