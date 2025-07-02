@@ -17,7 +17,7 @@
 #define SEGMENT_WIDTH 5
 #define SEGMENT_HEIGHT 2
 #define TOTAL_BLOCKS 16
-#define MAX_ENEMIES 6
+#define MAX_ENEMIES 5
 
 // Level code display settings - 24 character display system
 #define LEVEL_CODE_START_X 5

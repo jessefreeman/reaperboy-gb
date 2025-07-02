@@ -25,7 +25,7 @@ const UBYTE POS41_TILE_MAP[] = {
     58, 59, 60, 61, 62, 63, 64, 65, 66, 67, // 'A'-'J' (tiles 58-67)
     68, 69, 70, 71, 72, 73, 74, 75, 76, 77, // 'K'-'T' (tiles 68-77)
     78, 79, 80, 81, 82, 83,                 // 'U'-'Z' (tiles 78-83)
-    33, 64, 35, 36, 37                      // '!@#$%' (tiles 33, 64, 35, 36, 37)
+    84, 85, 86, 87, 88                      // '!@#$%' (tiles 84-88) - Extended beyond Z
 };
 
 const UBYTE BASE32_TILE_MAP[] = {
@@ -34,6 +34,13 @@ const UBYTE BASE32_TILE_MAP[] = {
     68, 69, 70, 71, 72, 73, 74, 75, 76, 77, // 'K'-'T' (tiles 68-77)
     78, 79                                  // 'U'-'V' (tiles 78-79)
 };
+
+// ============================================================================
+// ENEMY ROW MAPPING
+// ============================================================================
+
+// Maps enemy index to row (0-3). This defines which row each enemy is assigned to.
+const UBYTE ENEMY_ROW_MAP[MAX_ENEMIES] = {0, 1, 2, 3, 0}; // 5 enemies: 0→row0, 1→row1, 2→row2, 3→row3, 4→row0
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -121,27 +128,10 @@ void extract_enemy_data(void) BANKED
 // Get the row (0-3) for an enemy at a given position index
 UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 {
-    if (enemy_index >= MAX_ENEMIES || current_level_code.enemy_positions[enemy_index] == 255)
-        return 255; // Invalid or no enemy
+    if (enemy_index >= MAX_ENEMIES)
+        return 255; // Invalid enemy index
 
-    // For now, scan the tilemap to find which row this enemy is actually on
-    UBYTE col = current_level_code.enemy_positions[enemy_index];
-    UBYTE tilemap_x = PLATFORM_X_MIN + col;
-
-    // Check each of the 4 possible enemy rows
-    for (UBYTE row = 0; row < 4; row++)
-    {
-        UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-        UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(tilemap_x, actual_y)];
-        UBYTE tile_type = get_tile_type(tile);
-
-        if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
-        {
-            return row; // Found the enemy in this row
-        }
-    }
-
-    return 0; // Default to row 0 if not found
+    return ENEMY_ROW_MAP[enemy_index];
 }
 
 // Encode enemy position using new POS41 system
@@ -154,9 +144,6 @@ char encode_enemy_position(UBYTE enemy_index) BANKED
 
     UBYTE col = current_level_code.enemy_positions[enemy_index];
     UBYTE row = get_enemy_row_from_position(enemy_index);
-
-    if (row == 255)
-        return POS41[0]; // Safety check
 
     // Calculate index: 1 + row*10 + anchor (where anchor = col/2)
     UBYTE anchor = col / 2;            // 0-9 (even columns: 0,2,4...18 map to 0,1,2...9)
@@ -205,12 +192,33 @@ void decode_enemy_position(UBYTE enemy_index, char pos_char, UBYTE odd_bit, UBYT
     if (enemy_index >= MAX_ENEMIES)
         return;
 
+    // Clear previous enemy placement if it exists
+    if (current_level_code.enemy_positions[enemy_index] != 255)
+    {
+        // Get the old row for this enemy and clear the tile
+        UBYTE old_row = get_enemy_row_from_position(enemy_index);
+        if (old_row != 255)
+        {
+            UBYTE old_col = current_level_code.enemy_positions[enemy_index];
+            UBYTE old_tilemap_x = PLATFORM_X_MIN + old_col;
+            UBYTE old_actual_y = PLATFORM_Y_MIN + old_row * SEGMENT_HEIGHT;
+            UBYTE old_tile = sram_map_data[METATILE_MAP_OFFSET(old_tilemap_x, old_actual_y)];
+            UBYTE old_tile_type = get_tile_type(old_tile);
+
+            if (old_tile_type == BRUSH_TILE_ENEMY_L || old_tile_type == BRUSH_TILE_ENEMY_R)
+            {
+                replace_meta_tile(old_tilemap_x, old_actual_y, 0, 1); // Clear old enemy tile
+            }
+        }
+    }
+
     UBYTE idx = find_pos41_index(pos_char);
 
     if (idx == 255 || idx == 0)
     {
-        // Invalid character or '0' = no enemy
+        // Invalid character or '0' = no enemy - clear the enemy
         current_level_code.enemy_positions[enemy_index] = 255;
+        clear_enemy_actor(enemy_index);
         return;
     }
 
@@ -222,9 +230,10 @@ void decode_enemy_position(UBYTE enemy_index, char pos_char, UBYTE odd_bit, UBYT
     // Calculate actual column: anchor*2 + odd_bit
     UBYTE col = anchor * 2 + odd_bit;
 
-    if (col > 19) // Safety check
+    if (col > 19 || row > 3) // Safety check
     {
         current_level_code.enemy_positions[enemy_index] = 255;
+        clear_enemy_actor(enemy_index);
         return;
     }
 
@@ -241,13 +250,15 @@ void decode_enemy_position(UBYTE enemy_index, char pos_char, UBYTE odd_bit, UBYT
         current_level_code.enemy_directions &= ~(1 << enemy_index);
     }
 
-    // TODO: Place the enemy on the tilemap at the correct row and column
-    // For now, we'll place it on row 0 (actual_y = PLATFORM_Y_MIN)
+    // Place the enemy on the tilemap at the correct row and column
     UBYTE tilemap_x = PLATFORM_X_MIN + col;
     UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-    UBYTE enemy_tile = dir_bit ? BRUSH_TILE_ENEMY_L : BRUSH_TILE_ENEMY_R;
+    UBYTE enemy_tile = dir_bit ? TILE_LEFT_ENEMY : TILE_RIGHT_ENEMY;
 
     replace_meta_tile(tilemap_x, actual_y, enemy_tile, 1);
+
+    // Update the enemy actor position
+    place_enemy_actor(enemy_index, tilemap_x, actual_y, dir_bit);
 }
 
 // Decode full enemy data from 7-character level code section
@@ -598,104 +609,104 @@ void vm_increment_enemy_level_code_char(SCRIPT_CTX *THIS) BANKED
 {
     UBYTE char_index = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
 
-    if (char_index >= 17 && char_index <= 23)
+    if (char_index < 17 || char_index > 23)
+        return; // Not an enemy character
+
+    // Get current value
+    UBYTE current_val = 0;
+    UBYTE max_val;
+
+    if (char_index <= 21) // Position characters (17-21)
     {
-        // Get current value
-        UBYTE current_val = 0;
-        UBYTE max_val = 40; // Default to POS41 range
-
-        if (char_index >= 17 && char_index <= 21) // Position characters
+        switch (char_index)
         {
-            switch (char_index)
-            {
-            case 17:
-                current_val = encode_enemy_positions();
-                break;
-            case 18:
-                current_val = encode_enemy_details_1();
-                break;
-            case 19:
-                current_val = encode_enemy_details_2();
-                break;
-            case 20:
-                current_val = encode_enemy_position_4();
-                break;
-            case 21:
-                current_val = encode_enemy_position_5();
-                break;
-            }
-            max_val = 40; // POS41 range
+        case 17:
+            current_val = encode_enemy_positions();
+            break;
+        case 18:
+            current_val = encode_enemy_details_1();
+            break;
+        case 19:
+            current_val = encode_enemy_details_2();
+            break;
+        case 20:
+            current_val = encode_enemy_position_4();
+            break;
+        case 21:
+            current_val = encode_enemy_position_5();
+            break;
         }
-        else // Mask characters (22-23)
-        {
-            switch (char_index)
-            {
-            case 22:
-                current_val = encode_odd_mask_value();
-                break;
-            case 23:
-                current_val = encode_enemy_directions();
-                break;
-            }
-            max_val = 31; // BASE32 range
-        }
-
-        // Increment with wrap-around
-        UBYTE new_val = (current_val + 1) % (max_val + 1);
-        handle_enemy_data_edit(char_index, new_val);
+        max_val = 40; // POS41 range
     }
+    else // Mask characters (22-23)
+    {
+        switch (char_index)
+        {
+        case 22:
+            current_val = encode_odd_mask_value();
+            break;
+        case 23:
+            current_val = encode_enemy_directions();
+            break;
+        }
+        max_val = 31; // BASE32 range
+    }
+
+    // Increment with wrap-around
+    UBYTE new_val = (current_val + 1) % (max_val + 1);
+    handle_enemy_data_edit(char_index, new_val);
 }
 
 void vm_decrement_enemy_level_code_char(SCRIPT_CTX *THIS) BANKED
 {
     UBYTE char_index = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
 
-    if (char_index >= 17 && char_index <= 23)
+    if (char_index < 17 || char_index > 23)
+        return; // Not an enemy character
+
+    // Get current value
+    UBYTE current_val = 0;
+    UBYTE max_val;
+
+    if (char_index <= 21) // Position characters (17-21)
     {
-        // Get current value
-        UBYTE current_val = 0;
-        UBYTE max_val = 40; // Default to POS41 range
-
-        if (char_index >= 17 && char_index <= 21) // Position characters
+        switch (char_index)
         {
-            switch (char_index)
-            {
-            case 17:
-                current_val = encode_enemy_positions();
-                break;
-            case 18:
-                current_val = encode_enemy_details_1();
-                break;
-            case 19:
-                current_val = encode_enemy_details_2();
-                break;
-            case 20:
-                current_val = encode_enemy_position_4();
-                break;
-            case 21:
-                current_val = encode_enemy_position_5();
-                break;
-            }
-            max_val = 40; // POS41 range
+        case 17:
+            current_val = encode_enemy_positions();
+            break;
+        case 18:
+            current_val = encode_enemy_details_1();
+            break;
+        case 19:
+            current_val = encode_enemy_details_2();
+            break;
+        case 20:
+            current_val = encode_enemy_position_4();
+            break;
+        case 21:
+            current_val = encode_enemy_position_5();
+            break;
         }
-        else // Mask characters (22-23)
-        {
-            switch (char_index)
-            {
-            case 22:
-                current_val = encode_odd_mask_value();
-                break;
-            case 23:
-                current_val = encode_enemy_directions();
-                break;
-            }
-            max_val = 31; // BASE32 range
-        }
-
-        // Decrement with wrap-around
-        UBYTE new_val = (current_val == 0) ? max_val : (current_val - 1);
-        handle_enemy_data_edit(char_index, new_val);
+        max_val = 40; // POS41 range
     }
+    else // Mask characters (22-23)
+    {
+        switch (char_index)
+        {
+        case 22:
+            current_val = encode_odd_mask_value();
+            break;
+        case 23:
+            current_val = encode_enemy_directions();
+            break;
+        }
+        max_val = 31; // BASE32 range
+    }
+
+    // Decrement with wrap-around
+    UBYTE new_val = (current_val == 0) ? max_val : (current_val - 1);
+    handle_enemy_data_edit(char_index, new_val);
 }
 
 // Test functions for validating enemy level code editing
@@ -815,80 +826,68 @@ void test_cycle_enemy_directions(void) BANKED
 }
 
 // ============================================================================
-// ACTOR MANAGEMENT FUNCTIONS FOR ENEMY DECODING (IMPLEMENTATIONS)
+// ACTOR MANAGEMENT FUNCTIONS
 // ============================================================================
 
-// Convert subpixels (from paint.c)
-#define TO_FP(n) ((INT16)((n) << 4))
+// External references from paint.c
+extern UBYTE paint_enemy_ids[5];
+extern UBYTE paint_enemy_slots_used[5];
+extern actor_t actors[];
+extern void activate_actor(actor_t *actor) BANKED;
+extern void deactivate_actor(actor_t *actor) BANKED;
+extern void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 
-// Direction constants from GB Studio
+// Direction constants
 #define DIRECTION_DOWN 0
 #define DIRECTION_RIGHT 1
 #define DIRECTION_UP 2
 #define DIRECTION_LEFT 3
 
-// External references for actor management
-extern UBYTE paint_enemy_ids[5];
-extern UBYTE paint_enemy_slots_used[5];
-extern actor_t actors[];
+// Convert to fixed point (from paint.c)
+#define TO_FP(n) ((INT16)((n) << 4))
 
-// External function declarations we need
-extern void activate_actor(actor_t *actor) BANKED;
-extern void deactivate_actor(actor_t *actor) BANKED;
-extern void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
-
-// Clear all enemy actors and tiles when decoding new level code
-void clear_all_enemy_actors(void) BANKED
+// Clear a specific enemy actor
+void clear_enemy_actor(UBYTE enemy_index) BANKED
 {
-    for (UBYTE i = 0; i < 5; i++)
+    if (enemy_index >= MAX_ENEMIES)
+        return;
+
+    if (paint_enemy_slots_used[enemy_index])
     {
-        if (paint_enemy_slots_used[i])
-        {
-            actor_t *enemy = &actors[paint_enemy_ids[i]];
-
-            // Convert actor position from fixed point to tile coordinates
-            UBYTE old_tile_x = (enemy->pos.x >> 4) / 8;
-            UBYTE old_tile_y = (enemy->pos.y >> 4) / 8;
-
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                old_tile_x += 1;
-            }
-
-            // Clear the old tile (set to empty)
-            replace_meta_tile(old_tile_x, old_tile_y, 0, 1);
-
-            // Deactivate the actor
-            deactivate_actor(enemy);
-            paint_enemy_slots_used[i] = 0;
-        }
+        actor_t *enemy = &actors[paint_enemy_ids[enemy_index]];
+        deactivate_actor(enemy);
+        paint_enemy_slots_used[enemy_index] = 0;
     }
 }
 
-// Place an enemy actor at the specified position with direction
-void place_enemy_actor(UBYTE enemy_index, UBYTE col, UBYTE row, UBYTE direction) BANKED
+// Place an enemy actor at a specific position
+void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYTE direction) BANKED
 {
-    if (enemy_index >= 5) // Only 5 enemy slots available
+    if (enemy_index >= MAX_ENEMIES)
         return;
 
-    // Calculate tilemap position
-    UBYTE tilemap_x = PLATFORM_X_MIN + col;
-    UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-
-    // Place the tile
-    UBYTE enemy_tile = direction ? BRUSH_TILE_ENEMY_L : BRUSH_TILE_ENEMY_R;
-    replace_meta_tile(tilemap_x, actual_y, enemy_tile, 1);
-
-    // Set up the actor
+    // Set up the enemy actor
     actor_t *enemy = &actors[paint_enemy_ids[enemy_index]];
     enemy->pos.x = TO_FP(tilemap_x * 8);
-    enemy->pos.y = TO_FP(actual_y * 8);
+    enemy->pos.y = TO_FP(tilemap_y * 8);
     activate_actor(enemy);
 
-    // Set direction (DIRECTION_LEFT = 3, DIRECTION_RIGHT = 1)
+    // Set direction: direction=1 means left-facing, direction=0 means right-facing
     UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
     actor_set_dir(enemy, actor_dir, 1); // 1 = moving/active
 
     paint_enemy_slots_used[enemy_index] = 1;
 }
+
+// Clear all enemy actors from the screen
+void clear_all_enemy_actors(void) BANKED
+{
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        clear_enemy_actor(i);
+    }
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================

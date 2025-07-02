@@ -713,7 +713,7 @@
       "flipLeft": true
     }
   ],
-  "numTiles": 4,
+  "numTiles": 9,
   "canvasWidth": 8,
   "canvasHeight": 16,
   "boundsX": 0,
@@ -722,7 +722,7 @@
   "boundsHeight": 8,
   "animSpeed": 15,
   "filename": "enemy_walker.png",
-  "width": 64,
+  "width": 88,
   "height": 16,
-  "checksum": "60e917add992f4bde3307f3442130c7cac7ac315"
+  "checksum": "4eb2966cca1c0ee59bae630710a9803dc5058d51"
 }

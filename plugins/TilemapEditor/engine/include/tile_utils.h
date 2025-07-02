@@ -19,7 +19,7 @@
 
 // Character tile range constants for cycling
 #define TILE_CHAR_FIRST 48 // '0' at (0,3)
-#define TILE_CHAR_LAST 83  // 'Z' at (3,5)
+#define TILE_CHAR_LAST 88  // Extended past 'Z' to cover all 41 positions (was 83)
 
 // Brush tile type constants
 #define BRUSH_TILE_EMPTY 0

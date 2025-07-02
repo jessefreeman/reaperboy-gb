@@ -385,10 +385,25 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
             UBYTE next_col = get_next_valid_player_position(current_col);
             new_value = next_col;
         }
-        else if (char_index >= 17 && char_index <= 22)
+        else if (char_index >= 17 && char_index <= 21)
         {
-            // Enemy positions: 0-19 (0 means no enemy)
-            max_value = 19;
+            // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
+            max_value = 40;
+
+            // Cycle to next value
+            if (current_value >= max_value)
+            {
+                new_value = 0; // Wrap to 0
+            }
+            else
+            {
+                new_value = current_value + 1;
+            }
+        }
+        else if (char_index == 22 || char_index == 23)
+        {
+            // Enemy mask values (BASE32 system): 0-31
+            max_value = 31;
 
             // Cycle to next value
             if (current_value >= max_value)
@@ -485,10 +500,24 @@ void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
             UBYTE prev_col = get_previous_valid_player_position(current_col);
             new_value = prev_col;
         }
-        else if (char_index >= 17 && char_index <= 22)
+        else if (char_index >= 17 && char_index <= 21)
         {
-            // Enemy positions: 0-19 (0 means no enemy) - cycle in reverse
-            UBYTE max_value = 19;
+            // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy) - cycle in reverse
+            UBYTE max_value = 40;
+
+            if (current_value == 0)
+            {
+                new_value = max_value; // Wrap to max
+            }
+            else
+            {
+                new_value = current_value - 1;
+            }
+        }
+        else if (char_index == 22 || char_index == 23)
+        {
+            // Enemy mask values (BASE32 system): 0-31 - cycle in reverse
+            UBYTE max_value = 31;
 
             if (current_value == 0)
             {

@@ -68,6 +68,11 @@ UBYTE enemy_char_to_value(UBYTE tile_id) BANKED;
 // Row detection
 UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED;
 
+// Actor management
+void clear_enemy_actor(UBYTE enemy_index) BANKED;
+void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYTE direction) BANKED;
+void clear_all_enemy_actors(void) BANKED;
+
 // ============================================================================
 // LEGACY COMPATIBILITY FUNCTIONS
 // ============================================================================
