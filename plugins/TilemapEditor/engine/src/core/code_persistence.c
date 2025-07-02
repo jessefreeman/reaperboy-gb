@@ -369,18 +369,17 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         }
         else if (char_index >= 17 && char_index <= 21)
         {
-            // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
-            max_value = 48; // Allow up to 48 for testing
+            // Enemy positions (POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
+            max_value = 40; // Maximum valid enemy position value
 
-            // Cycle to next value - prevent wrapping for debugging
-            if (current_value < 48)
+            // Cycle to next value and wrap properly
+            if (current_value >= max_value)
             {
-                new_value = current_value + 1;
+                new_value = 0; // Wrap back to 0 (no enemy)
             }
             else
             {
-                // Stay at max value
-                new_value = current_value;
+                new_value = current_value + 1;
             }
         }
         else if (char_index == 22 || char_index == 23)
@@ -478,7 +477,7 @@ void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
         }
         else if (char_index >= 17 && char_index <= 21)
         {
-            // Enemy positions (NEW POS41 system): 0-40 (0 means no enemy) - cycle in reverse
+            // Enemy positions (POS41 system): 0-40 (0 means no enemy) - cycle in reverse
             UBYTE max_value = 40;
 
             if (current_value == 0)

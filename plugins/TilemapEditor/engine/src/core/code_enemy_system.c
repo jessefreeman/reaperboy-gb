@@ -11,9 +11,6 @@
 // ENEMY NUMERIC SYSTEM
 // ============================================================================
 
-// Maps enemy index to row (0-3)
-const UBYTE ENEMY_ROW_MAP[MAX_ENEMIES] = {0, 1, 2, 3, 0, 1};
-
 // Level code enemy system constants
 #define LEVEL_CODE_MAX_ENEMIES 5
 
@@ -38,7 +35,13 @@ UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 {
     if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
         return 0;
-    return ENEMY_ROW_MAP[enemy_index];
+
+    // Use the actual row from the level code
+    if (current_level_code.enemy_rows[enemy_index] != 255)
+        return current_level_code.enemy_rows[enemy_index];
+
+    // Default row if none is set
+    return enemy_index % 4; // Distribute across rows 0-3
 }
 
 // ============================================================================
@@ -54,6 +57,7 @@ void extract_enemy_data(void) BANKED
     for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255; // 255 = no enemy
+        current_level_code.enemy_rows[i] = 255;      // 255 = no enemy
     }
 
     UBYTE enemy_count = 0;
@@ -73,6 +77,7 @@ void extract_enemy_data(void) BANKED
             if ((tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R) && enemy_count < LEVEL_CODE_MAX_ENEMIES)
             {
                 current_level_code.enemy_positions[enemy_count] = col;
+                current_level_code.enemy_rows[enemy_count] = row; // Store the row too!
 
                 // Set direction bit (left = 1, right = 0)
                 if (tile_type == BRUSH_TILE_ENEMY_L)
@@ -240,8 +245,9 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
         return;
     }
 
-    // Store the position
+    // Store both row and column
     current_level_code.enemy_positions[enemy_index] = col;
+    current_level_code.enemy_rows[enemy_index] = row;
 
     // Set direction bit
     if (dir_bit)

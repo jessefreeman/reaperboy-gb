@@ -55,7 +55,8 @@ typedef struct
     UBYTE player_column;                   // Player starting column (0-19)
     UBYTE enemy_directions;                // Bitmask for enemy facing directions
     UBYTE enemy_types;                     // Bitmask for enemy types (walker/jumper)
-    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255 = empty) - must be last
+    UBYTE enemy_positions[MAX_ENEMIES];    // Enemy column positions (255 = empty)
+    UBYTE enemy_rows[MAX_ENEMIES];         // Enemy row positions (0-3, 255 = empty)
 } level_code_t;
 
 // Main level code data structure - shared across all modules
