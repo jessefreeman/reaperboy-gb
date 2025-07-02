@@ -535,7 +535,8 @@
                                       ],
                                       "override": true,
                                       "__scriptTabs": "press",
-                                      "__collapse": false
+                                      "__collapse": false,
+                                      "__comment": true
                                     },
                                     "children": {
                                       "true": [
@@ -862,16 +863,6 @@
                                 "__label": "Reload entire scene"
                               },
                               "id": "7b63beae-d644-46fe-95fd-2907d8b92730"
-                            },
-                            {
-                              "command": "EVENT_CALL_CUSTOM_EVENT",
-                              "args": {
-                                "customEventId": "43c5a146-9737-41d7-8a73-c7241fcb4493",
-                                "$actor[0]$": "d5043213-d1dc-4d02-b470-9d13dfa87721",
-                                "__label": "Toggle play event",
-                                "__comment": true
-                              },
-                              "id": "1c68a8ae-c047-4fe4-b11d-cdd3365af563"
                             }
                           ],
                           "false": []
