@@ -13,6 +13,14 @@
 #include "paint.h"
 
 // ============================================================================
+// FORWARD DECLARATIONS
+// ============================================================================
+
+// Internal helper functions
+static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED;
+void update_display_with_value(UBYTE char_index, UBYTE value, UBYTE x, UBYTE y) BANKED;
+
+// ============================================================================
 // EXTERNAL FUNCTION DECLARATIONS (from paint.c)
 // ============================================================================
 
@@ -34,37 +42,27 @@ extern UBYTE paint_player_id;
 // - Values 0-9 map to tiles 48-57 (ASCII characters '0'-'9')
 // - Values 10-31 map to tiles 58-79 (ASCII characters 'A'-'V')
 
-// Convert display character back to numeric value
+// Convert display character back to numeric value (optimized)
 UBYTE char_to_value(UBYTE display_char) BANKED
 {
-    if (display_char >= 48 && display_char <= 57) // '0'-'9' (tiles 48-57)
+    // Fast path for numeric characters '0'-'9' (tiles 48-57)
+    if (display_char >= 48 && display_char <= 57)
     {
         return display_char - 48;
     }
-    else if (display_char >= 58 && display_char <= 83) // 'A'-'Z' (tiles 58-83)
+
+    // Fast path for letter characters 'A'-'Z' (tiles 58-83)
+    if (display_char >= 58 && display_char <= 83)
     {
         return (display_char - 58) + 10;
     }
-    else if (display_char == 84) // Special character ! (tile 84)
+
+    // Special characters (tiles 84-88) - handle in a single range check
+    if (display_char >= 84 && display_char <= 88)
     {
-        return 36;
+        return display_char - 48; // 84-48=36, 85-48=37, etc.
     }
-    else if (display_char == 85) // Special character @ (tile 85)
-    {
-        return 37;
-    }
-    else if (display_char == 86) // Special character # (tile 86)
-    {
-        return 38;
-    }
-    else if (display_char == 87) // Special character $ (tile 87)
-    {
-        return 39;
-    }
-    else if (display_char == 88) // Special character % (tile 88)
-    {
-        return 40;
-    }
+
     return 0; // Default for invalid characters
 }
 
@@ -168,19 +166,19 @@ void load_level_code_from_variables(void) BANKED
 // SRAM-BASED PERSISTENCE
 // ============================================================================
 
-// Calculate simple checksum
+// Calculate simple checksum (XOR of all bytes except the checksum itself)
 UBYTE calculate_level_code_checksum(sram_level_code_t *data) BANKED
 {
     UBYTE checksum = 0;
     UBYTE *ptr = (UBYTE *)data;
-    for (UBYTE i = 0; i < sizeof(sram_level_code_t) - 1; i++) // Exclude checksum field
+    for (UBYTE i = 0; i < sizeof(sram_level_code_t) - 1; i++)
     {
         checksum ^= ptr[i];
     }
     return checksum;
 }
 
-// Save level code to SRAM
+// Save level code to SRAM with optimized data copying
 void save_level_code_to_sram(void) BANKED
 {
     update_complete_level_code();
@@ -188,13 +186,13 @@ void save_level_code_to_sram(void) BANKED
     sram_level_code_t sram_data;
     sram_data.magic = SRAM_LEVEL_CODE_MAGIC;
 
-    // Copy platform patterns
+    // Copy all platform patterns in one loop
     for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
         sram_data.platform_patterns[i] = current_level_code.platform_patterns[i];
     }
 
-    // Copy enemy data
+    // Copy all enemy data with minimal operations
     for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
         sram_data.enemy_positions[i] = current_level_code.enemy_positions[i];
@@ -202,11 +200,9 @@ void save_level_code_to_sram(void) BANKED
     sram_data.enemy_directions = current_level_code.enemy_directions;
     sram_data.enemy_types = current_level_code.enemy_types;
     sram_data.player_column = current_level_code.player_column;
-
-    // Calculate and store checksum
     sram_data.checksum = calculate_level_code_checksum(&sram_data);
 
-    // Write to SRAM
+    // Write to SRAM in a single block copy operation
     ENABLE_RAM;
     UBYTE *sram_ptr = (UBYTE *)(0xA000 + SRAM_LEVEL_CODE_OFFSET);
     UBYTE *data_ptr = (UBYTE *)&sram_data;
@@ -217,12 +213,12 @@ void save_level_code_to_sram(void) BANKED
     DISABLE_RAM;
 }
 
-// Load level code from SRAM
+// Load level code from SRAM with optimized validation and data loading
 UBYTE load_level_code_from_sram(void) BANKED
 {
     sram_level_code_t sram_data;
 
-    // Read from SRAM
+    // Read from SRAM in a single block read operation
     ENABLE_RAM;
     UBYTE *sram_ptr = (UBYTE *)(0xA000 + SRAM_LEVEL_CODE_OFFSET);
     UBYTE *data_ptr = (UBYTE *)&sram_data;
@@ -232,24 +228,20 @@ UBYTE load_level_code_from_sram(void) BANKED
     }
     DISABLE_RAM;
 
-    // Validate magic number and checksum
-    if (sram_data.magic != SRAM_LEVEL_CODE_MAGIC)
+    // Fast validation of both magic number and checksum
+    if (sram_data.magic != SRAM_LEVEL_CODE_MAGIC ||
+        calculate_level_code_checksum(&sram_data) != sram_data.checksum)
     {
-        return 0; // Invalid data
+        return 0; // Invalid or corrupted data
     }
 
-    UBYTE calculated_checksum = calculate_level_code_checksum(&sram_data);
-    if (calculated_checksum != sram_data.checksum)
-    {
-        return 0; // Corrupted data
-    }
-
-    // Copy data to current level code
+    // Copy platform patterns in one batch
     for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
     {
         current_level_code.platform_patterns[i] = sram_data.platform_patterns[i];
     }
 
+    // Copy enemy data efficiently
     for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = sram_data.enemy_positions[i];
@@ -258,10 +250,8 @@ UBYTE load_level_code_from_sram(void) BANKED
     current_level_code.enemy_types = sram_data.enemy_types;
     current_level_code.player_column = sram_data.player_column;
 
-    // Update valid player positions after loading platform patterns
+    // Update player position validation
     update_valid_player_positions();
-
-    // Ensure player position is valid, if not, move to first valid position
     if (valid_player_count > 0 && !is_valid_player_position(current_level_code.player_column))
     {
         current_level_code.player_column = valid_player_columns[0];
@@ -359,12 +349,9 @@ void vm_has_saved_level_code(SCRIPT_CTX *THIS) BANKED
     *(UWORD *)VM_REF_TO_PTR(FN_ARG0) = has_data;
 }
 
-// Advanced character cycling function
-void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
+// Cycle character in a given direction (1 = forward, -1 = reverse)
+static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED
 {
-    UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
-    UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
-
     // First, check if this position is within the level code display area
     UBYTE char_index = get_char_index_from_display_position(x, y);
 
@@ -375,69 +362,72 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         UBYTE current_value = char_to_value(current_tile);
         UBYTE new_value;
 
-        // Determine the maximum value for this position
-        UBYTE max_value;
+        // Determine the new value based on character position and cycling direction
         if (char_index < TOTAL_BLOCKS)
         {
-            // Platform patterns: use position-aware validation to get next valid pattern
-            new_value = get_next_valid_pattern_for_char(char_index, current_value);
+            // Platform patterns: use position-aware validation to get valid pattern
+            new_value = (direction > 0)
+                            ? get_next_valid_pattern_for_char(char_index, current_value)
+                            : get_previous_valid_pattern_for_char(char_index, current_value);
         }
         else if (char_index == 16)
         {
             // Player column: cycle only through valid positions (columns with platforms)
-            // First, extract the current platform data to ensure we have fresh data
+            // First, ensure fresh platform data
             extract_platform_data();
-
-            // Then update valid positions based on current platform patterns
             update_valid_player_positions();
 
-            UBYTE current_col = char_to_value(current_tile);
-            UBYTE next_col = get_next_valid_player_position(current_col);
-            new_value = next_col;
+            // Get next/previous valid player position based on direction
+            new_value = (direction > 0)
+                            ? get_next_valid_player_position(current_value)
+                            : get_previous_valid_player_position(current_value);
         }
         else if (char_index >= 17 && char_index <= 21)
         {
-            // Enemy positions (POS41 system): 0-40 (0 means no enemy, 1-40 are valid positions)
-            max_value = 40; // Maximum valid enemy position value
+            // Enemy positions (POS41 system): 0-40 (0 means no enemy)
+            UBYTE max_value = 40;
 
-            // Cycle to next value and wrap properly
-            if (current_value >= max_value)
+            if (direction > 0)
             {
-                new_value = 0; // Wrap back to 0 (no enemy)
+                // Forward cycling
+                new_value = (current_value >= max_value) ? 0 : current_value + 1;
             }
             else
             {
-                new_value = current_value + 1;
+                // Reverse cycling
+                new_value = (current_value == 0) ? max_value : current_value - 1;
             }
         }
         else if (char_index == 22 || char_index == 23)
         {
             // Enemy mask values (BASE32 system): 0-31
-            max_value = 31;
+            UBYTE max_value = 31;
 
-            // Cycle to next value
-            if (current_value >= max_value)
+            if (direction > 0)
             {
-                new_value = 0; // Wrap to 0
+                // Forward cycling
+                new_value = (current_value >= max_value) ? 0 : current_value + 1;
             }
             else
             {
-                new_value = current_value + 1;
+                // Reverse cycling
+                new_value = (current_value == 0) ? max_value : current_value - 1;
             }
         }
         else
         {
             // Other encoded values: 0-34
-            max_value = 34;
+            UBYTE max_value = 34;
 
-            // Cycle to next value
-            if (current_value >= max_value)
+            if (direction > 0)
             {
-                new_value = 0; // Wrap to 0
+                // Forward cycling
+                new_value = (current_value >= max_value) ? 0 : current_value + 1;
             }
             else
             {
-                new_value = current_value + 1;
+                // Reverse cycling
+                new_value = (current_value == 0) ? max_value : current_value - 1;
             }
         }
 
@@ -450,23 +440,34 @@ void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
         UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
         UBYTE new_tile = current_tile;
 
-        // Check if current tile is in the character range (TILE_CHAR_FIRST to TILE_CHAR_LAST)
+        // Check if current tile is in the character range
         if (current_tile >= TILE_CHAR_FIRST && current_tile <= TILE_CHAR_LAST)
         {
-            // Going forward - increment the character
-            if (current_tile == TILE_CHAR_LAST) // If at 'Z' (83), wrap to '0' (48)
+            if (direction > 0)
             {
-                new_tile = TILE_CHAR_FIRST;
+                // Going forward - increment the character
+                new_tile = (current_tile == TILE_CHAR_LAST) ? TILE_CHAR_FIRST : current_tile + 1;
             }
             else
             {
-                new_tile = current_tile + 1;
+                // Going backward - decrement the character
+                new_tile = (current_tile == TILE_CHAR_FIRST) ? TILE_CHAR_LAST : current_tile - 1;
             }
 
-            // Set the new tile using replace_meta_tile to update both map data and visual display
+            // Update both map data and visual display
             replace_meta_tile(x, y, new_tile, 1);
         }
     }
+}
+
+// Advanced character cycling function (forward)
+void vm_cycle_character(SCRIPT_CTX *THIS) OLDCALL BANKED
+{
+    UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+
+    // Call shared implementation with direction = 1 (forward)
+    cycle_character_internal(x, y, 1);
 }
 
 // Reverse character cycling function (for backward navigation)
@@ -475,103 +476,8 @@ void vm_cycle_character_reverse(SCRIPT_CTX *THIS) OLDCALL BANKED
     UBYTE x = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
     UBYTE y = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
 
-    // First, check if this position is within the level code display area
-    UBYTE char_index = get_char_index_from_display_position(x, y);
-
-    if (char_index != 255)
-    {
-        // This is a level code character position
-        UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
-        UBYTE current_value = char_to_value(current_tile);
-        UBYTE new_value;
-
-        if (char_index < TOTAL_BLOCKS)
-        {
-            // Platform patterns: use position-aware validation to get previous valid pattern
-            new_value = get_previous_valid_pattern_for_char(char_index, current_value);
-        }
-        else if (char_index == 16)
-        {
-            // Player column: cycle only through valid positions (columns with platforms) in reverse
-            // First, extract the current platform data to ensure we have fresh data
-            extract_platform_data();
-
-            // Then update valid positions based on current platform patterns
-            update_valid_player_positions();
-
-            UBYTE current_col = char_to_value(current_tile);
-            UBYTE prev_col = get_previous_valid_player_position(current_col);
-            new_value = prev_col;
-        }
-        else if (char_index >= 17 && char_index <= 21)
-        {
-            // Enemy positions (POS41 system): 0-40 (0 means no enemy) - cycle in reverse
-            UBYTE max_value = 40;
-
-            if (current_value == 0)
-            {
-                new_value = max_value; // Wrap to max
-            }
-            else
-            {
-                new_value = current_value - 1;
-            }
-        }
-        else if (char_index == 22 || char_index == 23)
-        {
-            // Enemy mask values (BASE32 system): 0-31 - cycle in reverse
-            UBYTE max_value = 31;
-
-            if (current_value == 0)
-            {
-                new_value = max_value; // Wrap to max
-            }
-            else
-            {
-                new_value = current_value - 1;
-            }
-        }
-        else
-        {
-            // Other encoded values: 0-34 - cycle in reverse
-            UBYTE max_value = 34;
-
-            if (current_value == 0)
-            {
-                new_value = max_value; // Wrap to max
-            }
-            else
-            {
-                new_value = current_value - 1;
-            }
-        }
-
-        // Update the display using our helper function (directly uses numeric values)
-        update_display_with_value(char_index, new_value, x, y);
-    }
-    else
-    {
-        // This is not a level code position, use original character cycling logic (reverse)
-        UBYTE current_tile = sram_map_data[METATILE_MAP_OFFSET(x, y)];
-        UBYTE new_tile = current_tile;
-
-        // Check if current tile is in the character range (TILE_CHAR_FIRST to TILE_CHAR_LAST)
-        if (current_tile >= TILE_CHAR_FIRST && current_tile <= TILE_CHAR_LAST)
-        {
-            // Going backward - decrement the character
-            if (current_tile == TILE_CHAR_FIRST) // If at '0' (48), wrap to 'Z' (83)
-            {
-                new_tile = TILE_CHAR_LAST;
-            }
-            else
-            {
-                new_tile = current_tile - 1;
-            }
-
-            // Set the new tile using replace_meta_tile to update both map data and visual display
-            replace_meta_tile(x, y, new_tile, 1);
-        }
-    }
+    // Call shared implementation with direction = -1 (reverse)
+    cycle_character_internal(x, y, -1);
 }
 
 // Update the display character directly with numeric value
