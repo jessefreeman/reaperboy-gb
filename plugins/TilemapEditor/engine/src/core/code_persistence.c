@@ -11,6 +11,7 @@
 #include "code_enemy_system.h"
 #include "tile_utils.h"
 #include "paint.h"
+#include "code_enemy_system_validation.h"
 
 // ============================================================================
 // FORWARD DECLARATIONS
@@ -29,6 +30,12 @@ extern void clear_existing_player_on_row_11(void) BANKED;
 extern void move_player_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y) BANKED;
 extern void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
 extern UBYTE paint_player_id;
+
+// Enemy system validation functions
+extern void update_valid_enemy_positions(void) BANKED;
+extern void find_next_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED;
+extern void find_prev_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED;
+extern UBYTE encode_odd_mask_value(void) BANKED;
 
 // ============================================================================
 // CHARACTER CONVERSION UTILITIES
@@ -385,17 +392,61 @@ static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED
         else if (char_index >= 17 && char_index <= 21)
         {
             // Enemy positions (POS41 system): 0-40 (0 means no enemy)
-            UBYTE max_value = 40;
+            // Get the enemy index from the character position (17-21 -> 0-4)
+            UBYTE enemy_index = char_index - 17;
+
+            // Update valid enemy positions to ensure we're using current data
+            update_valid_enemy_positions();
 
             if (direction > 0)
             {
-                // Forward cycling
-                new_value = (current_value >= max_value) ? 0 : current_value + 1;
+                // Forward cycling - get the next valid position using our validation system
+                UBYTE pos_value = current_value;
+                UBYTE odd_bit = (current_level_code.enemy_directions >> enemy_index) & 1;
+                UBYTE dir_bit = odd_bit; // Keep direction the same
+
+                find_next_valid_enemy_position_in_code(enemy_index, &pos_value, &odd_bit, &dir_bit);
+                new_value = pos_value; // Use the validated position
+
+                // Update odd bit in the mask if needed
+                if (odd_bit != ((current_level_code.enemy_directions >> enemy_index) & 1))
+                {
+                    UBYTE current_odd_mask = encode_odd_mask_value();
+                    UBYTE new_odd_mask = current_odd_mask;
+
+                    if (odd_bit)
+                        new_odd_mask |= (1 << enemy_index);
+                    else
+                        new_odd_mask &= ~(1 << enemy_index);
+
+                    // Update the odd mask character (character 22)
+                    update_display_with_value(22, new_odd_mask, 0, 0); // Position doesn't matter
+                }
             }
             else
             {
-                // Reverse cycling
-                new_value = (current_value == 0) ? max_value : current_value - 1;
+                // Reverse cycling - get the previous valid position using our validation system
+                UBYTE pos_value = current_value;
+                UBYTE odd_bit = (current_level_code.enemy_directions >> enemy_index) & 1;
+                UBYTE dir_bit = odd_bit; // Keep direction the same
+
+                find_prev_valid_enemy_position_in_code(enemy_index, &pos_value, &odd_bit, &dir_bit);
+                new_value = pos_value; // Use the validated position
+
+                // Update odd bit in the mask if needed
+                if (odd_bit != ((current_level_code.enemy_directions >> enemy_index) & 1))
+                {
+                    UBYTE current_odd_mask = encode_odd_mask_value();
+                    UBYTE new_odd_mask = current_odd_mask;
+
+                    if (odd_bit)
+                        new_odd_mask |= (1 << enemy_index);
+                    else
+                        new_odd_mask &= ~(1 << enemy_index);
+
+                    // Update the odd mask character (character 22)
+                    update_display_with_value(22, new_odd_mask, 0, 0); // Position doesn't matter
+                }
             }
         }
         else if (char_index == 22 || char_index == 23)

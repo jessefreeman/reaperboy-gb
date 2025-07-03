@@ -113,6 +113,23 @@ UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED
     return 0;
 }
 
+// Strict version for enemy placement that requires the platform to be directly below
+UBYTE has_platform_directly_below(UBYTE x, UBYTE y) BANKED
+{
+    // Find the immediate platform row below this enemy row
+    UBYTE platform_row = y + 1; // Platform row is directly below enemy row
+
+    // Verify this is a valid row for a platform
+    if (!is_valid_platform_row(platform_row))
+        return 0; // Not a valid platform row
+
+    // Check if there's a platform tile directly at this position
+    UBYTE tile_type = get_current_tile_type(x, platform_row);
+
+    // Must be exactly a platform tile (not any tile)
+    return (tile_type == BRUSH_TILE_PLATFORM);
+}
+
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED
 {
     for (BYTE dy = -PLATFORM_MIN_VERTICAL_GAP; dy <= PLATFORM_MIN_VERTICAL_GAP; ++dy)
@@ -153,12 +170,20 @@ UBYTE count_enemies_on_map(void) BANKED
 
 UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED
 {
+    // Check the same tile
+    UBYTE current_tile = get_current_tile_type(x, y);
+    if (current_tile == BRUSH_TILE_ENEMY_L || current_tile == BRUSH_TILE_ENEMY_R)
+        return 1;
+
+    // Check tile to the left
     if (x > PLATFORM_X_MIN)
     {
         UBYTE left_tile = get_current_tile_type(x - 1, y);
         if (left_tile == BRUSH_TILE_ENEMY_L || left_tile == BRUSH_TILE_ENEMY_R)
             return 1;
     }
+
+    // Check tile to the right
     if (x < PLATFORM_X_MAX)
     {
         UBYTE right_tile = get_current_tile_type(x + 1, y);
@@ -209,12 +234,21 @@ UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 
     // No need to check enemy count - we use a pool system that cycles through enemies
 
-    // Allow enemies on even rows where they are scanned: 12, 14, 16, 18
-    // This removes the platform requirement temporarily for easier enemy placement testing
+    // Allow enemies only on standard rows where they are scanned: 12, 14, 16, 18
     if (y != 12 && y != 14 && y != 16 && y != 18)
         return 0;
 
-    // Don't allow multiple enemies in the same position
+    // Must have a platform directly below (strict 1:1 relationship)
+    if (!has_platform_directly_below(x, y))
+        return 0;
+
+    // Don't allow enemies directly below the player
+    // Player is at column 2-21 in tilemap, corresponding to 0-19 in level code
+    UBYTE player_x = current_level_code.player_column + 2;
+    if (x == player_x)
+        return 0;
+
+    // Don't allow multiple enemies in the same position or adjacent
     if (has_enemy_nearby(x, y))
         return 0;
 
@@ -539,39 +573,55 @@ void clear_existing_player_on_row_11(void) BANKED
 
 void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
 {
-    for (UBYTE check_y = PLATFORM_Y_MIN; check_y < y; check_y++)
+    // Find the corresponding enemy row for this platform
+    // Platforms are at rows 13, 15, 17, 19, and enemies are at rows 12, 14, 16, 18
+    UBYTE enemy_row = 255;
+
+    if (y == 13)
+        enemy_row = 12;
+    else if (y == 15)
+        enemy_row = 14;
+    else if (y == 17)
+        enemy_row = 16;
+    else if (y == 19)
+        enemy_row = 18;
+
+    // If this isn't a platform row that would affect enemies, exit
+    if (enemy_row == 255)
+        return;
+
+    // Check if there's an enemy directly above this platform
+    UBYTE tile_type = get_current_tile_type(x, enemy_row);
+
+    if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
     {
-        UBYTE tile_type = get_current_tile_type(x, check_y);
-        if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+        replace_meta_tile(x, enemy_row, TILE_EMPTY, 1);
+
+        // Also deactivate the corresponding actor
+        for (UBYTE i = 0; i < 5; i++)
         {
-            replace_meta_tile(x, check_y, TILE_EMPTY, 1);
-
-            // Also deactivate the corresponding actor
-            for (UBYTE i = 0; i < 5; i++)
+            if (paint_enemy_slots_used[i])
             {
-                if (paint_enemy_slots_used[i])
+                actor_t *enemy = &actors[paint_enemy_ids[i]];
+                // Convert actor position from fixed point to tile coordinates
+                UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+                UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+                // For left-facing enemies, the tile position is offset by +1 tile
+                if (enemy->dir == DIRECTION_LEFT)
                 {
-                    actor_t *enemy = &actors[paint_enemy_ids[i]];
-                    // Convert actor position from fixed point to tile coordinates
-                    UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
-                    UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+                    actor_tile_x += 1;
+                }
 
-                    // For left-facing enemies, the tile position is offset by +1 tile
-                    if (enemy->dir == DIRECTION_LEFT)
-                    {
-                        actor_tile_x += 1;
-                    }
+                if (actor_tile_x == x && actor_tile_y == enemy_row)
+                {
+                    deactivate_actor(enemy);
+                    paint_enemy_slots_used[i] = 0; // Mark slot as available
 
-                    if (actor_tile_x == x && actor_tile_y == check_y)
-                    {
-                        deactivate_actor(enemy);
-                        paint_enemy_slots_used[i] = 0; // Mark slot as available
-
-                        // Remove from paint order and add to front for immediate reuse
-                        remove_enemy_from_paint_order(i);
-                        add_enemy_to_front_of_paint_order(i);
-                        break;
-                    }
+                    // Remove from paint order and add to front for immediate reuse
+                    remove_enemy_from_paint_order(i);
+                    add_enemy_to_front_of_paint_order(i);
+                    break;
                 }
             }
         }
@@ -602,8 +652,16 @@ void paint_player(UBYTE x, UBYTE y) BANKED
 
 void paint_enemy_right(UBYTE x, UBYTE y) BANKED
 {
+    // If this position is not valid, find the next valid position
     if (!can_paint_enemy_right(x, y))
-        return;
+    {
+        // Try to find next valid position
+        find_next_valid_enemy_position(&x, &y);
+
+        // If we still can't paint here after searching, return
+        if (!can_paint_enemy_right(x, y))
+            return;
+    }
 
     replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
 
@@ -672,8 +730,19 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
 
         update_level_code_for_paint(x, y);
     }
-    else if (current_tile_type == BRUSH_TILE_EMPTY && can_paint_enemy_right(x, y))
+    else if (current_tile_type == BRUSH_TILE_EMPTY)
     {
+        // If this position is not valid, find the next valid position
+        if (!can_paint_enemy_right(x, y))
+        {
+            // Try to find next valid position
+            find_next_valid_enemy_position(&x, &y);
+
+            // If we still can't paint here after searching, return
+            if (!can_paint_enemy_right(x, y))
+                return;
+        }
+
         replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
 
         // Get next enemy from FIFO pool
@@ -771,7 +840,7 @@ void paint(UBYTE x, UBYTE y) BANKED
     // Cache current tile type to avoid repeated lookups
     UBYTE current_tile_type = get_current_tile_type(x, y);
 
-    // Enemy state transitions: right -> left -> delete
+    // Enemy state transitions: right -> left -> delete -> new position
     if (current_tile_type == BRUSH_TILE_ENEMY_R)
     {
         paint_enemy_left(x, y);
@@ -780,14 +849,28 @@ void paint(UBYTE x, UBYTE y) BANKED
     else if (current_tile_type == BRUSH_TILE_ENEMY_L)
     {
         delete_enemy(x, y);
+
+        // After deleting, try to find the next valid position
+        UBYTE next_x = x;
+        UBYTE next_y = y;
+        find_next_valid_enemy_position(&next_x, &next_y);
+
+        // If we found a valid position and it's not the same as the current one,
+        // place a new enemy there
+        if (can_paint_enemy_right(next_x, next_y) &&
+            (next_x != x || next_y != y))
+        {
+            paint_enemy_right(next_x, next_y);
+        }
         return;
     }
 
-    // New enemy placement
-    if (can_paint_enemy_right(x, y))
+    // New enemy placement - cycle through valid positions if needed
+    // Only try to place an enemy if in a valid row for enemies
+    if (y == 12 || y == 14 || y == 16 || y == 18)
     {
         paint_enemy_right(x, y);
-        return;
+        // Don't return here - continue to check for platform placement
     }
 
     // Early exit for invalid platform areas
@@ -973,6 +1056,12 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
         deactivate_actor(&actors[paint_enemy_ids[i]]);
     }
 
+    // Initialize enemy validation system
+    init_enemy_system();
+
+    // Initialize player position tracking
+    update_valid_player_positions();
+
     // Reset the FIFO enemy pool
     reset_enemy_pool();
 
@@ -1155,6 +1244,9 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         // Extract player data
         extract_player_data();
 
+        // Update valid enemy positions as player position affects enemy validity
+        update_valid_enemy_positions();
+
         // Mark enemy/player data positions for update (positions 16-23)
         for (UBYTE i = 16; i < 24; i++)
         {
@@ -1174,6 +1266,28 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
 
         // Mark enemy/player data positions for update (positions 16-23)
         for (UBYTE i = 16; i < 24; i++)
+        {
+            mark_display_position_for_update(i);
+        }
+        display_selective_level_code_fast();
+        return;
+    }
+
+    // For platform operations, update valid enemy positions
+    if (current_tile_type == BRUSH_TILE_PLATFORM ||
+        y == 13 || y == 15 || y == 17 || y == 19) // Platform rows
+    {
+        // Update platform data
+        extract_platform_data();
+
+        // Update valid enemy positions - platforms affect where enemies can be placed
+        update_valid_enemy_positions();
+
+        // Update enemy data in case enemies were removed when deleting platforms
+        extract_enemy_data();
+
+        // Mark platform and enemy data for update
+        for (UBYTE i = 0; i < 24; i++)
         {
             mark_display_position_for_update(i);
         }
@@ -1238,4 +1352,88 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
 
     // Fallback to complete update for other cases
     display_complete_level_code();
+}
+
+// Find the next valid position for an enemy in the paint system
+void find_next_valid_enemy_position(UBYTE *x, UBYTE *y) BANKED
+{
+    // Start from current position
+    UBYTE start_x = *x;
+    UBYTE start_y = *y;
+    UBYTE found = 0;
+
+    // Check all standard enemy rows (these match ENEMY_ROWS in validation.c)
+    const UBYTE enemy_rows[4] = {12, 14, 16, 18};
+
+    // Check all standard enemy rows
+    for (UBYTE row_index = 0; row_index < 4; row_index++)
+    {
+        UBYTE check_y = enemy_rows[row_index];
+
+        // On the current row, start from the next column
+        UBYTE start_col = (check_y == start_y) ? (start_x + 1) : PLATFORM_X_MIN;
+
+        // Scan this row
+        for (UBYTE check_x = start_col; check_x <= PLATFORM_X_MAX; check_x++)
+        {
+            // Use the strict validation - must have platform directly below
+            if (can_paint_enemy_right(check_x, check_y))
+            {
+                *x = check_x;
+                *y = check_y;
+                found = 1;
+                return;
+            }
+        }
+
+        // If we're still on the first row and haven't found a position,
+        // wrap around and check columns before the starting point
+        if (check_y == start_y && !found && start_x > PLATFORM_X_MIN)
+        {
+            for (UBYTE check_x = PLATFORM_X_MIN; check_x < start_x; check_x++)
+            {
+                if (can_paint_enemy_right(check_x, check_y))
+                {
+                    *x = check_x;
+                    *y = check_y;
+                    found = 1;
+                    return;
+                }
+            }
+        }
+    }
+
+    // If we get here and haven't found a valid position,
+    // start over from the beginning
+    if (!found)
+    {
+        for (UBYTE row_index = 0; row_index < 4; row_index++)
+        {
+            UBYTE check_y = 0;
+
+            // Get the actual row Y value
+            if (row_index == 0)
+                check_y = 12;
+            else if (row_index == 1)
+                check_y = 14;
+            else if (row_index == 2)
+                check_y = 16;
+            else
+                check_y = 18;
+
+            for (UBYTE check_x = PLATFORM_X_MIN; check_x <= PLATFORM_X_MAX; check_x++)
+            {
+                if (can_paint_enemy_right(check_x, check_y))
+                {
+                    *x = check_x;
+                    *y = check_y;
+                    found = 1;
+                    return;
+                }
+            }
+        }
+    }
+
+    // No valid position found, keep the original position
+    // (this shouldn't happen if the validation logic is working correctly)
 }

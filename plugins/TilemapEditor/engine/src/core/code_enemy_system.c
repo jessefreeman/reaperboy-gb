@@ -6,6 +6,8 @@
 #include "code_enemy_system.h"
 #include "code_level_core.h"
 #include "tile_utils.h"
+#include "paint.h"                        // Add this to access the validation functions
+#include "code_enemy_system_validation.h" // Add the validation header
 
 // ============================================================================
 // ENEMY NUMERIC SYSTEM
@@ -13,6 +15,19 @@
 
 // Level code enemy system constants
 #define LEVEL_CODE_MAX_ENEMIES 5
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// Initialize the enemy system including position validation
+void init_enemy_system(void) BANKED
+{
+    // Initialize the validation system
+    init_valid_enemy_positions();
+
+    // Any other enemy system initialization can be added here
+}
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -86,11 +101,14 @@ void extract_enemy_data(void) BANKED
 // Encode enemy position using numeric POS41 system
 UBYTE encode_enemy_position(UBYTE enemy_index) BANKED
 {
-    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES || current_level_code.enemy_positions[enemy_index] == 255)
-    {
+    // First check if the enemy index is valid and the position is valid
+    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
         return 0; // 0 = no enemy
-    }
 
+    if (current_level_code.enemy_positions[enemy_index] == 255)
+        return 0; // 0 = no enemy
+
+    // Get the column and row
     UBYTE col = current_level_code.enemy_positions[enemy_index];
     UBYTE row = get_enemy_row_from_position(enemy_index);
 
@@ -98,8 +116,9 @@ UBYTE encode_enemy_position(UBYTE enemy_index) BANKED
     UBYTE anchor = col / 2;
     UBYTE idx = 1 + row * 10 + anchor;
 
+    // Safety check - value must be in range 1-40
     if (idx > 40)
-        return 0; // Safety check
+        return 0; // Invalid index
 
     return idx;
 }
@@ -321,15 +340,71 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
 
     if (rel_index < 5) // Position characters (17-21)
     {
-        // Allow values beyond 40 for debugging
-        if (new_value < 41) // Valid POS41 range
+        // Position character (0-4) - validate position value
+        if (new_value == 0)
         {
-            enemy_values[rel_index] = new_value;
+            // 0 = no enemy is always valid
+            enemy_values[rel_index] = 0;
         }
-        else
+        else if (new_value <= 40) // Valid POS41 range
         {
-            // Debug: For values beyond the POS41 range, use the maximum value
-            enemy_values[rel_index] = 40;
+            // For position values, we need to check if this is a valid position
+            // Convert POS41 value to row/column
+            UBYTE v = new_value - 1; // 0-39
+            UBYTE row = v / 10;      // 0-3
+            UBYTE anchor = v % 10;   // 0-9
+
+            // Get the odd bit for this enemy
+            UBYTE odd_bit = (enemy_values[5] >> rel_index) & 1;
+
+            // Calculate actual column: anchor*2 + odd_bit
+            UBYTE col = anchor * 2 + odd_bit;
+
+            if (row < 4 && col < 20)
+            {
+                // Temporarily set this position to see if it's valid
+                UBYTE old_pos = current_level_code.enemy_positions[rel_index];
+                UBYTE old_row = current_level_code.enemy_rows[rel_index];
+
+                // Set temporary position to check validity
+                current_level_code.enemy_positions[rel_index] = col;
+                current_level_code.enemy_rows[rel_index] = row;
+
+                // Convert to tilemap coordinates
+                UBYTE x = PLATFORM_X_MIN + col;
+                UBYTE y = 0;
+
+                // Map row to actual y coordinate
+                if (row == 0)
+                    y = 12;
+                else if (row == 1)
+                    y = 14;
+                else if (row == 2)
+                    y = 16;
+                else
+                    y = 18;
+
+                // Use our strict enemy position validation system instead
+                if (is_valid_enemy_position(x, y))
+                {
+                    // Position is valid, use it
+                    enemy_values[rel_index] = new_value;
+                }
+                else
+                {
+                    // Invalid position, use our validation system to find a valid position
+                    enemy_values[rel_index] = get_valid_enemy_pos41(rel_index, new_value);
+                }
+
+                // Restore original position
+                current_level_code.enemy_positions[rel_index] = old_pos;
+                current_level_code.enemy_rows[rel_index] = old_row;
+            }
+            else
+            {
+                // Invalid row/column, keep old value
+                enemy_values[rel_index] = encode_enemy_position(rel_index);
+            }
         }
     }
     else // Mask characters (22-23)

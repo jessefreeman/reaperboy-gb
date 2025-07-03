@@ -31,10 +31,12 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED;
 
 UBYTE is_valid_platform_row(UBYTE y) BANKED;
 UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED;
+UBYTE has_platform_directly_below(UBYTE x, UBYTE y) BANKED;
 UBYTE can_place_platform(UBYTE x, UBYTE y) BANKED;
 UBYTE has_enemy_below_player(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED;
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED;
+void find_next_valid_enemy_position(UBYTE *x, UBYTE *y) BANKED;
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y) BANKED;
 UBYTE get_platform_placement_type(UBYTE x, UBYTE y) BANKED;
 UBYTE count_connected_platform_length(UBYTE x, UBYTE y) BANKED;
