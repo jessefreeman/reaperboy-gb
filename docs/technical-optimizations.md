@@ -1,10 +1,68 @@
-# Performance Optimizations & Bug Fixes
+# Technical Optimizations Reference
 
-## Overview
+This document consolidates technical details about key optimizations made to the Tilemap Editor plugin system.
 
-This document consolidates all performance optimizations and critical bug fixes implemented in the TilemapEditor plugin system.
+## Platform Pattern System Optimization
 
-## Level Code Display Flicker Fix
+### Overview
+
+The platform pattern matching system was optimized to work with single-row platform configurations instead of the previous 5x2 block system. Since platforms are only rendered on odd rows (the second row of each 2-row segment), the system now uses simplified 5-bit patterns instead of 10-bit patterns.
+
+### Key Changes
+
+#### 1. Pattern Data Structure Simplified
+
+**Before:**
+
+- Used `UWORD` (16-bit) patterns with 10 bits of data
+- Top 5 bits (9-5) for first row, bottom 5 bits (4-0) for second row
+- 21 predefined patterns
+
+**After:**
+
+- Uses `UBYTE` (8-bit) patterns with 5 bits of data
+- Only bottom 5 bits (4-0) for the platform row
+- 32 comprehensive patterns covering all possible 5-bit combinations
+
+#### 2. Function Signatures Updated
+
+**Before:**
+
+```c
+UWORD extract_chunk_pattern(UBYTE x, UBYTE y, UBYTE *row0, UBYTE *row1) BANKED;
+UWORD match_platform_pattern(UWORD pattern) BANKED;
+void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UWORD pattern, UBYTE block_index) BANKED;
+```
+
+**After:**
+
+```c
+UBYTE extract_chunk_pattern(UBYTE x, UBYTE y) BANKED;
+UBYTE match_platform_pattern(UBYTE pattern) BANKED;
+void apply_pattern_with_endcaps(UBYTE segment_x, UBYTE segment_y, UBYTE pattern, UBYTE block_index) BANKED;
+```
+
+#### 3. Pattern Array Expansion
+
+The new pattern array includes all 32 possible 5-bit combinations (0b00000 to 0b11111), providing comprehensive coverage of platform configurations.
+
+#### 4. Performance Benefits
+
+1. **Reduced Memory Usage:**
+
+   - Pattern data reduced from 16-bit to 8-bit
+   - Simpler pattern matching with fewer bit operations
+
+2. **Faster Pattern Extraction:**
+
+   - Only reads 5 tiles instead of 10 tiles per segment
+   - Eliminates unnecessary row checking
+
+3. **Improved Cache Efficiency:**
+   - Smaller data structures fit better in memory
+   - Fewer memory accesses per operation
+
+## Level Code Display Flicker Elimination
 
 ### Problem
 
@@ -57,10 +115,6 @@ display_update_mask;               // 32-bit bitmask for tracking updates
 
 When entering code letters that triggered auto-completion into neighboring blocks, the neighboring blocks' level codes were not updated immediately, causing a "one change late" issue.
 
-#### Root Cause
-
-The `apply_pattern_with_brush_logic` function was calling `paint(x, y)` for each tile, but each `paint()` call only updated the level code for the immediate block. Neighboring blocks affected by auto-completion didn't get their level codes updated.
-
 #### Solution
 
 Enhanced `apply_pattern_with_brush_logic` to explicitly update neighboring block codes:
@@ -70,37 +124,9 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED 
     // ...existing pattern application logic...
     update_neighboring_block_codes(block_index);
 }
-
-void update_neighboring_block_codes(UBYTE block_index) BANKED {
-    // Check and update horizontal and vertical neighbors
-    // Update their level codes if they were affected by auto-completion
-}
-```
-
-### Paint Toggle Fix
-
-#### Problem
-
-The `paint()` function toggles platform tiles, so calling `paint()` on an existing platform would delete it. Pattern application was inadvertently deleting auto-completed platforms.
-
-#### Solution
-
-Added smart platform detection before calling `paint()`:
-
-```c
-// Check if already has correct platform before painting
-if (get_meta_tile(tile_x, current_y) != PLATFORM_TILE_2) {
-    paint(tile_x, current_y);  // Only paint if needed
-}
 ```
 
 ### True Manual Paint Simulation
-
-#### Problem
-
-Pattern application used different logic from manual painting, causing inconsistencies in level code updates and platform behavior.
-
-#### Solution
 
 Rewrote pattern application to literally call the `paint(x, y)` function for each tile:
 
@@ -120,12 +146,6 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED 
 
 ### 8-Tile Length Limit Enforcement
 
-#### Problem
-
-Users could create visually connected platforms exceeding the 8-tile limit, causing visual-logical inconsistency.
-
-#### Solution
-
 Added comprehensive length validation:
 
 ```c
@@ -136,19 +156,7 @@ UBYTE count_connected_platform_length(UBYTE x, UBYTE y);
 UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y);
 ```
 
-#### Implementation
-
-- **Direct Extension**: Prevents extending existing 8-tile platforms
-- **Indirect Merging**: Prevents creating platforms that would auto-merge beyond limits
-- **Visual Consistency**: What users see exactly matches internal platform structure
-
 ### Single Platform Auto-Completion
-
-#### Problem
-
-Single isolated platform tiles were being removed instead of auto-completed into valid 2-tile platforms.
-
-#### Solution
 
 Added detection and auto-completion for isolated platforms:
 
@@ -158,45 +166,6 @@ if (is_isolated && i == SEGMENT_WIDTH - 1 && tile_x + 1 <= PLATFORM_X_MAX) {
     paint(tile_x + 1, current_y);  // Auto-complete to 2-tile platform
 }
 ```
-
-## Code Refactoring & Cleanup
-
-### Compilation Warning Cleanup
-
-#### Warning Fixed
-
-`warning 85: unreferenced function argument : 'block_index'` in `is_pattern_valid()`
-
-#### Solution
-
-Removed the unused `is_pattern_valid()` function entirely since it was no longer being called after edge validation rollback.
-
-### Legacy Code Removal
-
-#### Removed Systems
-
-- **Binary encoding system**: Eliminated duplicate 8-byte encoding in favor of 24-character display
-- **Edge validation logic**: Simplified to allow all patterns at all positions
-- **Unused validation functions**: Removed `find_valid_pattern()` and related logic
-- **Debug functions**: Removed test and debug functions not needed in production
-
-#### Code Size Reduction
-
-- **Before**: `code_gen.c` ~1012 lines, `paint.c` ~1035 lines
-- **After**: `code_gen_optimized.c` ~400 lines, `paint_optimized.c` ~350 lines
-- **Result**: Cleaner, more maintainable codebase
-
-### Edge Validation Rollback
-
-#### Change
-
-Removed complex validation logic that blocked certain patterns at tilemap edges.
-
-#### Result
-
-- All patterns now work at all positions
-- Code entry always draws the corresponding pattern tile-by-tile
-- Consistent behavior between manual painting and code entry
 
 ## Performance Metrics Summary
 
@@ -212,22 +181,8 @@ Removed complex validation logic that blocked certain patterns at tilemap edges.
 - **Update Synchronization**: Immediate level code updates for all affected blocks
 - **Behavioral Consistency**: 100% identical behavior between input methods
 
-### Code Quality
+### Memory Usage
 
-- **Lines of Code**: ~50% reduction through elimination of duplicate systems
-- **Compilation**: Zero functional warnings
-- **Maintainability**: Simplified architecture with clear separation of concerns
-
-## Integration Benefits
-
-### User Experience
-
-- **Predictable Behavior**: Consistent results from all input methods
-- **Visual Feedback**: Real-time updates without flicker
-- **Error Prevention**: Automatic validation and cleanup
-
-### Developer Experience
-
-- **Simplified Logic**: Single update system instead of multiple competing systems
-- **Easier Debugging**: Clear data flow and update paths
-- **Better Performance**: Optimized for minimal necessary updates
+- **Pattern Data**: Reduced from 16-bit to 8-bit (50% reduction)
+- **Display Update System**: Added ~32 bytes for tracking but eliminated redundant operations
+- **Overall**: More efficient memory usage with better performance

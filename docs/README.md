@@ -1,68 +1,101 @@
-# TilemapEditor Plugin Documentation
+# Tilemap Editor Documentation
 
 ## Overview
 
-The TilemapEditor plugin provides a comprehensive level editing system for GB Studio, featuring a lossless level code system, advanced platform painting with validation, and seamless save/load functionality.
+The Tilemap Editor plugin provides a comprehensive in-game level editing system for GB Studio platformers, featuring real-time validation, seamless painting, and a compact level code system for persistence.
 
-## Documentation Index
+## Core Documentation
 
-### Core Systems
+| Document                                                | Description                                                                |
+| ------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **[Tilemap Editor Overview](tilemap-editor-plugin.md)** | Complete overview of plugin architecture, components, and usage            |
+| **[Quick Reference Cheatsheet](cheatsheet.md)**         | At-a-glance reference for events, controls, and rules                      |
+| **[Integration Guide](integration-guide.md)**           | Step-by-step instructions for adding the plugin to your project            |
+| **[Implementation Details](implementation-details.md)** | Technical guide for developers extending the plugin                        |
+| **[Platform Paint System](platform-paint-system.md)**   | Detailed explanation of platform creation, validation, and management      |
+| **[Level Code System](level-code-system.md)**           | Technical details on the level encoding, serialization, and display system |
+| **[Enemy System](enemy-system.md)**                     | Complete documentation of the enemy placement and management system        |
+| **[Code Entry Mode](code-entry-mode.md)**               | Guide to the alternative code-based level editing workflow                 |
 
-#### [Level Code System](level-code-system.md)
+## Getting Started
 
-Complete documentation of the level code encoding, storage, and persistence system.
+### Quick Setup
+
+1. Add the Tilemap Editor plugin to your GB Studio project
+2. Add "Setup Paint Actors" event to your scene
+3. Add "Enable Editor" event when triggered by player input
+4. Connect paint events to player controls
+
+### Basic Controls
+
+```
+D-PAD:        Move cursor
+A Button:     Paint at cursor position
+B Button:     Delete at cursor position
+SELECT:       Cycle between tools (platform, player, enemy)
+```
+
+### Loading & Saving
+
+```
+Save Level:   Stores current design to variables
+Load Level:   Restores previously saved design
+Copy Code:    Displays 24-character level code for sharing
+```
+
+## Plugin Features
+
+### Level Design
+
+- Interactive platform painting with auto-validation
+- Player and enemy placement with position validation
+- Real-time visual feedback for valid/invalid actions
+- Automatic platform rule enforcement (2-8 tile length)
+
+### Level Code System
+
+- Compact 24-character encoding for level designs
+- Variable-based persistence across game sessions
+- Smart zone-based updates for performance
+- Pattern matching for efficient storage
+
+### Integration
+
+- Compatible with standard GB Studio workflow
+- Uses native actor system for visual representation
+- Suitable for in-game level editors and debug tools
+- Easy to extend with additional tile types
+
+### Additional Resources
+
+#### [Development History](development-history.md)
+
+Chronological record of implementation phases and key decisions.
 
 **Key Topics:**
 
-- 5-bit platform pattern encoding (21 patterns)
-- Variable-based persistence across 6 global variables
-- 24-character display system
-- VM wrapper functions and GB Studio integration
-- Usage examples and setup requirements
-
-#### [Platform Paint System](platform-paint-system.md)
-
-Comprehensive guide to the platform painting, validation, and management system.
-
-**Key Topics:**
-
-- Platform creation and validation rules (2-8 tile limits)
-- Auto-completion and merging logic
-- Brush preview system
-- Pattern application with manual paint simulation
-- Integration with level code updates
-
-#### [Code Entry Mode](code-entry-mode.md)
-
-Documentation for the code entry mode system that allows unrestricted pattern drawing with automatic cleanup.
-
-**Key Topics:**
-
-- Unrestricted drawing during code entry
-- Automatic cleanup on exit
-- Available events and functions
-- Usage workflows and examples
-- Rule enforcement after cleanup
-
-> **Note**: This system appears to be partially implemented. Event files exist but core functions may need verification.
+- Major implementation phases
+- Technical challenges and solutions
+- Lessons learned during development
+- Evolution of the code architecture
 
 ### Technical Details
 
-#### [Performance Optimizations](performance-optimizations.md)
+#### [Technical Optimizations](technical-optimizations.md)
 
-Detailed coverage of all performance improvements and critical bug fixes.
+Consolidated reference for all technical optimizations and performance improvements.
 
 **Key Topics:**
 
+- Platform pattern system optimization (5-bit patterns)
 - Level code display flicker elimination
-- Selective update system implementation
 - Paint logic synchronization fixes
 - Platform validation improvements
-- Code refactoring and cleanup results
+- Memory usage and performance metrics
 
-#### [Plugin Architecture](plugin-architecture.md)
+#### [Implementation Details](implementation-details.md)
 
-Complete overview of the plugin structure, migration history, and integration details.
+Complete overview of the plugin structure, architecture, and implementation details.
 
 **Key Topics:**
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The platform paint system handles the creation, modification, and validation of platforms within the tilemap. It ensures platforms follow game rules while providing a consistent painting experience.
+The platform paint system handles the creation, modification, and validation of platforms within the tilemap. It ensures platforms follow game rules while providing a consistent painting experience. The system is deeply integrated with the level code system and enemy placement logic to create a cohesive level editing experience.
 
 ## Platform Rules
 
@@ -11,12 +11,14 @@ The platform paint system handles the creation, modification, and validation of 
 - **Minimum Length**: 2 tiles (single-tile platforms are auto-completed or removed)
 - **Maximum Length**: 8 tiles (prevents creation of overly long platforms)
 - **Auto-completion**: Single platforms at edges automatically extend to 2-tile minimum
+- **Segment-Aware Logic**: Platforms can span across segment boundaries while maintaining rules
 
 ### Visual-Logical Consistency
 
 - What users see on screen exactly matches the internal platform structure
 - No visual "phantom" connections that don't represent actual platform data
 - Platform merging follows predictable rules
+- Auto-detection of isolated platforms for cleanup
 
 ## Core Functions
 
@@ -179,3 +181,57 @@ update_complete_level_code();  // Full re-extraction and display
 ```
 
 This ensures the visual level code display always reflects the current tilemap state immediately after any paint operation.
+
+## Enemy System Integration
+
+### Enemy Placement
+
+```c
+void paint_enemy_right(UBYTE x, UBYTE y);
+void paint_enemy_left(UBYTE x, UBYTE y);
+```
+
+- Validates position using `can_paint_enemy_right/left()`
+- Automatically selects next available enemy slot using FIFO replacement when needed
+- Updates enemy paint order tracking for sequential replacement
+- Handles actor movement and sprite orientation
+
+### Position Validation
+
+```c
+UBYTE can_paint_enemy_right(UBYTE x, UBYTE y);
+void find_next_valid_enemy_position(UBYTE *x, UBYTE *y);
+```
+
+- Requires platform tile directly below (no floating enemies)
+- Checks for space above platform (no vertical overlapping)
+- Prevents enemy stacking or overlapping on the same tile
+- Handles edge cases near player and scene boundaries
+
+### Player Placement Integration
+
+```c
+void paint_player(UBYTE x, UBYTE y);
+UBYTE can_paint_player(UBYTE x, UBYTE y);
+```
+
+- Ensures player can only be placed once
+- Automatically repositions exit based on player location
+- Validates player placement against enemies and level boundaries
+- Updates level code display for player position
+
+## Plugin Architecture Integration
+
+The paint system is designed with a modular architecture that enables:
+
+- **Code Separation**: Core functions isolated from GB Studio-specific event bindings
+- **Event Bindings**: VM wrapper functions connect to GB Studio events
+- **Extensibility**: Clear function responsibilities with minimal interdependencies
+- **Cross-Module Communication**: Smart integration with enemy, platform and level code systems
+
+## Performance Optimizations
+
+- **Cached Tile Access**: `get_current_tile_type()` reduces repeated lookups
+- **Boundary Check Inlining**: `is_within_platform_bounds()` optimizes frequent checks
+- **Smart Updates**: Zone-specific level code updates instead of full recalculation
+- **State Tracking**: Enemy slot management prevents unnecessary iteration
