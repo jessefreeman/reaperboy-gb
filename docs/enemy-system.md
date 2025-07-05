@@ -26,7 +26,7 @@ The enemy placement system in the Tilemap Editor plugin controls where enemies c
 
 ## Implementation Details
 
-### Core Functions
+### Core Functions (paint_entity.h)
 
 ```c
 // Paint functions
@@ -44,7 +44,15 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y);
 void delete_enemy(UBYTE x, UBYTE y);
 ```
 
-### Enemy Management
+### VM Interface (paint_vm.h)
+
+```c
+// Event wrapper functions
+void vm_paint_tile(void);
+void vm_cycle_character(void);
+```
+
+### Entity Management (paint_entity.h)
 
 ```c
 // Actor IDs for enemies
@@ -96,7 +104,16 @@ for (UBYTE i = 0; i < enemy_count; i++) {
 
 ## Paint System Integration
 
-### Enemy Position Finding
+The enemy system is integrated into the modular paint system through several key components:
+
+### Module Structure
+
+- **paint_entity.h/c**: Contains all enemy-specific logic and validation
+- **paint_core.h/c**: Provides coordinate bounds checking and main paint dispatch
+- **paint_vm.h/c**: Exposes enemy functions to GB Studio events
+- **paint.h**: Umbrella header that includes all enemy functionality
+
+### Enemy Position Finding (paint_entity.h)
 
 The `find_next_valid_enemy_position()` function helps users find a valid enemy position:
 
@@ -105,7 +122,7 @@ The `find_next_valid_enemy_position()` function helps users find a valid enemy p
 3. If not, searches in a spiral pattern outward
 4. Returns the first valid position found
 
-### FIFO Replacement System
+### FIFO Replacement System (paint_entity.h)
 
 When the maximum of 5 enemies is reached, the system replaces the oldest enemy:
 

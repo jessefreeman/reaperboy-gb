@@ -137,11 +137,34 @@ When START Button Pressed:
 
 ### Custom Tile Types
 
-To add custom tile types:
+To add custom tile types to the modular system:
 
-1. Update `tile_utils.c` with your new tile definitions
-2. Add appropriate validation in `paint.c`
-3. Create corresponding visual assets
+1. **Update Core Module**: Add tile definitions to `paint_core.h`
+2. **Add Validation**: Implement validation logic in appropriate module (e.g., `paint_platform.h` for platform types)
+3. **Create Visual Assets**: Add corresponding metatile graphics
+4. **Update VM Interface**: Add new functions to `paint_vm.h` if needed for GB Studio events
+
+### Engine File Structure
+
+The modular paint system consists of:
+
+```
+plugins/TilemapEditor/engine/
+├── include/
+│   ├── paint.h              # Umbrella header
+│   ├── paint_core.h         # Core functionality
+│   ├── paint_platform.h     # Platform-specific logic
+│   ├── paint_entity.h       # Entity management
+│   ├── paint_ui.h           # UI feedback
+│   └── paint_vm.h           # VM wrapper functions
+└── src/core/
+    ├── paint.c              # Compatibility stub
+    ├── paint_core.c         # Core implementation
+    ├── paint_platform.c     # Platform implementation
+    ├── paint_entity.c       # Entity implementation
+    ├── paint_ui.c           # UI implementation
+    └── paint_vm.c           # VM implementation
+```
 
 ### Multiple Level Support
 

@@ -20,16 +20,21 @@ The plugin provides several GB Studio events that can be added to your game scen
 
 ### 2. Core Engine Files
 
-The plugin's functionality is implemented through several core engine files:
+The plugin's functionality is implemented through several core engine files organized in a modular structure:
 
-| File                         | Purpose                                         |
-| ---------------------------- | ----------------------------------------------- |
-| **paint.h/c**                | Main painting logic and entity management       |
-| **tile_utils.h/c**           | Tile-specific utilities and metatile operations |
-| **code_level_core.h**        | Core level constants and structure definitions  |
-| **code_platform_system.h/c** | Platform-specific validation and manipulation   |
-| **code_enemy_system.h/c**    | Enemy placement and validation                  |
-| **code_player_system.h/c**   | Player positioning and related constraints      |
+| File                         | Purpose                                           |
+| ---------------------------- | ------------------------------------------------- |
+| **paint.h**                  | Umbrella header including all paint modules       |
+| **paint_core.h/c**           | Main painting logic and coordinate validation     |
+| **paint_platform.h/c**       | Platform-specific validation and manipulation     |
+| **paint_entity.h/c**         | Entity placement (player, enemies) and validation |
+| **paint_ui.h/c**             | UI feedback and brush preview system              |
+| **paint_vm.h/c**             | VM wrapper functions for GB Studio events         |
+| **tile_utils.h/c**           | Tile-specific utilities and metatile operations   |
+| **code_level_core.h**        | Core level constants and structure definitions    |
+| **code_platform_system.h/c** | Platform-specific validation and manipulation     |
+| **code_enemy_system.h/c**    | Enemy placement and validation                    |
+| **code_player_system.h/c**   | Player positioning and related constraints        |
 
 ### 3. Integration Points
 
@@ -113,9 +118,10 @@ UBYTE paint_enemy_slots_used[5] = {0, 0, 0, 0, 0}; // Track usage
 
 ### Paint Operation Flow
 
-The main paint function coordinates the placement logic:
+The main paint function coordinates the placement logic through the modular system:
 
 ```c
+// paint_core.h - Main dispatch function
 void paint(UBYTE x, UBYTE y) {
     // 1. Validate position is within bounds
     // 2. Check if platform can be placed
@@ -123,6 +129,18 @@ void paint(UBYTE x, UBYTE y) {
     // 4. Update metatiles and visual representation
     // 5. Update level code display
 }
+
+// paint_entity.h - Entity-specific placement
+void paint_player(UBYTE x, UBYTE y);
+void paint_enemy_right(UBYTE x, UBYTE y);
+void paint_enemy_left(UBYTE x, UBYTE y);
+
+// paint_platform.h - Platform-specific logic
+UBYTE count_connected_platform_length(UBYTE x, UBYTE y);
+void rebuild_platform_row(UBYTE y);
+
+// paint_ui.h - UI feedback
+UBYTE get_brush_tile(UBYTE x, UBYTE y);
 ```
 
 ## Best Practices

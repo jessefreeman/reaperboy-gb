@@ -49,18 +49,24 @@ The code entry mode system allows users to freely draw any platform pattern duri
 ## Core Functions (Implementation Status Unknown)
 
 ```c
-// Mode management
+// Mode management (paint_core.h)
 void enable_code_entry_mode(void);
 void disable_code_entry_mode(void);
 UBYTE is_code_entry_mode_active(void);
 
-// Unrestricted pattern application
+// VM wrapper functions (paint_vm.h)
+void vm_enable_code_entry_mode(void);
+void vm_disable_code_entry_mode(void);
+void vm_exit_code_entry_mode_with_cleanup(void);
+void vm_cleanup_invalid_platforms(void);
+
+// Unrestricted pattern application (paint_vm.h)
 void apply_raw_pattern_unrestricted(UBYTE segment_x, UBYTE segment_y, UWORD pattern);
 
-// Combined exit and cleanup
+// Combined exit and cleanup (paint_vm.h)
 void exit_code_entry_mode_with_cleanup(void);
 
-// Cleanup functions
+// Cleanup functions (paint_platform.h)
 void cleanup_invalid_platforms(void);
 void fix_platform_segment_rules(UBYTE segment_x, UBYTE segment_y);
 ```
@@ -99,20 +105,29 @@ void fix_platform_segment_rules(UBYTE segment_x, UBYTE segment_y);
 
 ### During Code Entry Mode
 
-1. `apply_pattern_to_tilemap()` should use `apply_raw_pattern_unrestricted()`
+1. `apply_pattern_to_tilemap()` should use `apply_raw_pattern_unrestricted()` from `paint_vm.h`
 2. Patterns are drawn directly without validation
 3. Single-tile platforms and invalid patterns are allowed
 4. Level code is updated to match exactly what was requested
 
 ### During Cleanup Process
 
-1. `cleanup_invalid_platforms()` iterates through all 16 platform segments
+1. `cleanup_invalid_platforms()` from `paint_platform.h` iterates through all 16 platform segments
 2. Calls `fix_platform_segment_rules()` for each segment
 3. This processes both rows in each segment
 4. `rebuild_platform_row()` enforces the actual platform rules:
    - **Single-Tile Removal**: Converts single tiles to empty space
    - **Valid Platform Processing**: Applies correct left/middle/right tiles
    - **Length Enforcement**: Forces platform finalization at max length
+
+## Integration with Modular Paint System
+
+### Module Responsibilities
+
+- **paint_core.h**: Manages code entry mode state and basic validation
+- **paint_platform.h**: Contains cleanup and platform rule enforcement
+- **paint_vm.h**: Provides VM wrapper functions for GB Studio events
+- **paint.h**: Umbrella header providing unified access to all code entry features
 
 ## Example Use Cases
 

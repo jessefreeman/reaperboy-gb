@@ -117,7 +117,7 @@ When entering code letters that triggered auto-completion into neighboring block
 
 #### Solution
 
-Enhanced `apply_pattern_with_brush_logic` to explicitly update neighboring block codes:
+Enhanced `apply_pattern_with_brush_logic` in `paint_vm.c` to explicitly update neighboring block codes:
 
 ```c
 void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED {
@@ -128,7 +128,7 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED 
 
 ### True Manual Paint Simulation
 
-Rewrote pattern application to literally call the `paint(x, y)` function for each tile:
+Rewrote pattern application to literally call the `paint(x, y)` function from `paint_core.c` for each tile:
 
 ```c
 void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED {
@@ -144,7 +144,7 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) BANKED 
 
 ## Platform Validation Improvements
 
-### 8-Tile Length Limit Enforcement
+### 8-Tile Length Limit Enforcement (paint_platform.c)
 
 Added comprehensive length validation:
 
@@ -156,7 +156,7 @@ UBYTE count_connected_platform_length(UBYTE x, UBYTE y);
 UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y);
 ```
 
-### Single Platform Auto-Completion
+### Single Platform Auto-Completion (paint_core.c)
 
 Added detection and auto-completion for isolated platforms:
 
@@ -166,6 +166,31 @@ if (is_isolated && i == SEGMENT_WIDTH - 1 && tile_x + 1 <= PLATFORM_X_MAX) {
     paint(tile_x + 1, current_y);  // Auto-complete to 2-tile platform
 }
 ```
+
+## Modular Architecture Benefits
+
+### Code Organization
+
+- **Separation of Concerns**: Each module handles specific responsibilities
+- **Maintainability**: Easier to locate and modify specific functionality
+- **Testability**: Individual modules can be tested independently
+
+### Performance Benefits
+
+- **Reduced Includes**: Only necessary headers included in each module
+- **Optimized Compilation**: Smaller compilation units
+- **Better Caching**: Improved CPU cache usage with focused code modules
+
+### Module Structure
+
+| Module   | File                 | Primary Responsibility          |
+| -------- | -------------------- | ------------------------------- |
+| Core     | `paint_core.h/c`     | Main paint logic and validation |
+| Platform | `paint_platform.h/c` | Platform-specific operations    |
+| Entity   | `paint_entity.h/c`   | Player and enemy management     |
+| UI       | `paint_ui.h/c`       | User interface feedback         |
+| VM       | `paint_vm.h/c`       | GB Studio event integration     |
+| Umbrella | `paint.h`            | Unified access to all modules   |
 
 ## Performance Metrics Summary
 

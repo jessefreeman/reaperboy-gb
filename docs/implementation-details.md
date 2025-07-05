@@ -28,7 +28,12 @@ TilemapEditor/
 │
 └── engine/                    # C implementation files
     ├── include/               # Header files
-    │   ├── paint.h
+    │   ├── paint.h                    # Main paint system umbrella header
+    │   ├── paint_core.h              # Core paint functionality
+    │   ├── paint_platform.h          # Platform-specific operations
+    │   ├── paint_entity.h            # Entity management (player/enemies)
+    │   ├── paint_ui.h                # UI state and brush management
+    │   ├── paint_vm.h                # VM wrapper functions
     │   ├── tile_utils.h
     │   ├── code_level_core.h
     │   ├── code_platform_system.h
@@ -36,7 +41,12 @@ TilemapEditor/
     │   └── code_player_system.h
     │
     └── src/core/              # Implementation files
-        ├── paint.c
+        ├── paint.c                   # Paint system compatibility stub
+        ├── paint_core.c              # Core paint logic and main paint() function
+        ├── paint_platform.c          # Platform validation and reconstruction
+        ├── paint_entity.c            # Player/enemy management and positioning
+        ├── paint_ui.c                # Brush state and UI feedback
+        ├── paint_vm.c                # VM wrapper functions
         ├── tile_utils.c
         ├── code_platform_system.c
         ├── code_enemy_system.c
@@ -45,22 +55,67 @@ TilemapEditor/
 
 ## Key Module Responsibilities
 
-### Paint System (`paint.h/c`)
+### Paint System (Modular Architecture)
 
-Core responsibility: Manage painting operations and coordinate between subsystems.
+**Refactored from monolithic paint.h/c into specialized modules:**
+
+#### Core Module (`paint_core.h/c`)
+
+Core responsibility: Main paint coordination and utility functions.
 
 ```c
-// Primary functions
 void paint(UBYTE x, UBYTE y);                  // Main painting function
-UBYTE get_brush_tile_state(UBYTE x, UBYTE y);  // Preview state calculation
+UBYTE is_within_platform_bounds(UBYTE x, UBYTE y);
+UBYTE get_current_tile_type(UBYTE x, UBYTE y);
+void update_level_code_for_paint(UBYTE x, UBYTE y);
+```
+
+#### Platform Module (`paint_platform.h/c`)
+
+Core responsibility: Platform validation, placement, and reconstruction.
+
+```c
+UBYTE can_place_platform(UBYTE x, UBYTE y);
+UBYTE count_connected_platform_length(UBYTE x, UBYTE y);
+UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y);
+void rebuild_platform_row(UBYTE y);
+```
+
+#### Entity Module (`paint_entity.h/c`)
+
+Core responsibility: Player and enemy management, positioning, and FIFO pool.
+
+```c
 void paint_player(UBYTE x, UBYTE y);           // Player placement
 void paint_enemy_right/left(UBYTE x, UBYTE y); // Enemy placement
+void move_actor_to_tile(UBYTE actor_id, UBYTE x, UBYTE y);
+UBYTE get_next_enemy_slot_from_pool(void);
+void reset_enemy_pool(void);
+```
 
-// VM wrapper functions for GB Studio integration
+#### UI Module (`paint_ui.h/c`)
+
+Core responsibility: Brush state management and UI feedback.
+
+```c
+UBYTE get_brush_tile_state(UBYTE x, UBYTE y);
+UBYTE get_platform_placement_type(UBYTE x, UBYTE y);
+```
+
+#### VM Module (`paint_vm.h/c`)
+
+Core responsibility: Script interface and VM wrapper functions.
+
+```c
+void vm_setup_paint_actors(SCRIPT_CTX *THIS);
 void vm_paint(SCRIPT_CTX *THIS);
 void vm_get_brush_tile_pos(SCRIPT_CTX *THIS);
-void vm_get_brush_preview_tile(SCRIPT_CTX *THIS);
+void vm_enable_editor(SCRIPT_CTX *THIS);
 ```
+
+#### Compatibility Layer (`paint.h`)
+
+The main paint.h header now serves as an umbrella that includes all specialized modules, maintaining backward compatibility while providing the benefits of modular organization.
 
 ### Platform System (`code_platform_system.h/c`)
 
@@ -100,11 +155,13 @@ void extract_platform_data(void);
 Core responsibility: Manage entity placement rules and validation.
 
 ```c
-// Key functions
-UBYTE can_paint_player(UBYTE x, UBYTE y);
-UBYTE can_paint_enemy_right/left(UBYTE x, UBYTE y);
-void find_next_valid_enemy_position(UBYTE *x, UBYTE *y);
+// Key functions (now integrated with modular paint system)
+UBYTE can_paint_player(UBYTE x, UBYTE y);          // In paint_entity.h/c
+UBYTE can_paint_enemy_right/left(UBYTE x, UBYTE y); // In paint_entity.h/c
+void find_next_valid_enemy_position(UBYTE *x, UBYTE *y); // In paint_entity.h/c (legacy - no longer auto-used)
 ```
+
+**Note**: Entity validation functions have been moved to the paint_entity module to consolidate all entity-related logic in one place.
 
 ## Data Structures
 
@@ -150,12 +207,21 @@ typedef struct {
 
 ## Extending the Plugin
 
+## Extending the Plugin
+
 ### Adding New Tile Types
 
 1. Define new tile type constants in `tile_utils.h`
-2. Add corresponding brush states in `paint.h`
-3. Implement validation in `paint.c`
+2. Add corresponding brush states in the appropriate paint module header:
+   - **Entities (players, enemies, items)**: `paint_entity.h`
+   - **Platforms/terrain**: `paint_platform.h`
+   - **UI elements**: `paint_ui.h`
+3. Implement validation logic in the corresponding module:
+   - **Entity validation**: `paint_entity.c`
+   - **Platform validation**: `paint_platform.c`
+   - **UI state logic**: `paint_ui.c`
 4. Update level code serialization in `code_gen.c`
+5. Add VM wrapper functions in `paint_vm.c` if needed for script access
 
 Example for adding a collectible item:
 

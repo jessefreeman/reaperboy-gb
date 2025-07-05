@@ -22,30 +22,35 @@ The platform paint system handles the creation, modification, and validation of 
 
 ## Core Functions
 
-### Paint Operations
+### Paint Operations (paint_core.h)
 
 ```c
 void paint(UBYTE x, UBYTE y);                           // Main paint function
-void paint_player(UBYTE x, UBYTE y);                   // Place player
-void paint_enemy_right(UBYTE x, UBYTE y);              // Place right-facing enemy
-void paint_enemy_left(UBYTE x, UBYTE y);               // Place left-facing enemy
 void delete_tile(UBYTE x, UBYTE y);                    // Remove tile/entity
+UBYTE get_current_tile_type(UBYTE x, UBYTE y);         // Get tile type at position
+UBYTE is_within_platform_bounds(UBYTE x, UBYTE y);     // Check coordinate bounds
 ```
 
-### Platform Validation
+### Platform-Specific Functions (paint_platform.h)
 
 ```c
 UBYTE count_connected_platform_length(UBYTE x, UBYTE y);    // Calculate total platform length
 UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y);  // Check merge limits
 UBYTE check_platform_vertical_conflict(UBYTE x, UBYTE y);   // Check for conflicts
-```
-
-### Platform Management
-
-```c
 void rebuild_platform_row(UBYTE y);                    // Enforce platform rules
 void cleanup_invalid_platforms(void);                  // Remove single-tile platforms
 void remove_enemies_above_platform(UBYTE x, UBYTE y);  // Safety cleanup
+```
+
+### Entity Management (paint_entity.h)
+
+```c
+void paint_player(UBYTE x, UBYTE y);                   // Place player
+void paint_enemy_right(UBYTE x, UBYTE y);              // Place right-facing enemy
+void paint_enemy_left(UBYTE x, UBYTE y);               // Place left-facing enemy
+UBYTE can_paint_enemy_right(UBYTE x, UBYTE y);         // Validate enemy placement
+UBYTE can_paint_enemy_left(UBYTE x, UBYTE y);          // Validate enemy placement
+void find_next_valid_enemy_position(UBYTE *x, UBYTE *y); // Find valid enemy position
 ```
 
 ## Paint Logic Details
@@ -86,10 +91,11 @@ Adjacent platforms automatically merge when:
 - **BRUSH_TILE_ENEMY_RIGHT**: Right-facing enemy
 - **BRUSH_TILE_ENEMY_LEFT**: Left-facing enemy
 
-### Preview Validation
+### Preview Validation (paint_ui.h)
 
 ```c
 UBYTE get_platform_placement_type(UBYTE x, UBYTE y);
+UBYTE get_brush_tile(UBYTE x, UBYTE y);
 ```
 
 Shows users what will happen before they click:
@@ -100,9 +106,18 @@ Shows users what will happen before they click:
 
 ## Pattern Application Integration
 
-### True Manual Paint Simulation
+### True Manual Paint Simulation (paint_vm.h)
 
 Pattern application uses the actual `paint()` function to ensure consistency:
+
+```c
+void vm_paint_tile(void);
+void vm_get_brush_tile(void);
+void vm_cycle_character(void);
+void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id);
+```
+
+The VM wrapper functions connect to GB Studio events while pattern application uses real paint calls:
 
 ```c
 void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) {
@@ -143,10 +158,11 @@ void apply_pattern_with_brush_logic(UBYTE block_index, UBYTE pattern_id) {
 
 ## Cleanup System
 
-### Platform Rule Enforcement
+### Cleanup System (paint_platform.h)
 
 ```c
 void fix_platform_segment_rules(UBYTE segment_x, UBYTE segment_y);
+void cleanup_invalid_platforms(void);
 ```
 
 Automatically called to:
@@ -184,7 +200,7 @@ This ensures the visual level code display always reflects the current tilemap s
 
 ## Enemy System Integration
 
-### Enemy Placement
+### Enemy Placement (paint_entity.h)
 
 ```c
 void paint_enemy_right(UBYTE x, UBYTE y);
@@ -196,11 +212,13 @@ void paint_enemy_left(UBYTE x, UBYTE y);
 - Updates enemy paint order tracking for sequential replacement
 - Handles actor movement and sprite orientation
 
-### Position Validation
+### Position Validation (paint_entity.h)
 
 ```c
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y);
+UBYTE can_paint_enemy_left(UBYTE x, UBYTE y);
 void find_next_valid_enemy_position(UBYTE *x, UBYTE *y);
+UBYTE has_enemy_below_player(UBYTE x, UBYTE y);
 ```
 
 - Requires platform tile directly below (no floating enemies)
@@ -208,7 +226,7 @@ void find_next_valid_enemy_position(UBYTE *x, UBYTE *y);
 - Prevents enemy stacking or overlapping on the same tile
 - Handles edge cases near player and scene boundaries
 
-### Player Placement Integration
+### Player Placement Integration (paint_entity.h)
 
 ```c
 void paint_player(UBYTE x, UBYTE y);
@@ -224,14 +242,26 @@ UBYTE can_paint_player(UBYTE x, UBYTE y);
 
 The paint system is designed with a modular architecture that enables:
 
-- **Code Separation**: Core functions isolated from GB Studio-specific event bindings
-- **Event Bindings**: VM wrapper functions connect to GB Studio events
-- **Extensibility**: Clear function responsibilities with minimal interdependencies
+### Core Module Structure
+
+- **paint_core.h/c**: Main painting logic and coordinate bounds checking
+- **paint_platform.h/c**: Platform-specific validation and manipulation
+- **paint_entity.h/c**: Entity placement (player, enemies) and validation
+- **paint_ui.h/c**: UI feedback and brush preview system
+- **paint_vm.h/c**: VM wrapper functions connecting to GB Studio events
+- **paint.h**: Umbrella header including all modules
+
+### Module Benefits
+
+- **Code Separation**: Each module has clear responsibilities and focused functionality
+- **Maintainability**: Easier to locate and modify specific features
+- **Extensibility**: New features can be added to appropriate modules
 - **Cross-Module Communication**: Smart integration with enemy, platform and level code systems
 
 ## Performance Optimizations
 
-- **Cached Tile Access**: `get_current_tile_type()` reduces repeated lookups
-- **Boundary Check Inlining**: `is_within_platform_bounds()` optimizes frequent checks
+- **Cached Tile Access**: `get_current_tile_type()` in paint_core.h reduces repeated lookups
+- **Boundary Check Inlining**: `is_within_platform_bounds()` in paint_core.h optimizes frequent checks
 - **Smart Updates**: Zone-specific level code updates instead of full recalculation
-- **State Tracking**: Enemy slot management prevents unnecessary iteration
+- **State Tracking**: Enemy slot management in paint_entity.h prevents unnecessary iteration
+- **Modular Design**: Each module is optimized for its specific responsibilities

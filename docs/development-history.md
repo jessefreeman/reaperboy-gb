@@ -27,14 +27,42 @@ This document captures the development history, key implementation decisions, an
 - **Solution**: Selective update system with change detection
 - **Outcome**: Smooth, flicker-free display updates
 
-### Phase 4: Code Entry Mode
+### Phase 5: Modular Architecture Refactoring
 
-- **Goal**: Allow unrestricted pattern drawing with automatic cleanup
-- **Challenges**: Balancing user freedom with rule enforcement
-- **Solution**: Two-phase system (unrestricted → cleanup)
-- **Status**: Partially implemented, requires verification
+- **Goal**: Break down monolithic paint.c into focused, maintainable modules
+- **Challenges**: Maintaining functionality while improving code organization
+- **Solution**: Modular structure with clear separation of concerns
+- **Outcome**: Improved maintainability, easier testing, and cleaner code organization
 
 ## Critical Implementation Decisions
+
+### Modular Architecture: Monolithic vs Modular Design
+
+#### Decision: Modular Structure
+
+**Reasoning**:
+
+- ✅ Improved maintainability and readability
+- ✅ Clear separation of concerns
+- ✅ Easier to test individual components
+- ✅ Better code organization for future development
+- ✅ Reduced cognitive load when working with specific functionality
+
+**Previous Approach**: Monolithic paint.c
+
+- ❌ Single file became too large (~1000+ lines)
+- ❌ Mixed concerns made changes risky
+- ❌ Difficult to locate specific functionality
+- ❌ Testing individual components was challenging
+
+**New Structure**:
+
+- **paint.h**: Umbrella header for unified access
+- **paint_core.h/c**: Core painting logic and validation
+- **paint_platform.h/c**: Platform-specific operations
+- **paint_entity.h/c**: Entity management (player, enemies)
+- **paint_ui.h/c**: UI feedback and brush preview
+- **paint_vm.h/c**: VM wrapper functions for GB Studio events
 
 ### Level Code Storage: Variables vs SRAM
 
@@ -195,9 +223,11 @@ void display_selective_level_code_fast(void);
 
 1. **Unified Code Paths**: Having separate logic for manual vs code entry led to inconsistencies. Unifying on actual `paint()` calls solved multiple issues simultaneously.
 
-2. **Caching for Performance**: Implementing comparison caches for display updates provided significant performance improvements with minimal complexity.
+2. **Modular Design Benefits**: Breaking down the monolithic paint.c into focused modules dramatically improved maintainability and made the codebase easier to work with.
 
-3. **Validation Granularity**: Comprehensive validation (checking all merge scenarios) was necessary to prevent edge cases that simple validation missed.
+3. **Caching for Performance**: Implementing comparison caches for display updates provided significant performance improvements with minimal complexity.
+
+4. **Validation Granularity**: Comprehensive validation (checking all merge scenarios) was necessary to prevent edge cases that simple validation missed.
 
 ### Implementation Strategies
 
@@ -207,6 +237,8 @@ void display_selective_level_code_fast(void);
 
 3. **Simplification**: Removing complex edge validation in favor of allowing all patterns everywhere simplified the system significantly.
 
+4. **Refactoring for Maintainability**: The modular refactoring improved code organization without breaking existing functionality.
+
 ### Performance Considerations
 
 1. **Selective Updates**: The difference between complete and selective updates was dramatic - visible flicker vs smooth operation.
@@ -215,13 +247,15 @@ void display_selective_level_code_fast(void);
 
 3. **Cache Management**: Simple comparison caches provided significant benefits without complex cache invalidation logic.
 
+4. **Modular Performance**: The modular structure improved compilation times and code organization without performance penalties.
+
 ## Future Development Considerations
 
 ### Potential Enhancements
 
 1. **Pattern System Extensions**: Additional platform patterns could be added following the existing 5-bit encoding system.
 
-2. **Advanced Validation**: More sophisticated validation rules could be implemented while maintaining the current architecture.
+2. **Advanced Validation**: More sophisticated validation rules could be implemented while maintaining the current modular architecture.
 
 3. **Enhanced Display**: The selective update system could support additional display elements (colors, animations) with minimal changes.
 
@@ -231,29 +265,48 @@ void display_selective_level_code_fast(void);
 
 2. **Save/Load Extensions**: Additional save formats (SRAM, external) could be added alongside the current variable-based system.
 
-3. **Editor Enhancements**: The current brush preview system could be extended with additional preview modes and visual feedback.
+3. **Module Extensions**: New modules could be added to the paint system following the established patterns (e.g., paint_effects.h/c, paint_terrain.h/c).
+
+### Code Quality Insights
+
+1. **Modular Architecture**: The refactored structure makes it much easier to locate and modify specific functionality.
+
+2. **Separation of Concerns**: Each module has a clear, focused responsibility, reducing complexity and improving testability.
+
+3. **Unified Interface**: The umbrella header (paint.h) provides a clean, unified interface while maintaining internal modularity.
+
+4. **Editor Enhancements**: The current brush preview system could be extended with additional preview modes and visual feedback.
 
 ## Code Quality Metrics
 
-### Before Optimization
+### Before Modular Refactoring
 
 - **code_gen.c**: ~1012 lines with significant duplication
-- **paint.c**: ~1035 lines with redundant validation
+- **paint.c**: ~1035 lines with mixed concerns and redundant validation
 - **Compilation**: Multiple warnings from unused functions
 - **Performance**: Visible flicker, slow updates
+- **Maintainability**: Difficult to locate and modify specific functionality
 
-### After Optimization
+### After Modular Refactoring
 
 - **code_gen.c**: ~1917 lines (optimized structure, more features)
-- **paint.c**: Streamlined logic, comprehensive validation
+- **paint.c**: Minimal stub file (~50 lines)
+- **paint_core.c**: Core logic (~300 lines)
+- **paint_platform.c**: Platform-specific operations (~250 lines)
+- **paint_entity.c**: Entity management (~400 lines)
+- **paint_ui.c**: UI feedback (~150 lines)
+- **paint_vm.c**: VM wrapper functions (~200 lines)
 - **Compilation**: Clean compilation with only optimizer notifications
 - **Performance**: Smooth, flicker-free operation
+- **Maintainability**: Easy to locate and modify specific functionality
 
 ### Maintainability Improvements
 
-- **Single Responsibility**: Each function has a clear, single purpose
+- **Single Responsibility**: Each module has a clear, focused purpose
 - **Clear APIs**: Well-defined interfaces between components
 - **Comprehensive Documentation**: Every major function and system documented
 - **Consistent Patterns**: Similar operations follow identical patterns
+- **Modular Testing**: Individual components can be tested in isolation
+- **Reduced Complexity**: Each file is smaller and more focused
 
-This development history serves as a guide for future enhancements and provides context for the current implementation decisions.
+This development history serves as a guide for future enhancements and provides context for the current implementation decisions and the benefits of the modular architecture.
