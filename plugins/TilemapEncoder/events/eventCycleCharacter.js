@@ -1,6 +1,6 @@
 export const id = "EVENT_CYCLE_CHARACTER";
 export const name = "Cycle Character";
-export const groups = ["TilemapEditor"];
+export const groups = ["TilemapEncoder"];
 
 export const autoLabel = (fetchArg) => {
   return `Cycle character at (${fetchArg("x")}, ${fetchArg("y")})`;

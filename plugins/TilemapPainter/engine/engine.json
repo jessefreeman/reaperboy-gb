@@ -4,7 +4,7 @@
 		{
 			"key": "PLATFORM_MAX_LENGTH",
 			"label": "Maximum Platform Length (tiles)",
-			"group": "TilemapEditor",
+			"group": "TilemapPainter",
 			"type": "slider",
 			"cType": "define",
 			"defaultValue": 8,
@@ -15,7 +15,7 @@
 		{
 			"key": "MAX_ENEMIES",
 			"label": "Maximum Enemies Per Level",
-			"group": "TilemapEditor",
+			"group": "TilemapPainter",
 			"type": "slider",
 			"cType": "define",
 			"defaultValue": 6,
@@ -24,20 +24,9 @@
 			"description": "Maximum number of enemies that can be placed in a level"
 		},
 		{
-			"key": "LEVEL_CODE_DISPLAY_LENGTH",
-			"label": "Level Code Display Length",
-			"group": "TilemapEditor",
-			"type": "slider",
-			"cType": "define",
-			"defaultValue": 24,
-			"min": 16,
-			"max": 32,
-			"description": "Number of characters to display in the level code"
-		},
-		{
 			"key": "PLATFORM_Y_MIN",
 			"label": "Platform Y Start Row",
-			"group": "TilemapEditor",
+			"group": "TilemapPainter",
 			"type": "slider",
 			"cType": "define",
 			"defaultValue": 12,
@@ -48,7 +37,7 @@
 		{
 			"key": "PLATFORM_Y_MAX",
 			"label": "Platform Y End Row",
-			"group": "TilemapEditor",
+			"group": "TilemapPainter",
 			"type": "slider",
 			"cType": "define",
 			"defaultValue": 19,

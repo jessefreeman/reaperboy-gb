@@ -1,0 +1,16 @@
+{
+	"version": "4.2.0-e7",
+	"fields": [
+		{
+			"key": "LEVEL_CODE_DISPLAY_LENGTH",
+			"label": "Level Code Display Length",
+			"group": "TilemapEncoder",
+			"type": "slider",
+			"cType": "define",
+			"defaultValue": 24,
+			"min": 16,
+			"max": 32,
+			"description": "Number of characters to display in the level code"
+		}
+	]
+}
