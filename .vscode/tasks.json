@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build GB Studio Plugin",
+			"type": "shell",
+			"command": "echo \"Simulating build of GB Studio plugin...\"",
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

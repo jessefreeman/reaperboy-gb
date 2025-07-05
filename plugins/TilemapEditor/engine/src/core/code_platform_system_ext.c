@@ -6,9 +6,10 @@
 #include "tile_utils.h"
 #include "paint.h"
 #include "vm.h"
+#include "meta_tiles.h"
 
 // External declarations for meta tile system
-extern uint8_t sram_map_data[];
+extern UBYTE __at(SRAM_MAP_DATA_PTR) sram_map_data[];
 extern UBYTE image_tile_width_bit;
 
 // Define missing macro locally

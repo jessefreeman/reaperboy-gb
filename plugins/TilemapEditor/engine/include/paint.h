@@ -4,10 +4,38 @@
 #include <gbdk/platform.h>
 #include "vm.h"
 
+// Include all paint module headers
+#include "paint_core.h"
+#include "paint_platform.h"
+#include "paint_entity.h"
+#include "paint_ui.h"
+#include "paint_vm.h"
+
+/*
+ * This header is maintained for backward compatibility.
+ * All functionality is now split across multiple modules.
+ *
+ * 3. paint_platform.h
+ *    - Platform-specific constants and types
+ *    - Platform validation and manipulation functions
+ *
+ * 4. paint_entity.h
+ *    - Entity (player, exit, enemy) management
+ *    - Actor positioning and state functions
+ *
+ * 5. paint_ui.h
+ *    - UI state definitions
+ *    - Brush and selector functions
+ *
+ * 6. paint_vm.h
+ *    - VM wrapper functions for scripting integration
+ */
+
 // ============================================================================
 // SELECTOR STATE CONSTANTS
 // ============================================================================
 
+/* REFACTORING: Move to paint_ui.h */
 #define SELECTOR_STATE_DEFAULT 0
 #define SELECTOR_STATE_DELETE 1
 #define SELECTOR_STATE_ENEMY_RIGHT 2
@@ -21,6 +49,7 @@
 // CORE PAINTING FUNCTIONS
 // ============================================================================
 
+/* REFACTORING: Move to paint_core.h */
 void paint(UBYTE x, UBYTE y) BANKED;
 UBYTE get_brush_tile_pos(UBYTE x, UBYTE y) BANKED;
 UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED;
@@ -29,6 +58,11 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED;
 // VALIDATION FUNCTIONS
 // ============================================================================
 
+/*
+ * REFACTORING: Split between paint_platform.h and paint_entity.h
+ * - Platform validation functions -> paint_platform.h
+ * - Entity validation functions -> paint_entity.h
+ */
 UBYTE is_valid_platform_row(UBYTE y) BANKED;
 UBYTE has_platform_below(UBYTE x, UBYTE y) BANKED;
 UBYTE has_platform_directly_below(UBYTE x, UBYTE y) BANKED;
@@ -45,6 +79,8 @@ UBYTE would_2tile_platform_exceed_limit(UBYTE x, UBYTE y) BANKED;
 // ============================================================================
 // ENTITY MANAGEMENT
 // ============================================================================
+
+/* REFACTORING: Move to paint_entity.h */
 
 // External paint actor IDs
 extern UBYTE paint_player_id;
@@ -64,12 +100,18 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED;
 // PLATFORM MANAGEMENT
 // ============================================================================
 
+/* REFACTORING: Move to paint_platform.h */
 void rebuild_platform_row(UBYTE y) BANKED;
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
+/*
+ * REFACTORING: Split across modules
+ * - Core utility functions -> paint_core.h
+ * - Entity-specific utilities -> paint_entity.h
+ */
 UBYTE count_enemies_on_map(void) BANKED;
 UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED;
 UBYTE validate_level_setup(void) BANKED;
@@ -83,12 +125,14 @@ UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED;
 // SMART UPDATE FUNCTIONS
 // ============================================================================
 
+/* REFACTORING: Move to paint_core.h */
 void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS
 // ============================================================================
 
+/* REFACTORING: Move to paint_vm.h */
 void vm_setup_paint_actors(SCRIPT_CTX *THIS) BANKED;
 void vm_enable_editor(SCRIPT_CTX *THIS) BANKED;
 void vm_paint(SCRIPT_CTX *THIS) BANKED;
@@ -99,6 +143,7 @@ void vm_get_brush_preview_tile(SCRIPT_CTX *THIS) BANKED;
 // EXIT POSITIONING FUNCTIONS
 // ============================================================================
 
+/* REFACTORING: Move to paint_entity.h */
 void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
 void clear_existing_exit_tiles(void) BANKED;
 
