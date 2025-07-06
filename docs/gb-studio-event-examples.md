@@ -19,19 +19,39 @@ No variables needed! Pure C memory persistence.
 - Rebuilds level tilemap from current C memory using paint system
 - Use on scene init to restore after editing
 - No parameters needed
-- **Features**: Platforms restored with correct end caps and visual styling
+- **Features**: 
+  - Platforms restored with correct end caps and visual styling
+  - Player actor positioned correctly (column 0 = leftmost position)
+  - Exit sprite positioned relative to player
 - **Note**: Only restores platforms/level layout, not level code display
 
 ### 2. **Load Level Code Into Memory**  
 - Loads a specific level code into C memory
 - Takes level code as comma-separated values
 - Format: 24 numbers (0-40 range)
+- Position 16 is player column (0-17, where 0 = leftmost column)
 - Example: `1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,10,0,0,0,0,0,0,0`
 
 ### 3. **Load Predefined Level**
 - Loads pre-built levels by index
 - Stores in C memory automatically
 - Use for tutorial/challenge levels
+
+## Level Code Format
+
+The level code consists of 24 numbers:
+- **Positions 0-15**: Platform patterns (0-34)
+- **Position 16**: Player column (0-17, where 0 = leftmost column)
+- **Positions 17-21**: Enemy positions (0-40, 0 = no enemy)
+- **Positions 22-23**: Enemy direction and type masks (0-31)
+
+### Player Position System
+- Player column 0 = leftmost playable column
+- Player column 17 = rightmost playable column  
+- Level code only stores horizontal position (column)
+- Player marker appears on row 11 during editing
+- Player actor drops down from top to land at the correct column
+- Restoration positions the actor at the stored column
 
 ## Basic Workflows
 

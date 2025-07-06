@@ -212,8 +212,19 @@ void update_complete_level_code(void) BANKED
 // Update player actor position based on current level code
 void update_player_actor_position(void) BANKED
 {
-    // Move player actor to the current column position at row 11 (bottom of screen)
-    move_player_actor_to_tile(paint_player_id, current_level_code.player_column, 11);
+    // First, clear any existing player tiles on row 11 (player marker position)
+    clear_existing_player_on_row_11();
+    
+    // Convert column position to tile coordinates (add 2 for offset)
+    // Note: The level code only stores the column (0-17), not the row
+    UBYTE player_x = current_level_code.player_column + 2;
+    
+    // Position the player actor at the top of the screen (row 0) so they drop down
+    // The actor system handles the dropping animation/physics to land on platforms
+    move_player_actor_to_tile(paint_player_id, player_x, 0);
+    
+    // Also position the exit sprite relative to where the player will land
+    position_exit_for_player(player_x, 11);
 }
 
 // ============================================================================
