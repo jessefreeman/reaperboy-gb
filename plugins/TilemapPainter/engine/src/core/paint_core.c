@@ -16,7 +16,7 @@
 // External data references
 extern UBYTE __at(SRAM_MAP_DATA_PTR) sram_map_data[];
 
-// External functions - keep these references in the core module
+// External functions used by paint operations
 extern void reconstruct_tilemap_from_level_code(void) BANKED;
 extern void mark_display_position_for_update(UBYTE position) BANKED;
 extern void display_complete_level_code(void) BANKED;

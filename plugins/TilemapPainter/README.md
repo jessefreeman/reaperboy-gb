@@ -1,15 +1,23 @@
-# Tilemap Editor Plugin
+# TilemapPainter Plugin
 
-This plugin provides enhanced tilemap editing capabilities for GB Studio, allowing in-game level design with real-time feedback and validation.
+This plugin provides interactive tilemap painting capabilities for GB Studio, allowing real-time level editing with validation and feedback.
 
 ## Core Features
 
-- **Interactive Level Editor**: Design levels directly in the game environment
+- **Interactive Level Editor**: Paint tiles directly in the game environment
 - **Platform Validation**: Automatic enforcement of platform rules (2-8 tile length)
 - **Entity Placement**: Position player and enemies with automatic validation
-- **Level Code System**: Compact encoding for level serialization and sharing
-- **Save/Load**: Persistence through GB Studio variables
-- **Code Entry Mode**: Support for direct pattern application
+- **Real-time Feedback**: Visual feedback during painting operations
+- **VM Integration**: Seamless integration with GB Studio's scripting system
+
+## Recent Updates
+
+This plugin has been cleaned up and optimized:
+
+- Removed empty stub files for better maintainability
+- Simplified header structure with cleaner interfaces
+- Consolidated external dependencies
+- Improved documentation and organization
 
 ## Events
 
@@ -70,17 +78,6 @@ Gets information about what would happen if painting at the current position.
 
 - Connect to cursor movement to provide real-time feedback
 - Returns preview state that can be used to show valid/invalid placement
-
-### Cycle Character
-
-Changes the active brush tool between platform, player, and enemy placement modes.
-
-**Parameters:** None
-
-**Usage:**
-
-- Connect to player input (typically SELECT button)
-- Cycles through available tools
 
 ## Recommended Workflow
 

@@ -13,14 +13,16 @@
 #include "code_player_system.h"
 #include "code_enemy_system.h"
 
-// Forward declaration for actors
+// Forward declarations
 extern void deactivate_actor(actor_t *actor) BANKED;
-
-// External actor array
 extern actor_t actors[];
-
-// External script memory for VM operations
-extern UWORD script_memory[]; // Using correct type from vm.h
+extern UWORD script_memory[];
+extern void reset_enemy_pool(void) BANKED;
+extern void init_column_platform_tracking(void) BANKED;
+extern UBYTE is_map_empty(void) BANKED;
+extern void init_default_level_code(void) BANKED;
+extern void update_complete_level_code(void) BANKED;
+extern void force_complete_level_code_display(void) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS
