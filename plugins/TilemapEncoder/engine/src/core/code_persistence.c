@@ -32,6 +32,7 @@ extern void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
 extern void set_suppress_display_updates_ext(UBYTE suppress) BANKED;
 extern void force_complete_level_code_display(void) BANKED;
 extern void update_player_actor_position(void) BANKED;
+extern void init_default_level_code(void) BANKED;
 extern UBYTE paint_player_id;
 extern UBYTE paint_player_id;
 
@@ -730,6 +731,32 @@ void clear_level_code_string(void) BANKED
 // This rebuilds the tilemap and display from whatever is currently in memory
 void restore_level_from_memory(void) BANKED
 {
+    // Check if memory contains any level data, if not initialize with default
+    UBYTE has_level_data = 0;
+    
+    // Check if there are any platform patterns
+    for (UBYTE i = 0; i < TOTAL_BLOCKS; i++)
+    {
+        if (current_level_code.platform_patterns[i] != 0)
+        {
+            has_level_data = 1;
+            break;
+        }
+    }
+    
+    // Check if player position is set
+    if (current_level_code.player_column != 0)
+    {
+        has_level_data = 1;
+    }
+    
+    // If no level data exists, initialize with default level
+    if (!has_level_data)
+    {
+        init_default_level_code();
+        return; // init_default_level_code handles the full setup
+    }
+    
     // Suppress display updates during the entire restoration process
     // This prevents feedback loops where the paint system tries to update the level code
     set_suppress_display_updates_ext(1);
@@ -741,7 +768,7 @@ void restore_level_from_memory(void) BANKED
     // Re-enable display updates
     set_suppress_display_updates_ext(0);
     
-    // Ensure player is positioned correctly
+    // Ensure player is positioned correctly (places marker tile for editor)
     update_player_actor_position();
     
     // Force a display update to show the restored level code

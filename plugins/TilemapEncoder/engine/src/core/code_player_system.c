@@ -8,6 +8,7 @@
 #include "code_platform_system.h"
 #include "tile_utils.h"
 #include "paint.h"
+#include "paint_entity.h"
 
 // ============================================================================
 // PLAYER SYSTEM DATA
@@ -15,6 +16,7 @@
 
 // External data declarations for cross-bank access
 extern const UBYTE PLATFORM_PATTERNS[];
+extern UBYTE paint_player_id;
 
 // Valid player position tracking - paint-system tied approach
 UBYTE column_has_platform[20];  // 1 if column has at least one platform, 0 if not
@@ -347,4 +349,15 @@ void handle_player_position_edit(UBYTE new_value) BANKED
         }
         // If new position is not valid, don't change the player position
     }
+}
+
+// ============================================================================
+// PLAYER ACTOR MOVEMENT
+// ============================================================================
+
+// Move player actor to specified column and row (for gameplay)
+void move_player_to_column(UBYTE x, UBYTE y) BANKED
+{
+    // Move the player actor to the specified tile position
+    move_player_actor_to_tile(paint_player_id, x, y);
 }

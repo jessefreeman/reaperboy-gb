@@ -9,11 +9,15 @@
 #include "code_enemy_system.h"
 #include "tile_utils.h"
 #include "paint.h"
+#include "paint_entity.h"
 #include "code_persistence.h"
 
 // External data declarations for cross-bank access
 extern const UBYTE PATTERN_TILE_MAP[];
 extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
+
+// Forward declarations
+void move_player_to_column(UBYTE x, UBYTE y) BANKED;
 
 // ============================================================================
 // GLOBAL VARIABLE DEFINITIONS
@@ -212,18 +216,18 @@ void update_complete_level_code(void) BANKED
 // Update player actor position based on current level code
 void update_player_actor_position(void) BANKED
 {
-    // First, clear any existing player tiles on row 11 (player marker position)
-    clear_existing_player_on_row_11();
-    
     // Convert column position to tile coordinates (add 2 for offset)
-    // Note: The level code only stores the column (0-17), not the row
     UBYTE player_x = current_level_code.player_column + 2;
     
-    // Position the player actor at the top of the screen (row 0) so they drop down
-    // The actor system handles the dropping animation/physics to land on platforms
-    move_player_actor_to_tile(paint_player_id, player_x, 0);
+    // For edit mode: Place the player marker tile on row 11 at the correct column
+    // This ensures the editor shows the player position correctly
+    replace_meta_tile(player_x, 11, TILE_PLAYER, 1);
     
-    // Also position the exit sprite relative to where the player will land
+    // For gameplay: Move the player actor to the top (row 0) at the correct column
+    // This ensures the player starts at the right position when playing
+    move_player_to_column(player_x, 0);
+    
+    // Position the exit sprite relative to the player marker
     position_exit_for_player(player_x, 11);
 }
 

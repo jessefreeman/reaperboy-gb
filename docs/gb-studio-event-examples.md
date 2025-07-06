@@ -21,8 +21,9 @@ No variables needed! Pure C memory persistence.
 - No parameters needed
 - **Features**: 
   - Platforms restored with correct end caps and visual styling
-  - Player actor positioned correctly (column 0 = leftmost position)
-  - Exit sprite positioned relative to player
+  - Player actor positioned at top (column 0 = leftmost position) to drop down
+  - Player marker tile placed on row 11 for editor visibility
+  - Exit sprite positioned relative to player landing position
 - **Note**: Only restores platforms/level layout, not level code display
 
 ### 2. **Load Level Code Into Memory**  

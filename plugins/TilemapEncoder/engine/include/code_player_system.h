@@ -38,6 +38,7 @@ UBYTE get_previous_valid_player_position(UBYTE current_position) BANKED;
 void position_player_at_valid_location(void) BANKED;
 void update_exit_position_after_platform_change(void) BANKED;
 void update_player_system(void) BANKED;
+void move_player_to_column(UBYTE x, UBYTE y) BANKED;
 
 // Debug functions
 

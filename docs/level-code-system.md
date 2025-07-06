@@ -119,6 +119,35 @@ The level code display uses a selective update system to prevent flicker:
 3. **Platform Merging**: Adjacent platforms merge using identical rules
 4. **Level Code Sync**: Immediate updates for all affected blocks
 
+## Player Position System - Final Implementation
+
+The player position system now handles both editor and gameplay modes correctly:
+
+### Editor Mode (Visual Marker)
+- Player marker tile is placed at row 11 (the bottom row) at the correct column
+- This provides visual feedback in the editor showing where the player will start
+- The marker is restored when loading a level code for editing
+
+### Gameplay Mode (Actor Movement)
+- Player actor is moved to row 0 (the top row) at the correct column
+- This positions the player at the starting position for gameplay
+- The actor movement is handled by the `move_player_to_column` function
+
+### Code Structure
+- `update_player_actor_position()` handles both modes:
+  - Places marker tile at row 11 for editor visualization
+  - Moves player actor to row 0 for gameplay
+- `move_player_to_column()` uses the paint system's `move_player_actor_to_tile()` function
+- Both functions work together to ensure seamless transitions between modes
+
+### Level Code Format
+The player position is stored as a single column value (0-19) in the level code:
+- Column 0 = leftmost playable position
+- Column 19 = rightmost playable position  
+- The system automatically converts this to the appropriate tile coordinates (adds 2 for offset)
+
+This ensures that both the editor shows the correct player position and gameplay starts the player at the right location.
+
 ## Setup Requirements
 
 ### GB Studio Variables
