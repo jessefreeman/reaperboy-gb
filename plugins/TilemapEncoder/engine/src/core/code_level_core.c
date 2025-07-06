@@ -18,6 +18,7 @@ extern const UBYTE EXTENDED_PATTERN_TILE_MAP[];
 
 // Forward declarations
 void move_player_to_column(UBYTE x, UBYTE y) BANKED;
+void restore_enemy_actors_from_level_code(void) BANKED;
 
 // ============================================================================
 // GLOBAL VARIABLE DEFINITIONS
@@ -229,6 +230,9 @@ void update_player_actor_position(void) BANKED
     
     // Position the exit sprite relative to the player marker
     position_exit_for_player(player_x, 11);
+    
+    // Restore all enemy actors from level code data with correct positions and directions
+    restore_enemy_actors_from_level_code();
 }
 
 // ============================================================================
@@ -859,7 +863,8 @@ void init_tilemap_editor_from_memory(void) BANKED
     // Extract current player data to ensure it's in sync
     extract_player_data();
     
-    // Update player position to ensure both marker and actor are positioned correctly
+    // Update player position and restore all actors (player, exit, enemies)
+    // This ensures both marker tiles and actors are positioned correctly
     update_player_actor_position();
     
     // Force display update to show current state

@@ -67,6 +67,7 @@ UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED;
 
 void clear_enemy_actor(UBYTE enemy_index) BANKED;
 void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYTE direction) BANKED;
+void restore_enemy_actors_from_level_code(void) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS

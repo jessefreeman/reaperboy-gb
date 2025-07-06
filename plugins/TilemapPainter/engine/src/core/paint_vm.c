@@ -24,6 +24,7 @@ extern void init_default_level_code(void) BANKED;
 extern void update_complete_level_code(void) BANKED;
 extern void force_complete_level_code_display(void) BANKED;
 extern void update_player_actor_position(void) BANKED;
+extern void restore_enemy_actors_from_level_code(void) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS

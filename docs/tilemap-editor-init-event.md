@@ -25,6 +25,10 @@ Event: "Enable Editor" (from TilemapEditor group)
 2. Initializes enemy and player tracking systems
 3. Checks if map is empty and initializes default level if needed
 4. **If map has content**: Updates level code from tilemap AND calls `update_player_actor_position()`
+   - Places player marker tile at row 11 for editor visualization
+   - Moves player actor to row 0 for gameplay positioning
+   - Positions exit sprite relative to player
+   - **Restores all enemy actors with correct positions and directions**
 5. Forces complete level code display update
 
 ### Usage
@@ -55,10 +59,11 @@ Event: "Initialize Tilemap Editor from Memory"
 
 ## Technical Notes
 
-- The "Enable Editor" event now includes automatic player positioning
+- The "Enable Editor" event now includes automatic actor positioning
 - Player marker tile is placed at row 11 for editor visualization
 - Player actor is moved to row 0 for gameplay positioning  
 - Exit sprite is positioned relative to the player
+- **Enemy actors are restored with correct positions and directions**
 - All positioning happens automatically when the editor loads
 
 ## Integration

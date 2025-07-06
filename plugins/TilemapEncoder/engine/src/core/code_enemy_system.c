@@ -510,3 +510,34 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
 
     paint_enemy_slots_used[enemy_index] = 1;
 }
+
+// Restore all enemy actors from current level code data
+void restore_enemy_actors_from_level_code(void) BANKED
+{
+    // First clear all existing enemy actors
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        clear_enemy_actor(i);
+    }
+    
+    // Now place enemies based on current level code data
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        if (current_level_code.enemy_positions[i] != 255)
+        {
+            // Enemy exists at this position
+            UBYTE col = current_level_code.enemy_positions[i];
+            UBYTE row = current_level_code.enemy_rows[i];
+            
+            // Convert to tilemap coordinates
+            UBYTE tilemap_x = PLATFORM_X_MIN + col;  // Convert column to tilemap X
+            UBYTE tilemap_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;  // Convert row to tilemap Y
+            
+            // Get direction for this enemy (bit i in enemy_directions)
+            UBYTE direction = (current_level_code.enemy_directions & (1 << i)) ? 1 : 0;
+            
+            // Place the enemy actor
+            place_enemy_actor(i, tilemap_x, tilemap_y, direction);
+        }
+    }
+}
