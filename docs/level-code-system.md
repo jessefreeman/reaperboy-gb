@@ -169,3 +169,34 @@ Level Editor Exit:
 1. Save Level Code
 2. Show confirmation message
 ```
+
+## Tilemap Editor Initialization
+
+### Function: `init_tilemap_editor_from_memory()`
+
+This function handles the complete initialization of the tilemap editor from memory, ensuring all elements are properly positioned:
+
+**Purpose**: 
+- Restores the complete level state when the tilemap editor loads
+- Ensures player marker, player actor, and exit sprite are correctly positioned
+- Synchronizes the level code display with the current state
+
+**Actions Performed**:
+1. Calls `restore_level_from_memory()` to rebuild the level
+2. Extracts current player data to ensure synchronization
+3. Updates player actor position (marker tile + actor movement)
+4. Forces a complete display update
+
+**GB Studio Usage**:
+```
+Event: "Initialize Tilemap Editor"
+└── Call Native: vm_init_tilemap_editor_from_memory
+```
+
+**When to Use**:
+- Scene "On Init" script for tilemap editor scenes
+- After loading a level code from external source
+- When switching between editor and gameplay modes
+- To refresh the editor state after any major changes
+
+This ensures that both the visual editor (with marker tiles) and the gameplay system (with positioned actors) are properly initialized when the tilemap editor loads.

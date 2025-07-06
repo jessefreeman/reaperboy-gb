@@ -23,6 +23,7 @@ extern UBYTE is_map_empty(void) BANKED;
 extern void init_default_level_code(void) BANKED;
 extern void update_complete_level_code(void) BANKED;
 extern void force_complete_level_code_display(void) BANKED;
+extern void update_player_actor_position(void) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS
@@ -153,6 +154,9 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
     {
         // Map has content, update level code from existing tilemap
         update_complete_level_code();
+        
+        // Restore player position from level code and update actors
+        update_player_actor_position();
     }
 
     // Always ensure the level code is displayed after initialization

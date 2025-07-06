@@ -113,6 +113,10 @@ void vm_test_level_code_character_editing(SCRIPT_CTX *THIS) BANKED;
 // Player actor management
 void update_player_actor_position(void) BANKED;
 
+// Tilemap editor initialization
+void init_tilemap_editor_from_memory(void) BANKED;
+void vm_init_tilemap_editor_from_memory(SCRIPT_CTX *THIS) BANKED;
+
 // External function from platform system
 extern void reconstruct_tilemap_from_level_code(void) BANKED;
 

@@ -846,3 +846,30 @@ void display_enemy_char_at_position(UBYTE value, UBYTE char_position, UBYTE x, U
 
     replace_meta_tile(x, y, tile_id, 1);
 }
+
+// Initialize tilemap editor with level data from memory
+void init_tilemap_editor_from_memory(void) BANKED
+{
+    // This function should be called when the tilemap editor loads
+    // It restores the level state from memory and ensures proper positioning
+    
+    // First restore the complete level from memory
+    restore_level_from_memory();
+    
+    // Extract current player data to ensure it's in sync
+    extract_player_data();
+    
+    // Update player position to ensure both marker and actor are positioned correctly
+    update_player_actor_position();
+    
+    // Force display update to show current state
+    force_complete_level_code_display();
+}
+
+// VM function to initialize tilemap editor from memory
+void vm_init_tilemap_editor_from_memory(SCRIPT_CTX *THIS) BANKED
+{
+    init_tilemap_editor_from_memory();
+}
+
+// ============================================================================
