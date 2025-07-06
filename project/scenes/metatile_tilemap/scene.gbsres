@@ -1076,6 +1076,13 @@
               ]
             },
             "id": "6535e29c-c169-40e3-86c2-2006d374ccdd"
+          },
+          {
+            "command": "EVENT_RESTORE_LEVEL_FROM_MEMORY",
+            "args": {
+              "description": "Restores the level layout from whatever is currently stored in C memory. Use this on scene init to restore the level after editing."
+            },
+            "id": "38595138-7bb0-4c97-9815-d4ffc611da9b"
           }
         ]
       },

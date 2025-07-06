@@ -9,6 +9,7 @@
 #include "code_enemy_system.h"
 #include "tile_utils.h"
 #include "paint.h"
+#include "code_persistence.h"
 
 // External data declarations for cross-bank access
 extern const UBYTE PATTERN_TILE_MAP[];

@@ -54,4 +54,51 @@ void update_level_code_from_character_edit(UBYTE char_index, UBYTE new_value) BA
 // Helper function to update display with numeric value
 void update_display_with_value(UBYTE char_index, UBYTE value, UBYTE x, UBYTE y) BANKED;
 
+// ============================================================================
+// STRING-BASED LEVEL CODE PERSISTENCE
+// ============================================================================
+
+// String-based level code functions
+void generate_level_code_string(UBYTE level_code_chars[24]) BANKED;
+void save_level_code_string_to_variables(void) BANKED;
+void load_level_code_string_from_variables(void) BANKED;
+void apply_level_code_string(UBYTE level_code_chars[24]) BANKED;
+
+// Individual character management
+void set_level_code_character(UBYTE char_index, UBYTE value) BANKED;
+UBYTE get_level_code_character(UBYTE char_index) BANKED;
+UBYTE has_saved_level_code_string(void) BANKED;
+void clear_level_code_string(void) BANKED;
+
+// Predefined level system
+void load_predefined_level(UBYTE level_index) BANKED;
+UBYTE get_predefined_level_count(void) BANKED;
+
+// VM wrapper functions for string-based level codes
+void vm_save_level_code_string(SCRIPT_CTX *THIS) BANKED;
+void vm_load_level_code_string(SCRIPT_CTX *THIS) BANKED;
+void vm_has_saved_level_code_string(SCRIPT_CTX *THIS) BANKED;
+void vm_clear_level_code_string(SCRIPT_CTX *THIS) BANKED;
+void vm_set_level_code_character(SCRIPT_CTX *THIS) BANKED;
+void vm_get_level_code_character(SCRIPT_CTX *THIS) BANKED;
+void vm_load_predefined_level(SCRIPT_CTX *THIS) BANKED;
+void vm_get_predefined_level_count(SCRIPT_CTX *THIS) BANKED;
+
+// ============================================================================
+// SIMPLE MEMORY-BASED RESTORE SYSTEM
+// ============================================================================
+
+// Simple memory-based restore system
+void restore_level_from_memory(void) BANKED;
+void vm_restore_level_from_memory(SCRIPT_CTX *THIS) BANKED;
+
+// ============================================================================
+// STRING-BASED LEVEL CODE CONFIGURATION
+// ============================================================================
+
+// IMPORTANT: Update this value to match your GB Studio project
+// This should be the ID of the first variable you allocate for level code storage
+// The system will use 24 consecutive variables starting from this ID
+#define VAR_LEVEL_CODE_CHAR_BASE 50  // Change this to match your GB Studio variables
+
 #endif // CODE_PERSISTENCE_H

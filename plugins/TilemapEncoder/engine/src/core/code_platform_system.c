@@ -233,7 +233,9 @@ void update_all_platform_patterns(void) BANKED
 // Initialize level persistence
 void init_level_persistence(void) BANKED
 {
-    // Level persistence initialization if needed
+    // Initialize the level code structure to ensure clean state
+    // But don't auto-create any platforms
+    init_level_code();
 }
 
 // ============================================================================

@@ -34,6 +34,7 @@ extern void mark_display_position_for_update(UBYTE position) BANKED;
 extern void display_selective_level_code_fast(void) BANKED;
 extern void validate_all_block_patterns(void) BANKED;
 extern void update_valid_player_positions(void) BANKED;
+extern void rebuild_platform_row(UBYTE y) BANKED;
 
 // Forward declarations for functions in this file
 void extract_platform_data_ext(void) BANKED;
@@ -501,17 +502,14 @@ void apply_pattern_with_brush_logic_ext(UBYTE block_index, UBYTE pattern_id) BAN
     UBYTE segment_x = 2 + block_x * SEGMENT_WIDTH;
     UBYTE segment_y = PLATFORM_Y_MIN + block_y * SEGMENT_HEIGHT;
 
-    // VALIDATION: Check if pattern is valid for this position
-    if (!is_pattern_valid_for_position_ext(pattern_id, block_x))
-    {
-        // Pattern is invalid for this position - do nothing
-        return;
-    }
-
     // Get the pattern data
     UBYTE pattern = PLATFORM_PATTERNS[pattern_id];
 
+    // The platform row is the second row of each segment (odd row)
+    UBYTE platform_y = segment_y + 1;
+
     // First, clear any existing platform tiles in this segment
+    // Use direct tile replacement to avoid level code interference
     for (UBYTE row = 0; row < SEGMENT_HEIGHT; row++)
     {
         UBYTE current_y = segment_y + row;
@@ -521,86 +519,31 @@ void apply_pattern_with_brush_logic_ext(UBYTE block_index, UBYTE pattern_id) BAN
             UBYTE current_tile = get_current_tile_type(tile_x, current_y);
             if (current_tile == BRUSH_TILE_PLATFORM)
             {
-                // Use paint() function to delete existing platforms - this triggers all the normal deletion logic
-                paint(tile_x, current_y);
+                // Direct tile replacement - no level code updates
+                replace_meta_tile(tile_x, current_y, TILE_EMPTY, 1);
             }
         }
     }
 
-    // Now apply the pattern by simulating manual painting at each position that should have a platform
-    // Since platforms are only on the second row (y+1) of each segment, we only need to paint on that row
-    UBYTE platform_y = segment_y + 1; // The actual platform row (odd row)
-
-    // Intelligent platform extension logic for specific patterns with leftmost platforms
-    UBYTE has_leftmost_platform = (pattern & (1 << 4)); // Check bit 4 (position 0)
-    UBYTE should_extend_left = 0;
-
-    // Special handling for patterns 2,A,E,F,H that have leftmost platforms
-    if (has_leftmost_platform)
-    {
-        // Check if this is one of the specific patterns that needs special left handling
-        UBYTE pattern_needs_left_support = 0;
-
-        // Patterns: 2,A(10),E(14),F(15),H(17)
-        if (pattern == 0b10000 || // Pattern 2: Single at position 0
-            pattern == 0b10110 || // Pattern A(10): Gapped at positions 0,2-3
-            pattern == 0b10001 || // Pattern E(14): Isolated at positions 0,4
-            pattern == 0b10011 || // Pattern F(15): Position 0 + positions 3-4
-            pattern == 0b10111)   // Pattern H(17): Position 0 + positions 2-4
-        {
-            pattern_needs_left_support = 1;
-        }
-
-        if (pattern_needs_left_support)
-        {
-            // Check what's to the left of this block
-            UBYTE left_tile_x = segment_x - 1;
-            UBYTE has_left_platform = 0;
-
-            // Check if there's already a platform tile to the immediate left
-            if (left_tile_x >= 2) // Within valid bounds
-            {
-                has_left_platform = (get_current_tile_type(left_tile_x, platform_y) == BRUSH_TILE_PLATFORM);
-            }
-
-            if (has_left_platform)
-            {
-                // Case 1: Platform exists to the left - just extend (no additional tile needed)
-                // The platform at position 0 will connect naturally via auto-completion
-                should_extend_left = 0;
-            }
-            else
-            {
-                // Case 2: No platform to the left - paint leading tile for 2-tile default pattern
-                should_extend_left = 1;
-            }
-        }
-    }
-
-    // Apply left extension if needed (for the 2-tile default pattern behavior)
-    if (should_extend_left)
-    {
-        UBYTE left_tile_x = segment_x - 1;
-        if (left_tile_x >= 2 && get_current_tile_type(left_tile_x, platform_y) == BRUSH_TILE_EMPTY)
-        {
-            paint(left_tile_x, platform_y);
-        }
-    }
-
-    // Paint platforms by calling the paint function - this will handle all auto-completion logic
+    // Place platforms using direct tile replacement (paint system approach)
     for (UBYTE i = 0; i < SEGMENT_WIDTH; i++)
     {
         if (pattern & (1 << (4 - i))) // Check if this position should have a platform
         {
             UBYTE tile_x = segment_x + i;
 
-            // Only paint if the tile is currently empty (to avoid interfering with auto-completion)
+            // Only place if the tile is currently empty
             if (get_current_tile_type(tile_x, platform_y) == BRUSH_TILE_EMPTY)
             {
-                paint(tile_x, platform_y);
+                // Use TILE_PLATFORM_MIDDLE initially - rebuild_platform_row will fix end caps
+                replace_meta_tile(tile_x, platform_y, TILE_PLATFORM_MIDDLE, 1);
             }
         }
     }
+
+    // Now use the paint system's platform row rebuilding logic to ensure proper end caps
+    // This is the key function that handles all the end cap logic correctly
+    rebuild_platform_row(platform_y);
 
     // NOTE: No need to call update_single_block_code here since the parent function handles it
     // and suppression may still be active
