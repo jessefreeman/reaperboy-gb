@@ -28,6 +28,7 @@ UBYTE encode_odd_mask(void) BANKED;
 UBYTE encode_direction_mask(void) BANKED;
 
 // Decoding functions for level code editing
+// decode_enemy_position: No longer draws background tiles; only manages actors
 void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UBYTE dir_bit) BANKED;
 void decode_enemy_data_from_values(const UBYTE *enemy_values) BANKED;
 
@@ -66,6 +67,8 @@ UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED;
 // ============================================================================
 
 void clear_enemy_actor(UBYTE enemy_index) BANKED;
+// Place enemy actor: In edit mode, deactivates actors (visible but inactive).
+// In play mode, activates actors for gameplay. Mode detected via script_memory[0].
 void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYTE direction) BANKED;
 void restore_enemy_actors_from_level_code(void) BANKED;
 

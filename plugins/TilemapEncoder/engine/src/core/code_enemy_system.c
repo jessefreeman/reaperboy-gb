@@ -262,12 +262,9 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
         current_level_code.enemy_directions &= ~(1 << enemy_index);
     }
 
-    // Place the enemy on the tilemap
+    // Move the enemy actor to position (no background tile drawing in edit mode)
     UBYTE tilemap_x = PLATFORM_X_MIN + col;
     UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-    UBYTE enemy_tile = dir_bit ? TILE_LEFT_ENEMY : TILE_RIGHT_ENEMY;
-
-    replace_meta_tile(tilemap_x, actual_y, enemy_tile, 1);
 
     // Update the enemy actor position
     place_enemy_actor(enemy_index, tilemap_x, actual_y, dir_bit);
@@ -469,6 +466,9 @@ extern void activate_actor(actor_t *actor) BANKED;
 extern void deactivate_actor(actor_t *actor) BANKED;
 extern void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 
+// External reference to script memory for mode checking
+extern UWORD script_memory[];
+
 // Direction constants
 #define DIRECTION_DOWN 0
 #define DIRECTION_RIGHT 1
@@ -502,11 +502,36 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
     actor_t *enemy = &actors[paint_enemy_ids[enemy_index]];
     enemy->pos.x = TO_FP(tilemap_x * 8);
     enemy->pos.y = TO_FP(tilemap_y * 8);
-    activate_actor(enemy);
+    
+    // Check edit mode: script_memory[0] = 0 means play mode, 1 means edit mode
+    UBYTE is_edit_mode = (script_memory[0] != 0);
+    
+    if (is_edit_mode) {
+        // Edit mode: Position enemy actors but keep them deactivated (visible but inactive)
+        // The actors will be visible for editing but won't move or collide
+        deactivate_actor(enemy);
 
-    // Set direction: direction=1 means left-facing, direction=0 means right-facing
-    UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
-    actor_set_dir(enemy, actor_dir, 1); // 1 = moving/active
+        // Set direction: direction=1 means left-facing, direction=0 means right-facing  
+        UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
+        actor_set_dir(enemy, actor_dir, 0); // 0 = not moving (edit mode)
+
+        // Handle left-facing enemy positioning offset
+        if (actor_dir == DIRECTION_LEFT) {
+            enemy->pos.x = TO_FP(tilemap_x * 8 - 8);
+        }
+    } else {
+        // Play mode: Activate enemy actors for gameplay
+        activate_actor(enemy);
+
+        // Set direction: direction=1 means left-facing, direction=0 means right-facing  
+        UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
+        actor_set_dir(enemy, actor_dir, 1); // 1 = moving (play mode)
+
+        // Handle left-facing enemy positioning offset
+        if (actor_dir == DIRECTION_LEFT) {
+            enemy->pos.x = TO_FP(tilemap_x * 8 - 8);
+        }
+    }
 
     paint_enemy_slots_used[enemy_index] = 1;
 }
