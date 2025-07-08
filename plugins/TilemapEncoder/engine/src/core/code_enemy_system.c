@@ -454,6 +454,7 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
 
     // Set up the enemy actor
     actor_t *enemy = &actors[paint_enemy_ids[enemy_index]];
+    // Always position enemy at the brush/cursor tile
     enemy->pos.x = TO_FP(tilemap_x * 8);
     enemy->pos.y = TO_FP(tilemap_y * 8);
     
@@ -468,11 +469,6 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
         // Set direction: direction=1 means left-facing, direction=0 means right-facing  
         UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
         actor_set_dir(enemy, actor_dir, 0); // 0 = not moving (edit mode)
-
-        // Handle left-facing enemy positioning offset
-        if (actor_dir == DIRECTION_LEFT) {
-            enemy->pos.x = TO_FP(tilemap_x * 8 - 8);
-        }
     } else {
         // Play mode: Activate enemy actors for gameplay
         activate_actor(enemy);
@@ -480,11 +476,6 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
         // Set direction: direction=1 means left-facing, direction=0 means right-facing  
         UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
         actor_set_dir(enemy, actor_dir, 1); // 1 = moving (play mode)
-
-        // Handle left-facing enemy positioning offset
-        if (actor_dir == DIRECTION_LEFT) {
-            enemy->pos.x = TO_FP(tilemap_x * 8 - 8);
-        }
     }
 
     paint_enemy_slots_used[enemy_index] = 1;
@@ -525,14 +516,8 @@ void restore_enemy_actors_from_level_code(void) BANKED
             // Set up the enemy using the same logic as the paint functions
             actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
             
-            if (direction == 1) // Left-facing
-            {
-                enemy->pos.x = TO_FP(tilemap_x * 8 - 8);
-            }
-            else // Right-facing  
-            {
-                enemy->pos.x = TO_FP(tilemap_x * 8);
-            }
+            // Always position enemy at the correct tile regardless of direction
+            enemy->pos.x = TO_FP(tilemap_x * 8);
             enemy->pos.y = TO_FP(tilemap_y * 8);
             
             // Check edit mode: script_memory[0] = 0 means play mode, 1 means edit mode

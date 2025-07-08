@@ -349,12 +349,7 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
             UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
             UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                actor_tile_x += 1;
-            }
-
+            // No offset needed - all enemies are positioned at their actual tile
             if (actor_tile_x == x && actor_tile_y == enemy_row)
             {
                 // Found enemy at this position - remove it
@@ -425,12 +420,7 @@ void paint_enemy_right(UBYTE x, UBYTE y) BANKED
             UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
             UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                actor_tile_x += 1;
-            }
-
+            // No offset needed - all enemies are positioned at their actual tile
             if (actor_tile_x == x && actor_tile_y == y)
             {
                 // Found existing enemy - change direction to right
@@ -499,19 +489,14 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
             UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
             UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                actor_tile_x += 1;
-            }
-
+            // No offset needed - all enemies are positioned at their actual tile
             if (actor_tile_x == x && actor_tile_y == y)
             {
                 // Found existing enemy - change direction to left
                 if (enemy->dir != DIRECTION_LEFT)
                 {
-                    // When changing to left direction, offset the actor position
-                    enemy->pos.x = TO_FP(x * 8 - 8);
+                    // Position enemy at the same tile (no offset for left direction)
+                    enemy->pos.x = TO_FP(x * 8);
                     actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
                     
                     // Directly update level code structure
@@ -543,8 +528,8 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
 
         // Set up the new left-facing enemy
         actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
-        // Position left-facing enemy with offset
-        enemy->pos.x = TO_FP(x * 8 - 8);
+        // Position left-facing enemy at the same tile (no offset)
+        enemy->pos.x = TO_FP(x * 8);
         enemy->pos.y = TO_FP(y * 8);
         activate_actor(enemy);
         actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
@@ -578,12 +563,7 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
             UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
             UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                actor_tile_x += 1;
-            }
-
+            // No offset needed - all enemies are positioned at their actual tile
             if (actor_tile_x == x && actor_tile_y == y)
             {
                 deactivate_actor(enemy);
@@ -811,12 +791,7 @@ UBYTE has_enemy_actor_at_position(UBYTE x, UBYTE y) BANKED
             UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
             UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                actor_tile_x += 1;
-            }
-
+            // No offset needed - all enemies are positioned at their actual tile
             if (actor_tile_x == x && actor_tile_y == y)
             {
                 return 1; // Enemy found at this position
@@ -839,12 +814,7 @@ UBYTE get_enemy_actor_direction_at_position(UBYTE x, UBYTE y) BANKED
             UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
             UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (enemy->dir == DIRECTION_LEFT)
-            {
-                actor_tile_x += 1;
-            }
-
+            // No offset needed - all enemies are positioned at their actual tile
             if (actor_tile_x == x && actor_tile_y == y)
             {
                 return enemy->dir; // Return the direction of the enemy
