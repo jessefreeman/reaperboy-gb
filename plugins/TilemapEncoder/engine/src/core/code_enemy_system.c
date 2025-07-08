@@ -416,6 +416,10 @@ extern void activate_actor(actor_t *actor) BANKED;
 extern void deactivate_actor(actor_t *actor) BANKED;
 extern void actor_set_dir(actor_t *actor, UBYTE dir, UBYTE moving) BANKED;
 
+// External references from painting system
+extern UBYTE get_next_enemy_slot_from_pool(void) BANKED;
+extern void reset_enemy_pool(void) BANKED;
+
 // External reference to script memory for mode checking
 extern UWORD script_memory[];
 
@@ -457,9 +461,9 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
     UBYTE is_edit_mode = (script_memory[0] != 0);
     
     if (is_edit_mode) {
-        // Edit mode: Position enemy actors but keep them deactivated (visible but inactive)
-        // The actors will be visible for editing but won't move or collide
-        deactivate_actor(enemy);
+        // Edit mode: Position enemy actors and keep them activated (visible but not moving)
+        // In edit mode, enemies should be visible for editing purposes
+        activate_actor(enemy);
 
         // Set direction: direction=1 means left-facing, direction=0 means right-facing  
         UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
@@ -486,17 +490,21 @@ void place_enemy_actor(UBYTE enemy_index, UBYTE tilemap_x, UBYTE tilemap_y, UBYT
     paint_enemy_slots_used[enemy_index] = 1;
 }
 
-// Restore all enemy actors from current level code data
+// Restore all enemy actors from current level code data using the painting system
 void restore_enemy_actors_from_level_code(void) BANKED
 {
-    // First clear all existing enemy actors
+    // First clear all existing enemy actors and reset paint system
     for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
         clear_enemy_actor(i);
     }
     
-    // Now place enemies based on current level code data
-    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    // Reset the enemy painting pool to ensure clean state
+    reset_enemy_pool();
+    
+    // Now restore enemies based on current level code data
+    // Use the painting system's slot management for consistency
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         if (current_level_code.enemy_positions[i] != 255)
         {
@@ -511,8 +519,39 @@ void restore_enemy_actors_from_level_code(void) BANKED
             // Get direction for this enemy (bit i in enemy_directions)
             UBYTE direction = (current_level_code.enemy_directions & (1 << i)) ? 1 : 0;
             
-            // Place the enemy actor
-            place_enemy_actor(i, tilemap_x, tilemap_y, direction);
+            // Use the painting system's slot management
+            UBYTE enemy_slot = get_next_enemy_slot_from_pool();
+            
+            // Set up the enemy using the same logic as the paint functions
+            actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
+            
+            if (direction == 1) // Left-facing
+            {
+                enemy->pos.x = TO_FP(tilemap_x * 8 - 8);
+            }
+            else // Right-facing  
+            {
+                enemy->pos.x = TO_FP(tilemap_x * 8);
+            }
+            enemy->pos.y = TO_FP(tilemap_y * 8);
+            
+            // Check edit mode: script_memory[0] = 0 means play mode, 1 means edit mode
+            UBYTE is_edit_mode = (script_memory[0] != 0);
+            
+            if (is_edit_mode) {
+                // Edit mode: Position enemy actors and keep them activated (visible but not moving)
+                activate_actor(enemy);
+                UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
+                actor_set_dir(enemy, actor_dir, 0); // 0 = not moving (edit mode)
+            } else {
+                // Play mode: Activate enemy actors for gameplay
+                activate_actor(enemy);
+                UBYTE actor_dir = direction ? DIRECTION_LEFT : DIRECTION_RIGHT;
+                actor_set_dir(enemy, actor_dir, 1); // 1 = moving (play mode)
+            }
+            
+            // Mark slot as used in the painting system
+            paint_enemy_slots_used[enemy_slot] = 1;
         }
     }
 }

@@ -335,41 +335,49 @@ void remove_enemies_above_platform(UBYTE x, UBYTE y) BANKED
     if (enemy_row == 255)
         return;
 
-    // Check if there's an enemy directly above this platform
-    UBYTE tile_type = get_current_tile_type(x, enemy_row);
-
-    if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+    // Check if there's an enemy actor at this position and remove it
+    UBYTE found_enemy = 0;
+    for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
     {
-        replace_meta_tile(x, enemy_row, TILE_EMPTY, 1);
-
-        // Also deactivate the corresponding actor
-        for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
+        if (paint_enemy_slots_used[i])
         {
-            if (paint_enemy_slots_used[i])
+            actor_t *enemy = &actors[paint_enemy_ids[i]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+            UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (enemy->dir == DIRECTION_LEFT)
             {
-                actor_t *enemy = &actors[paint_enemy_ids[i]];
-                // Convert actor position from fixed point to tile coordinates
-                UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
-                UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+                actor_tile_x += 1;
+            }
 
-                // For left-facing enemies, the tile position is offset by +1 tile
-                if (enemy->dir == DIRECTION_LEFT)
-                {
-                    actor_tile_x += 1;
-                }
+            if (actor_tile_x == x && actor_tile_y == enemy_row)
+            {
+                // Found enemy at this position - remove it
+                deactivate_actor(enemy);
+                paint_enemy_slots_used[i] = 0; // Mark slot as available for reuse
 
-                if (actor_tile_x == x && actor_tile_y == enemy_row)
-                {
-                    deactivate_actor(enemy);
-                    paint_enemy_slots_used[i] = 0; // Mark slot as available
-
-                    // Remove from paint order and add to front for immediate reuse
-                    remove_enemy_from_paint_order(i);
-                    add_enemy_to_front_of_paint_order(i);
-                    break;
-                }
+                // Remove from paint order and add to front for immediate reuse
+                remove_enemy_from_paint_order(i);
+                add_enemy_to_front_of_paint_order(i);
+                found_enemy = 1;
+                break;
             }
         }
+    }
+
+    if (found_enemy)
+    {
+        // Directly update level code structure to remove the enemy
+        remove_enemy_from_level_code(x, enemy_row);
+        
+        // Mark enemy positions for display update
+        for (UBYTE i = 16; i < 24; i++)
+        {
+            mark_display_position_for_update(i);
+        }
+        display_selective_level_code_fast();
     }
 }
 
