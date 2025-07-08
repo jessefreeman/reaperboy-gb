@@ -28,6 +28,20 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
     // Cache current tile type to avoid repeated lookups
     UBYTE current_tile_type = get_current_tile_type(x, y);
 
+    // Check for enemy actors first (since they're no longer stored as background tiles)
+    if (has_enemy_actor_at_position(x, y))
+    {
+        UBYTE enemy_dir = get_enemy_actor_direction_at_position(x, y);
+        if (enemy_dir == DIRECTION_RIGHT)
+        {
+            return SELECTOR_STATE_ENEMY_LEFT; // Next click will flip to left
+        }
+        else if (enemy_dir == DIRECTION_LEFT)
+        {
+            return SELECTOR_STATE_DELETE; // Next click will delete
+        }
+    }
+
     switch (current_tile_type)
     {
     case BRUSH_TILE_EMPTY:
@@ -46,12 +60,6 @@ UBYTE get_brush_tile_state(UBYTE x, UBYTE y) BANKED
 
     case BRUSH_TILE_PLAYER:
         return (y == 11) ? SELECTOR_STATE_DEFAULT : SELECTOR_STATE_PLAYER;
-
-    case BRUSH_TILE_ENEMY_L:
-        return SELECTOR_STATE_DELETE;
-
-    case BRUSH_TILE_ENEMY_R:
-        return SELECTOR_STATE_ENEMY_LEFT;
 
     case BRUSH_TILE_EXIT:
     default:
