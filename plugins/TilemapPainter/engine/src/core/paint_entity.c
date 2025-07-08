@@ -55,23 +55,20 @@ UBYTE has_enemy_below_player(UBYTE x, UBYTE y) BANKED
 UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED
 {
     // Check the same tile
-    UBYTE current_tile = get_current_tile_type(x, y);
-    if (current_tile == BRUSH_TILE_ENEMY_L || current_tile == BRUSH_TILE_ENEMY_R)
+    if (has_enemy_actor_at_position(x, y))
         return 1;
 
     // Check tile to the left
     if (x > PLATFORM_X_MIN)
     {
-        UBYTE left_tile = get_current_tile_type(x - 1, y);
-        if (left_tile == BRUSH_TILE_ENEMY_L || left_tile == BRUSH_TILE_ENEMY_R)
+        if (has_enemy_actor_at_position(x - 1, y))
             return 1;
     }
 
     // Check tile to the right
     if (x < PLATFORM_X_MAX)
     {
-        UBYTE right_tile = get_current_tile_type(x + 1, y);
-        if (right_tile == BRUSH_TILE_ENEMY_L || right_tile == BRUSH_TILE_ENEMY_R)
+        if (has_enemy_actor_at_position(x + 1, y))
             return 1;
     }
     return 0;
@@ -131,7 +128,8 @@ UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
         return 0;
 
     // Don't allow multiple enemies in the same position or adjacent
-    if (has_enemy_nearby(x, y))
+    // Exception: if there's already an enemy at this exact position, allow it (for flipping)
+    if (has_enemy_nearby(x, y) && !has_enemy_actor_at_position(x, y))
         return 0;
 
     return 1;

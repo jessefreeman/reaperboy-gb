@@ -22,6 +22,7 @@ extern void delete_enemy(UBYTE x, UBYTE y) BANKED;
 extern UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED;
 extern UBYTE is_valid_platform_row(UBYTE y) BANKED;
 extern UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED;
+extern UBYTE has_enemy_actor_at_position(UBYTE x, UBYTE y) BANKED;
 
 // Valid enemy positions tracking
 UBYTE valid_enemy_positions[4][20]; // [row][column] - 1 if position is valid, 0 if not
@@ -423,11 +424,8 @@ void remove_enemies_above_deleted_platform(UBYTE x, UBYTE y) BANKED
     if (enemy_row == 255)
         return;
 
-    // Check if there's an enemy directly above this platform
-    UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(x, enemy_row)];
-    UBYTE tile_type = get_tile_type(tile);
-
-    if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
+    // Check if there's an enemy actor directly above this platform
+    if (has_enemy_actor_at_position(x, enemy_row))
     {
         // Remove this enemy - it's directly above the deleted platform
         delete_enemy(x, enemy_row);

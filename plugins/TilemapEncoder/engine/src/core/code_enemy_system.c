@@ -223,7 +223,17 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
 
     // Update the enemy actor position (no background tile manipulation)
     UBYTE tilemap_x = PLATFORM_X_MIN + col;
-    UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
+    
+    // Use the same row-to-Y mapping as the paint system (no offset)
+    UBYTE actual_y;
+    if (row == 0)
+        actual_y = 12;
+    else if (row == 1)
+        actual_y = 14;
+    else if (row == 2)
+        actual_y = 16;
+    else
+        actual_y = 18;
 
     // Update the enemy actor position
     place_enemy_actor(enemy_index, tilemap_x, actual_y, dir_bit);
@@ -309,19 +319,11 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
 
             if (row < 4 && col < 20)
             {
-                // Temporarily set this position to see if it's valid
-                UBYTE old_pos = current_level_code.enemy_positions[rel_index];
-                UBYTE old_row = current_level_code.enemy_rows[rel_index];
-
-                // Set temporary position to check validity
-                current_level_code.enemy_positions[rel_index] = col;
-                current_level_code.enemy_rows[rel_index] = row;
-
-                // Convert to tilemap coordinates
+                // Convert to tilemap coordinates for validation
                 UBYTE x = PLATFORM_X_MIN + col;
-                UBYTE y = 0;
-
-                // Map row to actual y coordinate
+                UBYTE y;
+                
+                // Use the same row-to-Y mapping as the paint system
                 if (row == 0)
                     y = 12;
                 else if (row == 1)
@@ -331,8 +333,8 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
                 else
                     y = 18;
 
-                // Use our strict enemy position validation system instead
-                if (is_valid_enemy_position(x, y))
+                // Use enemy-specific validation that properly handles spacing
+                if (is_position_valid_for_enemy(rel_index, x, y))
                 {
                     // Position is valid, use it
                     enemy_values[rel_index] = new_value;
@@ -342,10 +344,6 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
                     // Invalid position, use our validation system to find a valid position
                     enemy_values[rel_index] = get_valid_enemy_pos41(rel_index, new_value);
                 }
-
-                // Restore original position
-                current_level_code.enemy_positions[rel_index] = old_pos;
-                current_level_code.enemy_rows[rel_index] = old_row;
             }
             else
             {
@@ -505,7 +503,17 @@ void restore_enemy_actors_from_level_code(void) BANKED
             
             // Convert to tilemap coordinates
             UBYTE tilemap_x = PLATFORM_X_MIN + col;  // Convert column to tilemap X
-            UBYTE tilemap_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;  // Convert row to tilemap Y
+            
+            // Use the same row-to-Y mapping as the paint system (no offset)
+            UBYTE tilemap_y;
+            if (row == 0)
+                tilemap_y = 12;
+            else if (row == 1)
+                tilemap_y = 14;
+            else if (row == 2)
+                tilemap_y = 16;
+            else
+                tilemap_y = 18;
             
             // Get direction for this enemy (bit i in enemy_directions)
             UBYTE direction = (current_level_code.enemy_directions & (1 << i)) ? 1 : 0;
