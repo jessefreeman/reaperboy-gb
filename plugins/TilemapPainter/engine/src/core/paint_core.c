@@ -188,12 +188,13 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         return;
     }
 
-    // For enemy operations, update enemy data
-    UBYTE current_tile_type = get_current_tile_type(x, y);
-    if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
+    // For enemy operations on enemy rows, update enemy data
+    // Enemy rows are 12, 14, 16, 18 (PLATFORM_Y_MIN + row * SEGMENT_HEIGHT)
+    if (y == 12 || y == 14 || y == 16 || y == 18)
     {
-        // For any enemy-related operation, extract enemy data and update display
-        extract_enemy_data();
+        // For any operation on enemy rows, extract enemy data and update display
+        // This handles both enemy placement and other operations on enemy rows
+        // extract_enemy_data(); // No longer needed - enemy data is managed directly
         extract_player_data(); // Player data might have changed too
 
         // Mark enemy/player data positions for update (positions 16-23)
@@ -206,6 +207,7 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
     }
 
     // For platform operations, update valid enemy positions
+    UBYTE current_tile_type = get_current_tile_type(x, y);
     if (current_tile_type == BRUSH_TILE_PLATFORM ||
         y == 13 || y == 15 || y == 17 || y == 19) // Platform rows
     {
@@ -216,7 +218,7 @@ void update_level_code_for_paint(UBYTE x, UBYTE y) BANKED
         update_valid_enemy_positions();
 
         // Update enemy data in case enemies were removed when deleting platforms
-        extract_enemy_data();
+        // extract_enemy_data(); // No longer needed - enemy data is managed directly
 
         // Mark platform and enemy data for update
         for (UBYTE i = 0; i < 24; i++)

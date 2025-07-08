@@ -53,45 +53,13 @@ UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 
 void extract_enemy_data(void) BANKED
 {
-    // Clear all enemy data
-    current_level_code.enemy_directions = 0;
-    current_level_code.enemy_types = 0;
-
-    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
-    {
-        current_level_code.enemy_positions[i] = 255; // 255 = no enemy
-        current_level_code.enemy_rows[i] = 255;      // 255 = no enemy
-    }
-
-    UBYTE enemy_count = 0;
-
-    // Scan the 4 enemy rows
-    for (UBYTE row = 0; row < 4; row++)
-    {
-        UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-
-        // Scan all 20 columns
-        for (UBYTE col = 0; col < 20; col++)
-        {
-            UBYTE tilemap_x = PLATFORM_X_MIN + col;
-            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(tilemap_x, actual_y)];
-            UBYTE tile_type = get_tile_type(tile);
-
-            if ((tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R) && enemy_count < LEVEL_CODE_MAX_ENEMIES)
-            {
-                current_level_code.enemy_positions[enemy_count] = col;
-                current_level_code.enemy_rows[enemy_count] = row; // Store the row too!
-
-                // Set direction bit (left = 1, right = 0)
-                if (tile_type == BRUSH_TILE_ENEMY_L)
-                {
-                    current_level_code.enemy_directions |= (1 << enemy_count);
-                }
-
-                enemy_count++;
-            }
-        }
-    }
+    // Enemy data is now stored in level code structure, not as background tiles
+    // In both edit and play modes, preserve the existing level code data
+    // The level code structure (current_level_code) is the single source of truth for enemy data
+    
+    // No extraction needed - enemy data is already in current_level_code structure
+    // and is managed directly by the painting/editing system
+    return;
 }
 
 // ============================================================================
@@ -204,32 +172,23 @@ UBYTE encode_enemy_directions(void) BANKED
 // ============================================================================
 
 // Decode enemy position from a numeric value (0-40)
+// Used for level code editing - only updates data structures and actors, never modifies background tiles
 void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UBYTE dir_bit) BANKED
 {
     if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
         return;
 
-    // Clear previous enemy placement if it exists
+    // Clear previous enemy actor if it exists
     if (current_level_code.enemy_positions[enemy_index] != 255)
     {
-        UBYTE old_row = get_enemy_row_from_position(enemy_index);
-        UBYTE old_col = current_level_code.enemy_positions[enemy_index];
-        UBYTE old_tilemap_x = PLATFORM_X_MIN + old_col;
-        UBYTE old_actual_y = PLATFORM_Y_MIN + old_row * SEGMENT_HEIGHT;
-        UBYTE old_tile = sram_map_data[METATILE_MAP_OFFSET(old_tilemap_x, old_actual_y)];
-        UBYTE old_tile_type = get_tile_type(old_tile);
-
-        if (old_tile_type == BRUSH_TILE_ENEMY_L || old_tile_type == BRUSH_TILE_ENEMY_R)
-        {
-            replace_meta_tile(old_tilemap_x, old_actual_y, 0, 1);
-        }
+        clear_enemy_actor(enemy_index);
     }
 
     if (pos_value == 0)
     {
         // 0 = no enemy
         current_level_code.enemy_positions[enemy_index] = 255;
-        clear_enemy_actor(enemy_index);
+        current_level_code.enemy_rows[enemy_index] = 255;
         return;
     }
 
@@ -244,7 +203,7 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
     if (col > 19 || row > 3) // Safety check
     {
         current_level_code.enemy_positions[enemy_index] = 255;
-        clear_enemy_actor(enemy_index);
+        current_level_code.enemy_rows[enemy_index] = 255;
         return;
     }
 
@@ -262,7 +221,7 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
         current_level_code.enemy_directions &= ~(1 << enemy_index);
     }
 
-    // Move the enemy actor to position (no background tile drawing in edit mode)
+    // Update the enemy actor position (no background tile manipulation)
     UBYTE tilemap_x = PLATFORM_X_MIN + col;
     UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
 
@@ -271,23 +230,13 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
 }
 
 // Decode full enemy data from numeric values array
+// Used for level code editing - only updates data structures and actors, never modifies background tiles
 void decode_enemy_data_from_values(const UBYTE *enemy_values) BANKED
 {
-    // Clear existing enemies from tilemap
-    for (UBYTE row = 0; row < 4; row++)
+    // Clear all enemy actors but don't touch background tiles
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
-        UBYTE actual_y = PLATFORM_Y_MIN + row * SEGMENT_HEIGHT;
-        for (UBYTE col = 0; col < 20; col++)
-        {
-            UBYTE tilemap_x = PLATFORM_X_MIN + col;
-            UBYTE tile = sram_map_data[METATILE_MAP_OFFSET(tilemap_x, actual_y)];
-            UBYTE tile_type = get_tile_type(tile);
-
-            if (tile_type == BRUSH_TILE_ENEMY_L || tile_type == BRUSH_TILE_ENEMY_R)
-            {
-                replace_meta_tile(tilemap_x, actual_y, 0, 1);
-            }
-        }
+        clear_enemy_actor(i);
     }
 
     // Get masks directly (no character conversion needed)
@@ -299,6 +248,7 @@ void decode_enemy_data_from_values(const UBYTE *enemy_values) BANKED
     for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255;
+        current_level_code.enemy_rows[i] = 255;
     }
 
     // Decode each enemy position (values 0-4 = positions 0-4)

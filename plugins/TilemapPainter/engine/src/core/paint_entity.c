@@ -403,40 +403,73 @@ void paint_enemy_right(UBYTE x, UBYTE y) BANKED
         return;
     }
 
-    replace_meta_tile(x, y, TILE_RIGHT_ENEMY, 1);
-
-    // Get next enemy from FIFO pool
-    UBYTE enemy_slot = get_next_enemy_slot_from_pool();
-
-    // If this slot was already in use, clear its old tile and deactivate the actor
-    if (paint_enemy_slots_used[enemy_slot])
+    // Check if there's already an enemy actor at this position
+    UBYTE found_enemy = 0;
+    for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
     {
-        actor_t *old_enemy = &actors[paint_enemy_ids[enemy_slot]];
-        // Convert actor position from fixed point to tile coordinates
-        UBYTE old_tile_x = (old_enemy->pos.x >> 4) / 8;
-        UBYTE old_tile_y = (old_enemy->pos.y >> 4) / 8;
-
-        // For left-facing enemies, the tile position is offset by +1 tile
-        if (old_enemy->dir == DIRECTION_LEFT)
+        if (paint_enemy_slots_used[i])
         {
-            old_tile_x += 1;
+            actor_t *enemy = &actors[paint_enemy_ids[i]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+            UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (enemy->dir == DIRECTION_LEFT)
+            {
+                actor_tile_x += 1;
+            }
+
+            if (actor_tile_x == x && actor_tile_y == y)
+            {
+                // Found existing enemy - change direction to right
+                if (enemy->dir != DIRECTION_RIGHT)
+                {
+                    // When changing to right direction, remove the offset
+                    enemy->pos.x = TO_FP(x * 8);
+                    actor_set_dir(enemy, DIRECTION_RIGHT, TRUE);
+                    
+                    // Directly update level code structure
+                    update_enemy_direction_in_level_code(x, y, DIRECTION_RIGHT);
+                }
+                found_enemy = 1;
+                break;
+            }
         }
-
-        // Clear the old tile
-        clear_enemy_tile_at_position(old_tile_x, old_tile_y);
-
-        deactivate_actor(old_enemy);
     }
 
-    // Set up the new enemy
-    actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
-    enemy->pos.x = TO_FP(x * 8);
-    enemy->pos.y = TO_FP(y * 8);
-    activate_actor(enemy);
-    actor_set_dir(enemy, DIRECTION_RIGHT, TRUE);
-    paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
+    if (!found_enemy)
+    {
+        // Don't draw background tile - enemies are actors only
 
-    update_level_code_for_paint(x, y); // Smart update
+        // Get next enemy from FIFO pool
+        UBYTE enemy_slot = get_next_enemy_slot_from_pool();
+
+        // If this slot was already in use, clear its old actor and deactivate it
+        if (paint_enemy_slots_used[enemy_slot])
+        {
+            actor_t *old_enemy = &actors[paint_enemy_ids[enemy_slot]];
+            deactivate_actor(old_enemy);
+        }
+
+        // Set up the new enemy
+        actor_t *enemy = &actors[paint_enemy_ids[enemy_slot]];
+        enemy->pos.x = TO_FP(x * 8);
+        enemy->pos.y = TO_FP(y * 8);
+        activate_actor(enemy);
+        actor_set_dir(enemy, DIRECTION_RIGHT, TRUE);
+        paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
+
+        // Directly update level code structure
+        add_enemy_to_level_code(x, y, DIRECTION_RIGHT);
+    }
+    
+    // Mark enemy positions for display update
+    for (UBYTE i = 16; i < 24; i++)
+    {
+        mark_display_position_for_update(i);
+    }
+    display_selective_level_code_fast();
 }
 
 void paint_enemy_left(UBYTE x, UBYTE y) BANKED
@@ -444,33 +477,42 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
         return;
 
-    UBYTE current_tile_type = get_current_tile_type(x, y);
-
-    if (current_tile_type == BRUSH_TILE_ENEMY_R)
+    // Check if there's already an enemy actor at this position
+    UBYTE found_enemy = 0;
+    for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
     {
-        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1); // Find the enemy actor at this position and change direction
-        for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
+        if (paint_enemy_slots_used[i])
         {
-            if (paint_enemy_slots_used[i])
-            {
-                actor_t *enemy = &actors[paint_enemy_ids[i]];
-                // Convert actor position from fixed point to tile coordinates
-                UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
-                UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+            actor_t *enemy = &actors[paint_enemy_ids[i]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+            UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
 
-                if (actor_tile_x == x && actor_tile_y == y)
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (enemy->dir == DIRECTION_LEFT)
+            {
+                actor_tile_x += 1;
+            }
+
+            if (actor_tile_x == x && actor_tile_y == y)
+            {
+                // Found existing enemy - change direction to left
+                if (enemy->dir != DIRECTION_LEFT)
                 {
                     // When changing to left direction, offset the actor position
                     enemy->pos.x = TO_FP(x * 8 - 8);
                     actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
-                    break;
+                    
+                    // Directly update level code structure
+                    update_enemy_direction_in_level_code(x, y, DIRECTION_LEFT);
                 }
+                found_enemy = 1;
+                break;
             }
         }
-
-        update_level_code_for_paint(x, y);
     }
-    else if (current_tile_type == BRUSH_TILE_EMPTY)
+
+    if (!found_enemy)
     {
         // If this position is not valid, simply return without taking any action
         if (!can_paint_enemy_right(x, y))
@@ -478,28 +520,13 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
             return;
         }
 
-        replace_meta_tile(x, y, TILE_LEFT_ENEMY, 1);
-
-        // Get next enemy from FIFO pool
+        // Get next enemy from FIFO pool (no background tile drawing)
         UBYTE enemy_slot = get_next_enemy_slot_from_pool();
 
-        // If this slot was already in use, clear its old tile and deactivate the actor
+        // If this slot was already in use, clear its old actor and deactivate it
         if (paint_enemy_slots_used[enemy_slot])
         {
             actor_t *old_enemy = &actors[paint_enemy_ids[enemy_slot]];
-            // Convert actor position from fixed point to tile coordinates
-            UBYTE old_tile_x = (old_enemy->pos.x >> 4) / 8;
-            UBYTE old_tile_y = (old_enemy->pos.y >> 4) / 8;
-
-            // For left-facing enemies, the tile position is offset by +1 tile
-            if (old_enemy->dir == DIRECTION_LEFT)
-            {
-                old_tile_x += 1;
-            }
-
-            // Clear the old tile
-            clear_enemy_tile_at_position(old_tile_x, old_tile_y);
-
             deactivate_actor(old_enemy);
         }
 
@@ -512,8 +539,16 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED
         actor_set_dir(enemy, DIRECTION_LEFT, TRUE);
         paint_enemy_slots_used[enemy_slot] = 1; // Mark slot as used
 
-        update_level_code_for_paint(x, y);
+        // Directly update level code structure
+        add_enemy_to_level_code(x, y, DIRECTION_LEFT);
     }
+    
+    // Mark enemy positions for display update
+    for (UBYTE i = 16; i < 24; i++)
+    {
+        mark_display_position_for_update(i);
+    }
+    display_selective_level_code_fast();
 }
 
 void delete_enemy(UBYTE x, UBYTE y) BANKED
@@ -521,41 +556,48 @@ void delete_enemy(UBYTE x, UBYTE y) BANKED
     if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
         return;
 
-    UBYTE current_tile_type = get_current_tile_type(x, y);
-
-    if (current_tile_type == BRUSH_TILE_ENEMY_L || current_tile_type == BRUSH_TILE_ENEMY_R)
+    // Check if there's an enemy actor at this position to delete
+    UBYTE found_enemy = 0;
+    for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
     {
-        replace_meta_tile(x, y, TILE_EMPTY, 1);
-        // Find and deactivate the enemy actor at this position
-        for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
+        if (paint_enemy_slots_used[i])
         {
-            if (paint_enemy_slots_used[i])
+            actor_t *enemy = &actors[paint_enemy_ids[i]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+            UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (enemy->dir == DIRECTION_LEFT)
             {
-                actor_t *enemy = &actors[paint_enemy_ids[i]];
-                // Convert actor position from fixed point to tile coordinates
-                UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
-                UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+                actor_tile_x += 1;
+            }
 
-                // For left-facing enemies, the tile position is offset by +1 tile
-                if (enemy->dir == DIRECTION_LEFT)
-                {
-                    actor_tile_x += 1;
-                }
+            if (actor_tile_x == x && actor_tile_y == y)
+            {
+                deactivate_actor(enemy);
+                paint_enemy_slots_used[i] = 0; // Mark slot as available for reuse
 
-                if (actor_tile_x == x && actor_tile_y == y)
-                {
-                    deactivate_actor(enemy);
-                    paint_enemy_slots_used[i] = 0; // Mark slot as available for reuse
-
-                    // Remove from paint order and add to front for immediate reuse
-                    remove_enemy_from_paint_order(i);
-                    add_enemy_to_front_of_paint_order(i);
-                    break;
-                }
+                // Remove from paint order and add to front for immediate reuse
+                remove_enemy_from_paint_order(i);
+                add_enemy_to_front_of_paint_order(i);
+                found_enemy = 1;
+                break;
             }
         }
+    }
 
-        update_level_code_for_paint(x, y);
+    if (found_enemy)
+    {
+        // Directly update level code structure
+        remove_enemy_from_level_code(x, y);
+        
+        // Mark enemy positions for display update
+        for (UBYTE i = 16; i < 24; i++)
+        {
+            mark_display_position_for_update(i);
+        }
+        display_selective_level_code_fast();
     }
 }
 
@@ -617,6 +659,127 @@ void clear_existing_exit_tiles(void) BANKED
             {
                 replace_meta_tile(x, y, TILE_EMPTY, 1);
             }
+        }
+    }
+}
+
+// ============================================================================
+// DIRECT LEVEL CODE UPDATE FOR ENEMY PAINTING
+// ============================================================================
+
+#define LEVEL_CODE_MAX_ENEMIES 5 // Must match the level code structure limit
+
+// Convert tilemap coordinates to enemy position in level code
+void add_enemy_to_level_code(UBYTE x, UBYTE y, UBYTE direction) BANKED
+{
+    // Convert tilemap coordinates to column and row
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return;
+    
+    UBYTE col = x - PLATFORM_X_MIN; // Convert to 0-19 range
+    UBYTE row = 255; // Invalid row by default
+    
+    // Determine which enemy row this corresponds to
+    if (y == 12) row = 0;
+    else if (y == 14) row = 1;  
+    else if (y == 16) row = 2;
+    else if (y == 18) row = 3;
+    else return; // Not a valid enemy row
+    
+    // Find an empty enemy slot (only use first 5 slots to match level code)
+    UBYTE enemy_slot = 255;
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
+    {
+        if (current_level_code.enemy_positions[i] == 255)
+        {
+            enemy_slot = i;
+            break;
+        }
+    }
+    
+    if (enemy_slot == 255)
+        return; // No empty slots available
+    
+    // Add enemy to level code
+    current_level_code.enemy_positions[enemy_slot] = col;
+    current_level_code.enemy_rows[enemy_slot] = row;
+    
+    // Set direction bit (1 = left, 0 = right)
+    if (direction == DIRECTION_LEFT)
+    {
+        current_level_code.enemy_directions |= (1 << enemy_slot);
+    }
+    else
+    {
+        current_level_code.enemy_directions &= ~(1 << enemy_slot);
+    }
+}
+
+// Remove enemy from level code at specific position
+void remove_enemy_from_level_code(UBYTE x, UBYTE y) BANKED
+{
+    // Convert tilemap coordinates to column and row
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return;
+    
+    UBYTE col = x - PLATFORM_X_MIN; // Convert to 0-19 range
+    UBYTE row = 255; // Invalid row by default
+    
+    // Determine which enemy row this corresponds to
+    if (y == 12) row = 0;
+    else if (y == 14) row = 1;
+    else if (y == 16) row = 2;
+    else if (y == 18) row = 3;
+    else return; // Not a valid enemy row
+    
+    // Find and remove enemy at this position (only check first 5 slots)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
+    {
+        if (current_level_code.enemy_positions[i] == col && 
+            current_level_code.enemy_rows[i] == row)
+        {
+            // Remove enemy
+            current_level_code.enemy_positions[i] = 255;
+            current_level_code.enemy_rows[i] = 255;
+            current_level_code.enemy_directions &= ~(1 << i);
+            break;
+        }
+    }
+}
+
+// Update enemy direction in level code
+void update_enemy_direction_in_level_code(UBYTE x, UBYTE y, UBYTE direction) BANKED
+{
+    // Convert tilemap coordinates to column and row
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return;
+    
+    UBYTE col = x - PLATFORM_X_MIN; // Convert to 0-19 range
+    UBYTE row = 255; // Invalid row by default
+    
+    // Determine which enemy row this corresponds to
+    if (y == 12) row = 0;
+    else if (y == 14) row = 1;
+    else if (y == 16) row = 2;
+    else if (y == 18) row = 3;
+    else return; // Not a valid enemy row
+    
+    // Find and update enemy direction at this position (only check first 5 slots)
+    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
+    {
+        if (current_level_code.enemy_positions[i] == col && 
+            current_level_code.enemy_rows[i] == row)
+        {
+            // Update direction bit (1 = left, 0 = right)
+            if (direction == DIRECTION_LEFT)
+            {
+                current_level_code.enemy_directions |= (1 << i);
+            }
+            else
+            {
+                current_level_code.enemy_directions &= ~(1 << i);
+            }
+            break;
         }
     }
 }

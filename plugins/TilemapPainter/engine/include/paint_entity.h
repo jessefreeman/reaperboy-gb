@@ -107,4 +107,17 @@ void position_exit_for_player(UBYTE player_x, UBYTE player_y) BANKED;
 // Clear any existing exit tiles
 void clear_existing_exit_tiles(void) BANKED;
 
+// ============================================================================
+// DIRECT LEVEL CODE UPDATE FUNCTIONS
+// ============================================================================
+
+// Add enemy to level code structure directly
+void add_enemy_to_level_code(UBYTE x, UBYTE y, UBYTE direction) BANKED;
+
+// Remove enemy from level code structure directly  
+void remove_enemy_from_level_code(UBYTE x, UBYTE y) BANKED;
+
+// Update enemy direction in level code structure directly
+void update_enemy_direction_in_level_code(UBYTE x, UBYTE y, UBYTE direction) BANKED;
+
 #endif // PAINT_ENTITY_H

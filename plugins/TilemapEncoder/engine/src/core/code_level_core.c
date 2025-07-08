@@ -210,7 +210,7 @@ void init_level_code(void) BANKED
 void update_complete_level_code(void) BANKED
 {
     extract_platform_data();
-    extract_enemy_data();
+    // extract_enemy_data(); // No longer needed - enemy data is managed directly in level code
     extract_player_data();
 }
 
@@ -865,7 +865,7 @@ void init_tilemap_editor_from_memory(void) BANKED
     
     // Extract current data to ensure everything is in sync
     extract_player_data();
-    extract_enemy_data();
+    // extract_enemy_data(); // No longer needed - enemy data is managed directly in level code
     
     // Update player position and restore all actors (player, exit, enemies)
     // This ensures both marker tiles and actors are positioned correctly
