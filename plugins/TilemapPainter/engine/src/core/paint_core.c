@@ -28,6 +28,7 @@ extern void extract_player_data(void) BANKED;
 extern void extract_enemy_data(void) BANKED;
 extern void extract_platform_data(void) BANKED;
 extern void update_valid_enemy_positions(void) BANKED;
+extern void save_level_code_to_variables(void) BANKED;
 extern UBYTE is_block_suppressed(UBYTE zone_index) BANKED;
 extern UBYTE get_suppress_display_updates(void) BANKED;
 extern void force_complete_level_code_display(void) BANKED;
@@ -363,4 +364,7 @@ void init_default_level_code(void) BANKED
 
     // Update the level code display
     force_complete_level_code_display();
+    
+    // Save the default level to variables so editor mode stays in sync
+    save_level_code_to_variables();
 }

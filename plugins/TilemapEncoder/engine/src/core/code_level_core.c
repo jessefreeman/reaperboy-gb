@@ -855,13 +855,17 @@ void display_enemy_char_at_position(UBYTE value, UBYTE char_position, UBYTE x, U
 void init_tilemap_editor_from_memory(void) BANKED
 {
     // This function should be called when the tilemap editor loads
-    // It restores the level state from memory and ensures proper positioning
+    // It restores the level state from saved variables and ensures proper positioning
     
-    // First restore the complete level from memory
+    // Load level data from variables (this only loads platform patterns)
+    load_level_code_from_variables();
+    
+    // Now restore the complete level from the loaded data
     restore_level_from_memory();
     
-    // Extract current player data to ensure it's in sync
+    // Extract current data to ensure everything is in sync
     extract_player_data();
+    extract_enemy_data();
     
     // Update player position and restore all actors (player, exit, enemies)
     // This ensures both marker tiles and actors are positioned correctly

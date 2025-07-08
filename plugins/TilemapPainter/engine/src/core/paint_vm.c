@@ -25,6 +25,8 @@ extern void update_complete_level_code(void) BANKED;
 extern void force_complete_level_code_display(void) BANKED;
 extern void update_player_actor_position(void) BANKED;
 extern void restore_enemy_actors_from_level_code(void) BANKED;
+extern void init_tilemap_editor_from_memory(void) BANKED;
+extern void save_level_code_to_variables(void) BANKED;
 
 // ============================================================================
 // VM WRAPPER FUNCTIONS
@@ -153,10 +155,28 @@ void vm_enable_editor(SCRIPT_CTX *THIS) BANKED
     }
     else
     {
-        // Map has content, update level code from existing tilemap
+        // Always extract the current level state from the tilemap first
+        // This ensures the level code is in sync with what's actually on screen
         update_complete_level_code();
         
-        // Restore player position from level code and update actors
+        // Check if we have saved level data in variables that might be different
+        UBYTE has_saved_data = 0;
+        for (UBYTE i = VAR_LEVEL_CODE_PART_1; i <= VAR_LEVEL_CODE_PART_6; i++)
+        {
+            if (script_memory[i] != 0)
+            {
+                has_saved_data = 1;
+                break;
+            }
+        }
+        
+        if (has_saved_data)
+        {
+            // Save the current tilemap state to variables to keep them in sync
+            save_level_code_to_variables();
+        }
+        
+        // Always restore player position and actors based on current level code
         update_player_actor_position();
     }
 
