@@ -98,10 +98,12 @@ const UBYTE EXTENDED_PATTERN_TILE_MAP[] = {
 // ============================================================================
 
 // Invalid patterns for first column (block_x = 0) - patterns that have platforms at leftmost position
+// These patterns have their leftmost bit (position 0) set: 2, 10, 14, 15, 17 (in hex: 2, A, E, F, H)
 const UBYTE INVALID_PATTERNS_FIRST_COLUMN[] = {2, 10, 14, 15, 17};
 #define INVALID_PATTERNS_FIRST_COLUMN_COUNT 5
 
 // Invalid patterns for last column (block_x = 3) - patterns that have platforms at rightmost position
+// These patterns have their rightmost bit (position 4) set: 1, 9, 14, 16, 18 (in hex: 1, 9, E, G, I)
 const UBYTE INVALID_PATTERNS_LAST_COLUMN[] = {1, 9, 14, 16, 18};
 #define INVALID_PATTERNS_LAST_COLUMN_COUNT 5
 
@@ -160,25 +162,54 @@ UBYTE suppress_display_updates = 0;
 // Fast validation using direct array lookup (optimized for fixed system)
 UBYTE is_pattern_valid_for_position_ext(UBYTE pattern_id, UBYTE block_x) BANKED
 {
-    // First column (left edge) validation
-    if (block_x == 0)
-    {
-        for (UBYTE i = 0; i < INVALID_PATTERNS_FIRST_COLUMN_COUNT; i++)
-        {
-            if (INVALID_PATTERNS_FIRST_COLUMN[i] == pattern_id)
-                return 0;
+    // Special handling for Pattern E/14 (platforms at both leftmost and rightmost positions)
+    if (pattern_id == 14) {
+        // Pattern E needs both left and right neighbors to work
+        // Only valid in the middle columns (block_x = 1 or 2)
+        return (block_x > 0 && block_x < (SEGMENTS_PER_ROW - 1)) ? 1 : 0;
+    }
+    
+    // Special handling for Pattern 1 (single platform at position 4)
+    if (pattern_id == 1) {
+        // Pattern 1 is only invalid in the last column (block_x=3) where it would spill over with no neighbor
+        if (block_x == 3) {
+            return 0;
+        }
+        // Valid everywhere else
+        return 1;
+    }
+
+    // Special handling for Pattern 2 (single platform at position 0)
+    if (pattern_id == 2) {
+        // Pattern 2 is only invalid in the first column (block_x=0) where it would spill over with no neighbor
+        if (block_x == 0) {
+            return 0;
+        }
+        // Valid everywhere else
+        return 1;
+    }
+    
+    // For the leftmost column (block_x=0), we restrict patterns with the leftmost bit set
+    // that aren't covered by the special cases above
+    if (block_x == 0) {
+        // Patterns with leftmost bit set: 10, 15, 17
+        // Convert pattern IDs to hex values: A=10, F=15, H=17
+        if (pattern_id == 10 || pattern_id == 15 || pattern_id == 17) {
+            return 0;
         }
     }
-    // Last column (right edge) validation
-    else if (block_x == 3)
-    {
-        for (UBYTE i = 0; i < INVALID_PATTERNS_LAST_COLUMN_COUNT; i++)
-        {
-            if (INVALID_PATTERNS_LAST_COLUMN[i] == pattern_id)
-                return 0;
+    
+    // For the rightmost column (block_x=3), we restrict patterns with the rightmost bit set
+    // that aren't covered by the special cases above
+    if (block_x == 3) {
+        // Patterns with rightmost bit set: 9, 16, 18
+        // Convert pattern IDs to hex values: 9=9, G=16, I=18
+        if (pattern_id == 9 || pattern_id == 16 || pattern_id == 18) {
+            return 0;
         }
     }
-    // Middle columns (block_x = 1,2) - all patterns valid
+    
+    // All other patterns are valid in all positions
     return 1;
 }
 
@@ -382,11 +413,112 @@ void apply_valid_pattern_to_block_ext(UBYTE block_index, UBYTE pattern_id) BANKE
     // Also suppress code updates for this block during painting
     suppress_code_updates_for_block_ext(block_index);
 
+    // Handle special patterns that require cross-block connections
+    // Pattern 1 = single platform at position 4 (rightmost)
+    // Pattern 2 = single platform at position 0 (leftmost)
+    // Pattern E/14 = platforms at positions 0 and 4 (both leftmost and rightmost)
+    
+    // For tracking left neighbor updates
+    UBYTE need_to_update_left = 0;
+    UBYTE left_neighbor_index = 0;
+    UBYTE left_neighbor_pattern = 0;
+    
+    // For tracking right neighbor updates
+    UBYTE need_to_update_right = 0;
+    UBYTE right_neighbor_index = 0;
+    UBYTE right_neighbor_pattern = 0;
+
+    // Check for patterns with rightmost platform (position 4) - Patterns 1, 9, 14, 16, 18
+    // These patterns need to connect to the right neighbor's leftmost position
+    if ((pattern_id == 1 || pattern_id == 9 || pattern_id == 14 || pattern_id == 16 || 
+         pattern_id == 18) && block_x < (SEGMENTS_PER_ROW - 1)) 
+    {
+        right_neighbor_index = block_index + 1;
+        UBYTE current_neighbor_pattern = current_level_code.platform_patterns[right_neighbor_index];
+        
+        // We need to set leftmost bit in right neighbor's pattern
+        UBYTE neighbor_bits = PLATFORM_PATTERNS[current_neighbor_pattern];
+        neighbor_bits |= 0b10000; // Set leftmost bit
+        
+        // Find matching pattern for modified bits
+        for (UBYTE i = 0; i < PLATFORM_PATTERN_COUNT; i++) 
+        {
+            if (PLATFORM_PATTERNS[i] == neighbor_bits) 
+            {
+                right_neighbor_pattern = i;
+                need_to_update_right = 1;
+                break;
+            }
+        }
+    }
+    
+    // Check for patterns with leftmost platform (position 0) - Patterns 2, 10, 14, 15, 17
+    // These patterns need to connect to the left neighbor's rightmost position
+    if ((pattern_id == 2 || pattern_id == 10 || pattern_id == 14 || pattern_id == 15 || 
+         pattern_id == 17) && block_x > 0) 
+    {
+        left_neighbor_index = block_index - 1;
+        UBYTE current_neighbor_pattern = current_level_code.platform_patterns[left_neighbor_index];
+        
+        // We need to set rightmost bit in left neighbor's pattern
+        UBYTE neighbor_bits = PLATFORM_PATTERNS[current_neighbor_pattern];
+        neighbor_bits |= 0b00001; // Set rightmost bit
+        
+        // Find matching pattern for modified bits
+        for (UBYTE i = 0; i < PLATFORM_PATTERN_COUNT; i++) 
+        {
+            if (PLATFORM_PATTERNS[i] == neighbor_bits) 
+            {
+                left_neighbor_pattern = i;
+                need_to_update_left = 1;
+                break;
+            }
+        }
+    }
+
     // Set the intended pattern in level code FIRST (so display shows correct pattern immediately)
     current_level_code.platform_patterns[block_index] = pattern_id;
 
     // Apply the pattern using brush logic (the tilemap changes will happen)
     apply_pattern_with_brush_logic_ext(block_index, pattern_id);
+
+    // Update left neighbor if needed
+    if (need_to_update_left) 
+    {
+        // Suppress code updates for the left neighbor
+        suppress_code_updates_for_block_ext(left_neighbor_index);
+        
+        // Update left neighbor's pattern
+        current_level_code.platform_patterns[left_neighbor_index] = left_neighbor_pattern;
+        
+        // Apply the new pattern to the left neighbor
+        apply_pattern_with_brush_logic_ext(left_neighbor_index, left_neighbor_pattern);
+        
+        // Re-enable code updates for the left neighbor
+        enable_code_updates_for_block_ext(left_neighbor_index);
+        
+        // Mark the left neighbor for display update
+        mark_display_position_for_update(left_neighbor_index);
+    }
+    
+    // Update right neighbor if needed
+    if (need_to_update_right) 
+    {
+        // Suppress code updates for the right neighbor
+        suppress_code_updates_for_block_ext(right_neighbor_index);
+        
+        // Update right neighbor's pattern
+        current_level_code.platform_patterns[right_neighbor_index] = right_neighbor_pattern;
+        
+        // Apply the new pattern to the right neighbor
+        apply_pattern_with_brush_logic_ext(right_neighbor_index, right_neighbor_pattern);
+        
+        // Re-enable code updates for the right neighbor
+        enable_code_updates_for_block_ext(right_neighbor_index);
+        
+        // Mark the right neighbor for display update
+        mark_display_position_for_update(right_neighbor_index);
+    }
 
     // Re-enable code updates for this block
     enable_code_updates_for_block_ext(block_index);
@@ -538,6 +670,43 @@ void apply_pattern_with_brush_logic_ext(UBYTE block_index, UBYTE pattern_id) BAN
                 // Use TILE_PLATFORM_MIDDLE initially - rebuild_platform_row will fix end caps
                 replace_meta_tile(tile_x, platform_y, TILE_PLATFORM_MIDDLE, 1);
             }
+        }
+    }
+    
+    // Special case handling for cross-block platforms
+    // Check for rightmost platform (position 4) that needs to connect to right neighbor
+    // Patterns with rightmost bit: 1, 9, 14, 16, 18
+    if ((pattern_id == 1 || pattern_id == 9 || pattern_id == 14 || pattern_id == 16 || 
+         pattern_id == 18) && block_x < (SEGMENTS_PER_ROW - 1)) 
+    {
+        // Make sure next block has a platform at position 0
+        UBYTE next_block_x = segment_x + SEGMENT_WIDTH;
+        UBYTE next_block_y = platform_y;
+        
+        // Check if the next block already has a platform at position 0
+        UBYTE neighbor_tile = get_current_tile_type(next_block_x, next_block_y);
+        if (neighbor_tile != BRUSH_TILE_PLATFORM)
+        {
+            // Add a platform at position 0 of the next block
+            replace_meta_tile(next_block_x, next_block_y, TILE_PLATFORM_MIDDLE, 1);
+        }
+    }
+    
+    // Check for leftmost platform (position 0) that needs to connect to left neighbor
+    // Patterns with leftmost bit: 2, 10, 14, 15, 17
+    if ((pattern_id == 2 || pattern_id == 10 || pattern_id == 14 || pattern_id == 15 || 
+         pattern_id == 17) && block_x > 0) 
+    {
+        // Make sure previous block has a platform at position 4
+        UBYTE prev_block_x = segment_x - 1;
+        UBYTE prev_block_y = platform_y;
+        
+        // Check if the previous block already has a platform at position 4
+        UBYTE neighbor_tile = get_current_tile_type(prev_block_x, prev_block_y);
+        if (neighbor_tile != BRUSH_TILE_PLATFORM)
+        {
+            // Add a platform at position 4 of the previous block
+            replace_meta_tile(prev_block_x, prev_block_y, TILE_PLATFORM_MIDDLE, 1);
         }
     }
 
