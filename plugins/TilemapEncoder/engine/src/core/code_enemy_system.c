@@ -205,6 +205,20 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
         return;
     }
 
+    // Validate position to prevent enemy stacking (simplified for code-based placement)
+    UBYTE tilemap_x = PLATFORM_X_MIN + col;
+    UBYTE tilemap_y = ENEMY_ROWS[row];
+    
+    // Only check for direct enemy conflicts, not platform requirements
+    // Platform validation is handled by the paint system, not code system
+    if (has_enemy_at_exact_position_excluding(tilemap_x, tilemap_y, enemy_index))
+    {
+        // Another enemy is already at this exact position - don't place
+        current_level_code.enemy_positions[enemy_index] = 255;
+        current_level_code.enemy_rows[enemy_index] = 255;
+        return;
+    }
+
     // Store both row and column
     current_level_code.enemy_positions[enemy_index] = col;
     current_level_code.enemy_rows[enemy_index] = row;
@@ -220,7 +234,7 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
     }
 
     // Update the enemy actor position (no background tile manipulation)
-    UBYTE tilemap_x = PLATFORM_X_MIN + col;
+    // Reuse the tilemap_x variable already declared above
     
     // Use the same row-to-Y mapping as the paint system (no offset)
     UBYTE actual_y;

@@ -878,6 +878,7 @@ void init_tilemap_editor_from_memory(void) BANKED
 // VM function to initialize tilemap editor from memory
 void vm_init_tilemap_editor_from_memory(SCRIPT_CTX *THIS) BANKED
 {
+    (void)THIS; // Suppress unused parameter warning
     init_tilemap_editor_from_memory();
 }
 

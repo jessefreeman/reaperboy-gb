@@ -829,12 +829,14 @@ UBYTE get_predefined_level_count(void) BANKED
 // Save current level as string-based level code
 void vm_save_level_code_string(SCRIPT_CTX *THIS) BANKED
 {
+    (void)THIS; // Suppress unused parameter warning
     save_level_code_string_to_variables();
 }
 
 // Load level from string-based level code
 void vm_load_level_code_string(SCRIPT_CTX *THIS) BANKED
 {
+    (void)THIS; // Suppress unused parameter warning
     load_level_code_string_from_variables();
 }
 
@@ -847,6 +849,7 @@ void vm_has_saved_level_code_string(SCRIPT_CTX *THIS) BANKED
 // Clear string-based level code
 void vm_clear_level_code_string(SCRIPT_CTX *THIS) BANKED
 {
+    (void)THIS; // Suppress unused parameter warning
     clear_level_code_string();
 }
 
@@ -881,5 +884,6 @@ void vm_get_predefined_level_count(SCRIPT_CTX *THIS) BANKED
 // Restore level from C memory (simple scene reload)
 void vm_restore_level_from_memory(SCRIPT_CTX *THIS) BANKED
 {
+    (void)THIS; // Suppress unused parameter warning
     restore_level_from_memory();
 }

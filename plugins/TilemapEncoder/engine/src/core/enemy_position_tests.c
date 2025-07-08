@@ -1,4 +1,4 @@
-#pragma bank 254
+#pragma bank 253
 
 #include <gbdk/platform.h>
 #include "enemy_position_manager.h"

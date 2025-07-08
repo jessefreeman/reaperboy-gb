@@ -1,4 +1,4 @@
-#pragma bank 254
+#pragma bank 253
 
 #include <gbdk/platform.h>
 #include "vm.h"
@@ -147,8 +147,8 @@ void init_valid_enemy_positions(void) BANKED
 
     valid_enemy_positions_count = 0;
 
-    // Scan the level for valid enemy positions
-    update_valid_enemy_positions();
+    // Scan the level for valid enemy positions using unified system
+    update_valid_enemy_positions_unified();
 }
 
 // Update valid enemy positions by scanning the entire level
@@ -200,9 +200,9 @@ void find_next_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value,
     UBYTE current_col = (current_level_code.enemy_positions[enemy_index] != 255) ? current_level_code.enemy_positions[enemy_index] : 0;
     UBYTE current_row = get_enemy_row_from_position(enemy_index);
     
-    // Find next position using unified system
+    // Find next position using enemy-specific system to prevent stacking
     UBYTE next_row, next_col;
-    if (get_next_valid_enemy_position(current_row, current_col, &next_row, &next_col))
+    if (get_next_valid_enemy_position_for_specific_enemy(current_row, current_col, enemy_index, &next_row, &next_col))
     {
         // Calculate the POS41 value (1-40)
         UBYTE anchor = next_col / 2;
@@ -228,9 +228,9 @@ void find_prev_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value,
     UBYTE current_col = (current_level_code.enemy_positions[enemy_index] != 255) ? current_level_code.enemy_positions[enemy_index] : 19;
     UBYTE current_row = get_enemy_row_from_position(enemy_index);
     
-    // Find previous position using unified system
+    // Find previous position using enemy-specific system to prevent stacking
     UBYTE prev_row, prev_col;
-    if (get_prev_valid_enemy_position(current_row, current_col, &prev_row, &prev_col))
+    if (get_prev_valid_enemy_position_for_specific_enemy(current_row, current_col, enemy_index, &prev_row, &prev_col))
     {
         // Calculate the POS41 value (1-40)
         UBYTE anchor = prev_col / 2;

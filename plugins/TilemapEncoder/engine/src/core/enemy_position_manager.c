@@ -1,4 +1,4 @@
-#pragma bank 254
+#pragma bank 253
 
 #include <gbdk/platform.h>
 #include "enemy_position_manager.h"
@@ -160,6 +160,62 @@ UBYTE has_enemy_at_exact_position(UBYTE x, UBYTE y) BANKED
     return 0;
 }
 
+// Check for enemy at exact position, excluding a specific enemy index (for movement validation)
+UBYTE has_enemy_at_exact_position_excluding(UBYTE x, UBYTE y, UBYTE exclude_enemy_index) BANKED
+{
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        // Skip the enemy we're moving
+        if (i == exclude_enemy_index)
+            continue;
+            
+        if (current_level_code.enemy_positions[i] == 255)
+            continue;
+        
+        UBYTE enemy_x = PLATFORM_X_MIN + current_level_code.enemy_positions[i];
+        UBYTE enemy_row = current_level_code.enemy_rows[i];
+        UBYTE enemy_y = ENEMY_ROWS[enemy_row];
+        
+        if (enemy_x == x && enemy_y == y)
+        {
+            return 1; // Found another enemy at this position
+        }
+    }
+    
+    return 0;
+}
+
+// Check if a position is valid for a specific enemy placement (prevents stacking)
+UBYTE is_valid_enemy_position_for_enemy(UBYTE x, UBYTE y, UBYTE enemy_index) BANKED
+{
+    // Basic validation using unified logic
+    if (!is_valid_enemy_position_unified(x, y))
+    {
+        // Allow replacement of existing enemy at exact position
+        if (has_enemy_at_exact_position(x, y))
+        {
+            // Check if it's the same enemy being moved
+            if (current_level_code.enemy_positions[enemy_index] != 255)
+            {
+                UBYTE current_x = PLATFORM_X_MIN + current_level_code.enemy_positions[enemy_index];
+                UBYTE current_y = ENEMY_ROWS[current_level_code.enemy_rows[enemy_index]];
+                if (current_x == x && current_y == y)
+                {
+                    return 1; // Same enemy, allow it
+                }
+            }
+            return 0; // Different enemy already there
+        }
+        return 0;
+    }
+    
+    // Check for conflicts with other enemies (excluding the one being moved)
+    if (has_enemy_at_exact_position_excluding(x, y, enemy_index))
+        return 0;
+    
+    return 1;
+}
+
 // ============================================================================
 // VALID POSITIONS SYSTEM
 // ============================================================================
@@ -195,6 +251,25 @@ void update_valid_enemy_positions_unified(void) BANKED
             }
         }
     }
+    
+    // Fallback: If no valid positions found, allow basic positioning for code editor
+    if (valid_enemy_positions_count == 0)
+    {
+        for (UBYTE row = 0; row < 4; row++)
+        {
+            for (UBYTE col = 0; col < 20; col++)
+            {
+                UBYTE x = PLATFORM_X_MIN + col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (is_valid_enemy_position_for_code(x, y))
+                {
+                    valid_enemy_positions[row][col] = 1;
+                    valid_enemy_positions_count++;
+                }
+            }
+        }
+    }
 }
 
 // Get the next valid enemy position for cycling in level code editor
@@ -210,9 +285,16 @@ UBYTE get_next_valid_enemy_position(UBYTE current_row, UBYTE current_col, UBYTE 
         {
             if (valid_enemy_positions[row][col])
             {
-                *next_row = row;
-                *next_col = col;
-                return 1; // Found next position
+                // Check if any enemy is already at this position
+                UBYTE x = PLATFORM_X_MIN + col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (!has_enemy_at_exact_position(x, y))
+                {
+                    *next_row = row;
+                    *next_col = col;
+                    return 1; // Found next position with no enemy conflict
+                }
             }
         }
     }
@@ -233,9 +315,136 @@ UBYTE get_prev_valid_enemy_position(UBYTE current_row, UBYTE current_col, UBYTE 
         {
             if (valid_enemy_positions[row][col])
             {
-                *prev_row = row;
-                *prev_col = (UBYTE)col;
-                return 1; // Found previous position
+                // Check if any enemy is already at this position
+                UBYTE x = PLATFORM_X_MIN + (UBYTE)col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (!has_enemy_at_exact_position(x, y))
+                {
+                    *prev_row = row;
+                    *prev_col = (UBYTE)col;
+                    return 1; // Found previous position with no enemy conflict
+                }
+            }
+        }
+    }
+    
+    return 0; // No valid position found
+}
+
+// Get the next valid enemy position for a specific enemy (prevents stacking)
+UBYTE get_next_valid_enemy_position_for_enemy(UBYTE current_row, UBYTE current_col, UBYTE enemy_index, UBYTE *next_row, UBYTE *next_col) BANKED
+{
+    // Start searching from the position after current
+    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
+    {
+        UBYTE row = (current_row + row_offset) % 4;
+        UBYTE start_col = (row_offset == 0) ? current_col + 1 : 0;
+        
+        for (UBYTE col = start_col; col < 20; col++)
+        {
+            if (valid_enemy_positions[row][col])
+            {
+                // Check if this position is valid for this specific enemy
+                UBYTE x = PLATFORM_X_MIN + col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (is_valid_enemy_position_for_enemy(x, y, enemy_index))
+                {
+                    *next_row = row;
+                    *next_col = col;
+                    return 1; // Found next position
+                }
+            }
+        }
+    }
+    
+    return 0; // No valid position found
+}
+
+// Get the previous valid enemy position for a specific enemy (prevents stacking)
+UBYTE get_prev_valid_enemy_position_for_enemy(UBYTE current_row, UBYTE current_col, UBYTE enemy_index, UBYTE *prev_row, UBYTE *prev_col) BANKED
+{
+    // Start searching backward from the position before current
+    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
+    {
+        UBYTE row = (4 + current_row - row_offset) % 4;
+        BYTE end_col = (row_offset == 0) ? ((BYTE)current_col - 1) : 19;
+        
+        for (BYTE col = end_col; col >= 0; col--)
+        {
+            if (valid_enemy_positions[row][col])
+            {
+                // Check if this position is valid for this specific enemy
+                UBYTE x = PLATFORM_X_MIN + (UBYTE)col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (is_valid_enemy_position_for_enemy(x, y, enemy_index))
+                {
+                    *prev_row = row;
+                    *prev_col = (UBYTE)col;
+                    return 1; // Found previous position
+                }
+            }
+        }
+    }
+    
+    return 0; // No valid position found
+}
+
+// Get the next valid enemy position for a specific enemy (allows current position, prevents other enemies)
+UBYTE get_next_valid_enemy_position_for_specific_enemy(UBYTE current_row, UBYTE current_col, UBYTE enemy_index, UBYTE *next_row, UBYTE *next_col) BANKED
+{
+    // Start searching from the position after current
+    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
+    {
+        UBYTE row = (current_row + row_offset) % 4;
+        UBYTE start_col = (row_offset == 0) ? current_col + 1 : 0;
+        
+        for (UBYTE col = start_col; col < 20; col++)
+        {
+            if (valid_enemy_positions[row][col])
+            {
+                // Check if any OTHER enemy is at this position (exclude current enemy)
+                UBYTE x = PLATFORM_X_MIN + col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (!has_enemy_at_exact_position_excluding(x, y, enemy_index))
+                {
+                    *next_row = row;
+                    *next_col = col;
+                    return 1; // Found next position with no other enemy conflict
+                }
+            }
+        }
+    }
+    
+    return 0; // No valid position found
+}
+
+// Get the previous valid enemy position for a specific enemy (allows current position, prevents other enemies)
+UBYTE get_prev_valid_enemy_position_for_specific_enemy(UBYTE current_row, UBYTE current_col, UBYTE enemy_index, UBYTE *prev_row, UBYTE *prev_col) BANKED
+{
+    // Start searching backward from the position before current
+    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
+    {
+        UBYTE row = (4 + current_row - row_offset) % 4;
+        BYTE end_col = (row_offset == 0) ? ((BYTE)current_col - 1) : 19;
+        
+        for (BYTE col = end_col; col >= 0; col--)
+        {
+            if (valid_enemy_positions[row][col])
+            {
+                // Check if any OTHER enemy is at this position (exclude current enemy)
+                UBYTE x = PLATFORM_X_MIN + (UBYTE)col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (!has_enemy_at_exact_position_excluding(x, y, enemy_index))
+                {
+                    *prev_row = row;
+                    *prev_col = (UBYTE)col;
+                    return 1; // Found previous position with no other enemy conflict
+                }
             }
         }
     }
@@ -321,3 +530,37 @@ UBYTE validate_enemy_placement(UBYTE x, UBYTE y) BANKED
 {
     return is_valid_enemy_position_unified(x, y) || has_enemy_at_exact_position(x, y);
 }
+
+// Enhanced validation for paint tool when enemy index is known
+UBYTE validate_enemy_placement_for_enemy(UBYTE x, UBYTE y, UBYTE enemy_index) BANKED
+{
+    return is_valid_enemy_position_for_enemy(x, y, enemy_index);
+}
+
+// Simplified validation for code-based enemy placement (less restrictive)
+UBYTE is_valid_enemy_position_for_code(UBYTE x, UBYTE y) BANKED
+{
+    // Basic bounds check
+    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
+        return 0;
+    
+    // Check if it's a valid enemy row
+    UBYTE is_enemy_row = 0;
+    for (UBYTE i = 0; i < 4; i++)
+    {
+        if (y == ENEMY_ROWS[i])
+        {
+            is_enemy_row = 1;
+            break;
+        }
+    }
+    
+    if (!is_enemy_row)
+        return 0;
+    
+    // For code-based placement, we allow placement even without platforms
+    // The paint system will handle proper platform validation
+    return 1;
+}
+
+// ============================================================================
