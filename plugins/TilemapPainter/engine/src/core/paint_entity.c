@@ -105,10 +105,13 @@ UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
 
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 {
-    // Basic validation - must be within bounds and empty
+    // Basic validation - must be within bounds
     if (!is_within_platform_bounds(x, y))
         return 0;
-    if (get_current_tile_type(x, y) != BRUSH_TILE_EMPTY)
+    
+    // Allow painting over enemies (for flipping/deleting) or empty tiles
+    UBYTE current_tile = get_current_tile_type(x, y);
+    if (current_tile != BRUSH_TILE_EMPTY && !has_enemy_actor_at_position(x, y))
         return 0;
 
     // No need to check enemy count - we use a pool system that cycles through enemies
@@ -791,3 +794,64 @@ void update_enemy_direction_in_level_code(UBYTE x, UBYTE y, UBYTE direction) BAN
         }
     }
 }
+
+// ============================================================================
+// ENEMY ACTOR DETECTION HELPERS
+// ============================================================================
+
+// Check if there's an enemy actor at the specified position
+UBYTE has_enemy_actor_at_position(UBYTE x, UBYTE y) BANKED
+{
+    for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
+    {
+        if (paint_enemy_slots_used[i])
+        {
+            actor_t *enemy = &actors[paint_enemy_ids[i]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+            UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (enemy->dir == DIRECTION_LEFT)
+            {
+                actor_tile_x += 1;
+            }
+
+            if (actor_tile_x == x && actor_tile_y == y)
+            {
+                return 1; // Enemy found at this position
+            }
+        }
+    }
+    return 0; // No enemy found
+}
+
+// Get the direction of an enemy actor at the specified position
+// Returns: 0 = no enemy, DIRECTION_RIGHT, or DIRECTION_LEFT
+UBYTE get_enemy_actor_direction_at_position(UBYTE x, UBYTE y) BANKED
+{
+    for (UBYTE i = 0; i < MAX_PAINT_ENEMIES; i++)
+    {
+        if (paint_enemy_slots_used[i])
+        {
+            actor_t *enemy = &actors[paint_enemy_ids[i]];
+            // Convert actor position from fixed point to tile coordinates
+            UBYTE actor_tile_x = (enemy->pos.x >> 4) / 8;
+            UBYTE actor_tile_y = (enemy->pos.y >> 4) / 8;
+
+            // For left-facing enemies, the tile position is offset by +1 tile
+            if (enemy->dir == DIRECTION_LEFT)
+            {
+                actor_tile_x += 1;
+            }
+
+            if (actor_tile_x == x && actor_tile_y == y)
+            {
+                return enemy->dir; // Return the direction of the enemy
+            }
+        }
+    }
+    return 0; // No enemy found
+}
+
+// ============================================================================

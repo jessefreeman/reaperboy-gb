@@ -36,6 +36,8 @@ extern void init_enemy_system(void) BANKED;
 extern void update_valid_player_positions(void) BANKED;
 extern void init_column_platform_tracking(void) BANKED;
 extern void update_complete_level_code(void) BANKED;
+extern UBYTE has_enemy_actor_at_position(UBYTE x, UBYTE y) BANKED;
+extern UBYTE get_enemy_actor_direction_at_position(UBYTE x, UBYTE y) BANKED;
 
 // External reference to level code structure
 extern level_code_t current_level_code;
@@ -74,15 +76,20 @@ void paint(UBYTE x, UBYTE y) BANKED
     UBYTE current_tile_type = get_current_tile_type(x, y);
 
     // Enemy state transitions: right -> left -> delete -> new position
-    if (current_tile_type == BRUSH_TILE_ENEMY_R)
+    // Check for enemy actors instead of background tiles
+    if (has_enemy_actor_at_position(x, y))
     {
-        paint_enemy_left(x, y);
-        return;
-    }
-    else if (current_tile_type == BRUSH_TILE_ENEMY_L)
-    {
-        delete_enemy(x, y);
-        return;
+        UBYTE enemy_dir = get_enemy_actor_direction_at_position(x, y);
+        if (enemy_dir == DIRECTION_RIGHT)
+        {
+            paint_enemy_left(x, y);
+            return;
+        }
+        else if (enemy_dir == DIRECTION_LEFT)
+        {
+            delete_enemy(x, y);
+            return;
+        }
     }
 
     // New enemy placement - cycle through valid positions if needed

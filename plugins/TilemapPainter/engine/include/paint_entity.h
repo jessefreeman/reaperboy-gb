@@ -97,6 +97,12 @@ void paint_enemy_left(UBYTE x, UBYTE y) BANKED;
 // Delete an enemy at a position
 void delete_enemy(UBYTE x, UBYTE y) BANKED;
 
+// Check if there's an enemy actor at the specified position
+UBYTE has_enemy_actor_at_position(UBYTE x, UBYTE y) BANKED;
+
+// Get the direction of an enemy actor at the specified position
+UBYTE get_enemy_actor_direction_at_position(UBYTE x, UBYTE y) BANKED;
+
 // ============================================================================
 // EXIT POSITIONING
 // ============================================================================
