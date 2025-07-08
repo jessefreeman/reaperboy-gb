@@ -1,13 +1,14 @@
 #pragma bank 254
 
 #include <gbdk/platform.h>
+#include "code_level_core.h"
+#include "tile_utils.h"
 #include "paint_platform.h"
 #include "paint_core.h"
 #include "paint_entity.h"
 #include "paint_ui.h" // Include for SELECTOR_STATE_* constants
 #include "meta_tiles.h"
-#include "tile_utils.h"
-#include "code_level_core.h"
+#include "enemy_position_manager.h"
 
 // Forward declarations for platform-related functions
 extern void update_column_platform_deleted(UBYTE x, UBYTE y) BANKED;
@@ -274,4 +275,7 @@ void rebuild_platform_row(UBYTE y) BANKED
             current_len = 0;
         }
     }
+    
+    // Notify enemy position manager that platforms have changed
+    on_platform_changed(0, y); // x=0 is placeholder, function will recalculate all positions
 }

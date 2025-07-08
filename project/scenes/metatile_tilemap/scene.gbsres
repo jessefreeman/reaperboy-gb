@@ -130,22 +130,6 @@
       "children": {
         "true": [
           {
-            "command": "EVENT_GET_META_TILE_AT_POS",
-            "args": {
-              "x": {
-                "type": "number",
-                "value": 4
-              },
-              "y": {
-                "type": "number",
-                "value": 14
-              },
-              "output": "11",
-              "__comment": true
-            },
-            "id": "429ffb36-0366-4d1a-815a-d4d459d29305"
-          },
-          {
             "command": "EVENT_SET_VALUE",
             "args": {
               "variable": "8",
@@ -954,6 +938,14 @@
             "id": "1f5035c8-f261-41cb-99d9-ab5f8b7e5d0c"
           },
           {
+            "command": "EVENT_RESTORE_LEVEL_FROM_MEMORY",
+            "args": {
+              "description": "Restores the level layout from whatever is currently stored in C memory. Use this on scene init to restore the level after editing.",
+              "__collapse": true
+            },
+            "id": "38595138-7bb0-4c97-9815-d4ffc611da9b"
+          },
+          {
             "command": "EVENT_GROUP",
             "args": {
               "__label": "Star Setup",
@@ -1076,13 +1068,6 @@
               ]
             },
             "id": "6535e29c-c169-40e3-86c2-2006d374ccdd"
-          },
-          {
-            "command": "EVENT_RESTORE_LEVEL_FROM_MEMORY",
-            "args": {
-              "description": "Restores the level layout from whatever is currently stored in C memory. Use this on scene init to restore the level after editing."
-            },
-            "id": "38595138-7bb0-4c97-9815-d4ffc611da9b"
           }
         ]
       },

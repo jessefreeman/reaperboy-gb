@@ -8,13 +8,11 @@
 #include "tile_utils.h"
 #include "paint.h"                        // Add this to access the validation functions
 #include "code_enemy_system_validation.h" // Add the validation header
+#include "enemy_position_manager.h"       // Include unified enemy position manager
 
 // ============================================================================
 // ENEMY NUMERIC SYSTEM
 // ============================================================================
-
-// Level code enemy system constants
-#define LEVEL_CODE_MAX_ENEMIES 5
 
 // ============================================================================
 // INITIALIZATION
@@ -36,7 +34,7 @@ void init_enemy_system(void) BANKED
 // Get the row (0-3) for an enemy at a given position index
 UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED
 {
-    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
+    if (enemy_index >= MAX_ENEMIES)
         return 0;
 
     // Use the actual row from the level code
@@ -70,7 +68,7 @@ void extract_enemy_data(void) BANKED
 UBYTE encode_enemy_position(UBYTE enemy_index) BANKED
 {
     // First check if the enemy index is valid and the position is valid
-    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
+    if (enemy_index >= MAX_ENEMIES)
         return 0; // 0 = no enemy
 
     if (current_level_code.enemy_positions[enemy_index] == 255)
@@ -96,7 +94,7 @@ UBYTE encode_odd_mask(void) BANKED
 {
     UBYTE odd_mask = 0;
 
-    for (UBYTE k = 0; k < LEVEL_CODE_MAX_ENEMIES; k++)
+    for (UBYTE k = 0; k < MAX_ENEMIES; k++)
     {
         if (current_level_code.enemy_positions[k] != 255)
         {
@@ -175,7 +173,7 @@ UBYTE encode_enemy_directions(void) BANKED
 // Used for level code editing - only updates data structures and actors, never modifies background tiles
 void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UBYTE dir_bit) BANKED
 {
-    if (enemy_index >= LEVEL_CODE_MAX_ENEMIES)
+    if (enemy_index >= MAX_ENEMIES)
         return;
 
     // Clear previous enemy actor if it exists
@@ -244,7 +242,7 @@ void decode_enemy_position(UBYTE enemy_index, UBYTE pos_value, UBYTE odd_bit, UB
 void decode_enemy_data_from_values(const UBYTE *enemy_values) BANKED
 {
     // Clear all enemy actors but don't touch background tiles
-    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
         clear_enemy_actor(i);
     }
@@ -255,7 +253,7 @@ void decode_enemy_data_from_values(const UBYTE *enemy_values) BANKED
 
     // Clear enemy data
     current_level_code.enemy_directions = 0;
-    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
         current_level_code.enemy_positions[i] = 255;
         current_level_code.enemy_rows[i] = 255;
@@ -493,7 +491,7 @@ void restore_enemy_actors_from_level_code(void) BANKED
     
     // Now restore enemies based on current level code data
     // Use the painting system's slot management for consistency
-    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
     {
         if (current_level_code.enemy_positions[i] != 255)
         {

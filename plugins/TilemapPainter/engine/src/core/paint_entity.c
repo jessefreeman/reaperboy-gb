@@ -7,6 +7,7 @@
 #include "meta_tiles.h"
 #include "tile_utils.h"
 #include "code_level_core.h"
+#include "enemy_position_manager.h"
 
 // External actor array from GB Studio engine
 extern actor_t actors[];
@@ -102,37 +103,8 @@ UBYTE can_paint_player(UBYTE x, UBYTE y) BANKED
 
 UBYTE can_paint_enemy_right(UBYTE x, UBYTE y) BANKED
 {
-    // Basic validation - must be within bounds
-    if (!is_within_platform_bounds(x, y))
-        return 0;
-    
-    // Allow painting over enemies (for flipping/deleting) or empty tiles
-    UBYTE current_tile = get_current_tile_type(x, y);
-    if (current_tile != BRUSH_TILE_EMPTY && !has_enemy_actor_at_position(x, y))
-        return 0;
-
-    // No need to check enemy count - we use a pool system that cycles through enemies
-
-    // Allow enemies only on standard rows where they are scanned: 12, 14, 16, 18
-    if (y != 12 && y != 14 && y != 16 && y != 18)
-        return 0;
-
-    // Must have a platform directly below (strict 1:1 relationship)
-    if (!has_platform_directly_below(x, y))
-        return 0;
-
-    // Don't allow enemies directly below the player
-    // Player is at column 2-21 in tilemap, corresponding to 0-19 in level code
-    UBYTE player_x = current_level_code.player_column + 2;
-    if (x == player_x)
-        return 0;
-
-    // Don't allow multiple enemies in the same position or adjacent
-    // Exception: if there's already an enemy at this exact position, allow it (for flipping)
-    if (has_enemy_nearby(x, y) && !has_enemy_actor_at_position(x, y))
-        return 0;
-
-    return 1;
+    // Use the unified validation system for consistency
+    return validate_enemy_placement(x, y);
 }
 
 // Find the next valid position for an enemy in the paint system
@@ -144,7 +116,7 @@ void find_next_valid_enemy_position(UBYTE *x, UBYTE *y) BANKED
     UBYTE found = 0;
 
     // Check all standard enemy rows (these match ENEMY_ROWS in validation.c)
-    const UBYTE enemy_rows[4] = {12, 14, 16, 18};
+    static const UBYTE enemy_rows[4] = {12, 14, 16, 18};
 
     // Check all standard enemy rows
     for (UBYTE row_index = 0; row_index < 4; row_index++)

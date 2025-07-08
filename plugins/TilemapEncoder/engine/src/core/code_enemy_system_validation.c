@@ -8,13 +8,11 @@
 #include "tile_utils.h"
 #include "paint.h"
 #include "code_enemy_system_validation.h"
+#include "enemy_position_manager.h"
 
 // ============================================================================
-// ENEMY POSITION VALIDATION SYSTEM
+// ENEMY POSITION VALIDATION SYSTEM - Updated to use unified manager
 // ============================================================================
-
-// Maximum number of enemies supported in the level code
-#define LEVEL_CODE_MAX_ENEMIES 5
 
 // External function declarations
 extern UBYTE get_enemy_row_from_position(UBYTE enemy_index) BANKED;
@@ -24,12 +22,11 @@ extern UBYTE is_valid_platform_row(UBYTE y) BANKED;
 extern UBYTE has_enemy_nearby(UBYTE x, UBYTE y) BANKED;
 extern UBYTE has_enemy_actor_at_position(UBYTE x, UBYTE y) BANKED;
 
-// Valid enemy positions tracking
-UBYTE valid_enemy_positions[4][20]; // [row][column] - 1 if position is valid, 0 if not
-UBYTE valid_enemy_positions_count;  // Total count of valid enemy positions
+// Valid enemy positions tracking - now managed by unified system
+extern UBYTE valid_enemy_positions[4][20];
+extern UBYTE valid_enemy_positions_count;
 
-// Enemy position row mapping (the 4 standard enemy rows)
-const UBYTE ENEMY_ROWS[4] = {12, 14, 16, 18};
+// Use shared enemy position constants from enemy position manager
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -107,69 +104,29 @@ UBYTE is_above_exit(UBYTE x, UBYTE y) BANKED
 // Check if a position is valid for enemy placement
 UBYTE is_valid_enemy_position(UBYTE x, UBYTE y) BANKED
 {
-    // Basic boundary validation
-    if (x < PLATFORM_X_MIN || x > PLATFORM_X_MAX)
-        return 0;
-
-    // Enemy must be on one of the standard enemy rows
-    UBYTE is_valid_row = 0;
-    for (UBYTE i = 0; i < 4; i++)
-    {
-        if (y == ENEMY_ROWS[i])
-        {
-            is_valid_row = 1;
-            break;
-        }
-    }
-
-    if (!is_valid_row)
-        return 0;
-
-    // Must have a platform directly below
-    if (!has_platform_below_enemy(x, y))
-        return 0;
-
-    // Current position must be empty
-    UBYTE current_tile_type = get_current_tile_type(x, y);
-    if (current_tile_type != BRUSH_TILE_EMPTY)
-        return 0;
-
-    // Cannot be directly below player
-    if (is_below_player(x))
-        return 0;
-
-    // Cannot be above exit
-    if (is_above_exit(x, y))
-        return 0;
-
-    // Cannot have another enemy nearby
-    if (has_enemy_nearby(x, y))
-        return 0;
-
-    return 1;
+    // Use the unified validation system
+    return is_valid_enemy_position_unified(x, y);
 }
 
 // Check if a position is valid for an enemy at a specific index
 UBYTE is_position_valid_for_enemy(UBYTE enemy_index, UBYTE x, UBYTE y) BANKED
 {
-    // If checking the same enemy, consider its current position as empty
-    for (UBYTE i = 0; i < LEVEL_CODE_MAX_ENEMIES; i++)
-    {
-        if (i == enemy_index)
-            continue;
-
-        if (current_level_code.enemy_positions[i] != 255)
-        {
-            UBYTE enemy_x = PLATFORM_X_MIN + current_level_code.enemy_positions[i];
-            UBYTE enemy_y = get_enemy_y_from_row(get_enemy_row_from_position(i));
-
-            // Check if enemies would be too close
-            if ((enemy_x == x || enemy_x == x + 1 || enemy_x == x - 1) && enemy_y == y)
-                return 0;
-        }
-    }
-
-    return is_valid_enemy_position(x, y);
+    // Temporarily clear this enemy's position to avoid self-conflict
+    UBYTE old_pos = current_level_code.enemy_positions[enemy_index];
+    UBYTE old_row = current_level_code.enemy_rows[enemy_index];
+    
+    // Clear position temporarily
+    current_level_code.enemy_positions[enemy_index] = 255;
+    current_level_code.enemy_rows[enemy_index] = 255;
+    
+    // Check if position is valid
+    UBYTE is_valid = is_valid_enemy_position_unified(x, y);
+    
+    // Restore original position
+    current_level_code.enemy_positions[enemy_index] = old_pos;
+    current_level_code.enemy_rows[enemy_index] = old_row;
+    
+    return is_valid;
 }
 
 // ============================================================================
@@ -225,38 +182,8 @@ void update_valid_enemy_positions(void) BANKED
 // Update valid enemy positions affected by a platform change
 void update_enemy_positions_for_platform(UBYTE x, UBYTE y) BANKED
 {
-    // Determine which enemy row is affected
-    for (UBYTE row = 0; row < 4; row++)
-    {
-        UBYTE enemy_y = get_enemy_y_from_row(row);
-
-        // If this platform is below an enemy row, update that row
-        if (y > enemy_y && y <= enemy_y + 2) // Platform within 2 rows below enemy
-        {
-            // Check all columns that might be affected
-            for (UBYTE col = 0; col < 20; col++)
-            {
-                UBYTE check_x = PLATFORM_X_MIN + col;
-
-                // Only recheck positions directly above the platform
-                if (check_x == x)
-                {
-                    // Update this position
-                    UBYTE was_valid = valid_enemy_positions[row][col];
-                    UBYTE now_valid = is_valid_enemy_position(check_x, enemy_y);
-
-                    if (was_valid != now_valid)
-                    {
-                        valid_enemy_positions[row][col] = now_valid;
-                        if (now_valid)
-                            valid_enemy_positions_count++;
-                        else
-                            valid_enemy_positions_count--;
-                    }
-                }
-            }
-        }
-    }
+    // Use the unified system's platform change handler
+    on_platform_changed(x, y);
 }
 
 // ============================================================================
@@ -266,138 +193,60 @@ void update_enemy_positions_for_platform(UBYTE x, UBYTE y) BANKED
 // Find the next valid position for an enemy in the level code system
 void find_next_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED
 {
-    // Start from current position or from beginning if none
+    // Suppress unused parameter warning - direction is preserved
+    (void)dir_bit;
+    
+    // Get current position
     UBYTE current_col = (current_level_code.enemy_positions[enemy_index] != 255) ? current_level_code.enemy_positions[enemy_index] : 0;
     UBYTE current_row = get_enemy_row_from_position(enemy_index);
-
-    // Try each row and column combination, starting from current and wrapping around
-    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
+    
+    // Find next position using unified system
+    UBYTE next_row, next_col;
+    if (get_next_valid_enemy_position(current_row, current_col, &next_row, &next_col))
     {
-        UBYTE row = (current_row + row_offset) % 4;
-
-        // In the first row, start from column after current
-        UBYTE start_col = (row_offset == 0) ? (current_col + 1) : 0;
-
-        for (UBYTE col = start_col; col < 20; col++)
-        {
-            if (valid_enemy_positions[row][col])
-            {
-                // Found a valid position, convert to level code values
-                UBYTE x = PLATFORM_X_MIN + col;
-                UBYTE y = get_enemy_y_from_row(row);
-
-                // Calculate the POS41 value (1-40)
-                UBYTE anchor = col / 2;
-                *pos_value = 1 + row * 10 + anchor;
-
-                // Calculate the odd bit
-                *odd_bit = col % 2;
-
-                // Keep direction the same
-                *dir_bit = *dir_bit;
-
-                return;
-            }
-        }
-
-        // If we're not on the first row iteration, also check columns before the current one
-        if (row_offset == 0 && current_col > 0)
-        {
-            for (UBYTE col = 0; col < current_col; col++)
-            {
-                if (valid_enemy_positions[row][col])
-                {
-                    // Found a valid position, convert to level code values
-                    UBYTE x = PLATFORM_X_MIN + col;
-                    UBYTE y = get_enemy_y_from_row(row);
-
-                    // Calculate the POS41 value (1-40)
-                    UBYTE anchor = col / 2;
-                    *pos_value = 1 + row * 10 + anchor;
-
-                    // Calculate the odd bit
-                    *odd_bit = col % 2;
-
-                    // Keep direction the same
-                    *dir_bit = *dir_bit;
-
-                    return;
-                }
-            }
-        }
+        // Calculate the POS41 value (1-40)
+        UBYTE anchor = next_col / 2;
+        *pos_value = 1 + next_row * 10 + anchor;
+        
+        // Calculate the odd bit
+        *odd_bit = next_col % 2;
+        
+        // Keep direction the same
+        // *dir_bit unchanged
     }
-
-    // No valid position found
-    *pos_value = 0; // 0 = no enemy
+    else
+    {
+        // No valid position found
+        *pos_value = 0;
+    }
 }
 
 // Find the previous valid position for an enemy in the level code system
 void find_prev_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED
 {
-    // Start from current position or from end if none
+    // Get current position
     UBYTE current_col = (current_level_code.enemy_positions[enemy_index] != 255) ? current_level_code.enemy_positions[enemy_index] : 19;
     UBYTE current_row = get_enemy_row_from_position(enemy_index);
-
-    // Try each row and column combination, starting from current and wrapping around (in reverse)
-    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
+    
+    // Find previous position using unified system
+    UBYTE prev_row, prev_col;
+    if (get_prev_valid_enemy_position(current_row, current_col, &prev_row, &prev_col))
     {
-        UBYTE row = (4 + current_row - row_offset) % 4; // Move backward through rows
-
-        // In the first row, start from column before current
-        BYTE start_col = (row_offset == 0) ? ((BYTE)current_col - 1) : 19;
-
-        for (BYTE col = start_col; col >= 0; col--)
-        {
-            if (valid_enemy_positions[row][col])
-            {
-                // Found a valid position, convert to level code values
-                UBYTE x = PLATFORM_X_MIN + col;
-                UBYTE y = get_enemy_y_from_row(row);
-
-                // Calculate the POS41 value (1-40)
-                UBYTE anchor = col / 2;
-                *pos_value = 1 + row * 10 + anchor;
-
-                // Calculate the odd bit
-                *odd_bit = col % 2;
-
-                // Keep direction the same
-                // Use the dir_bit parameter to avoid warning
-                *dir_bit = *dir_bit;
-
-                return;
-            }
-        }
-
-        // If we're not on the first row iteration, also check columns after the current one
-        if (row_offset == 0 && current_col < 19)
-        {
-            for (BYTE col = 19; col > (BYTE)current_col; col--)
-            {
-                if (valid_enemy_positions[row][col])
-                {
-                    // Found a valid position, convert to level code values
-                    UBYTE x = PLATFORM_X_MIN + col;
-                    UBYTE y = get_enemy_y_from_row(row);
-
-                    // Calculate the POS41 value (1-40)
-                    UBYTE anchor = col / 2;
-                    *pos_value = 1 + row * 10 + anchor;
-
-                    // Calculate the odd bit
-                    *odd_bit = col % 2;
-
-                    // Keep direction the same
-                    // No need to modify *dir_bit
-
-                    return;
-                }
-            }
-        }
+        // Calculate the POS41 value (1-40)
+        UBYTE anchor = prev_col / 2;
+        *pos_value = 1 + prev_row * 10 + anchor;
+        
+        // Calculate the odd bit
+        *odd_bit = prev_col % 2;
+        
+        // Keep direction the same
+        *dir_bit = *dir_bit;
     }
-
-    // No valid position found
-    *pos_value = 0; // 0 = no enemy
+    else
+    {
+        // No valid position found
+        *pos_value = 0;
+    }
 }
 
 // ============================================================================
