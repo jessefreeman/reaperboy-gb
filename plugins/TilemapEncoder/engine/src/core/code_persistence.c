@@ -37,7 +37,7 @@ extern UBYTE paint_player_id;
 extern UBYTE paint_player_id;
 
 // Enemy system validation functions
-extern void update_valid_enemy_positions(void) BANKED;
+extern void update_valid_enemy_positions_unified(void) BANKED;
 extern void find_next_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED;
 extern void find_prev_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED;
 extern UBYTE encode_odd_mask_value(void) BANKED;
@@ -401,7 +401,7 @@ static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED
             UBYTE enemy_index = char_index - 17;
 
             // Update valid enemy positions to ensure we're using current data
-            update_valid_enemy_positions();
+            update_valid_enemy_positions_unified();
 
             if (direction > 0)
             {
@@ -412,21 +412,7 @@ static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED
 
                 find_next_valid_enemy_position_in_code(enemy_index, &pos_value, &odd_bit, &dir_bit);
                 new_value = pos_value; // Use the validated position
-
-                // Update odd bit in the mask if needed
-                if (odd_bit != ((current_level_code.enemy_directions >> enemy_index) & 1))
-                {
-                    UBYTE current_odd_mask = encode_odd_mask_value();
-                    UBYTE new_odd_mask = current_odd_mask;
-
-                    if (odd_bit)
-                        new_odd_mask |= (1 << enemy_index);
-                    else
-                        new_odd_mask &= ~(1 << enemy_index);
-
-                    // Update the odd mask character (character 22)
-                    update_display_with_value(22, new_odd_mask, 0, 0); // Position doesn't matter
-                }
+                // odd_bit and dir_bit remain unchanged during position cycling
             }
             else
             {
@@ -437,21 +423,7 @@ static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED
 
                 find_prev_valid_enemy_position_in_code(enemy_index, &pos_value, &odd_bit, &dir_bit);
                 new_value = pos_value; // Use the validated position
-
-                // Update odd bit in the mask if needed
-                if (odd_bit != ((current_level_code.enemy_directions >> enemy_index) & 1))
-                {
-                    UBYTE current_odd_mask = encode_odd_mask_value();
-                    UBYTE new_odd_mask = current_odd_mask;
-
-                    if (odd_bit)
-                        new_odd_mask |= (1 << enemy_index);
-                    else
-                        new_odd_mask &= ~(1 << enemy_index);
-
-                    // Update the odd mask character (character 22)
-                    update_display_with_value(22, new_odd_mask, 0, 0); // Position doesn't matter
-                }
+                // odd_bit and dir_bit remain unchanged during position cycling
             }
         }
         else if (char_index == 22 || char_index == 23)

@@ -193,60 +193,91 @@ void update_enemy_positions_for_platform(UBYTE x, UBYTE y) BANKED
 // Find the next valid position for an enemy in the level code system
 void find_next_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED
 {
-    // Suppress unused parameter warning - direction is preserved
-    (void)dir_bit;
+    // Preserve the odd bit and direction bit - they should not change during cycling
+    UBYTE current_odd_bit = *odd_bit;
     
     // Get current position
     UBYTE current_col = (current_level_code.enemy_positions[enemy_index] != 255) ? current_level_code.enemy_positions[enemy_index] : 0;
     UBYTE current_row = get_enemy_row_from_position(enemy_index);
     
-    // Find next position using enemy-specific system to prevent stacking
-    UBYTE next_row, next_col;
-    if (get_next_valid_enemy_position_for_specific_enemy(current_row, current_col, enemy_index, &next_row, &next_col))
+    // Cycle through positions that match the current odd bit
+    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
     {
-        // Calculate the POS41 value (1-40)
-        UBYTE anchor = next_col / 2;
-        *pos_value = 1 + next_row * 10 + anchor;
+        UBYTE row = (current_row + row_offset) % 4;
+        UBYTE start_col = (row_offset == 0) ? current_col + 1 : 0;
         
-        // Calculate the odd bit
-        *odd_bit = next_col % 2;
-        
-        // Keep direction the same
-        // *dir_bit unchanged
+        for (UBYTE col = start_col; col < 20; col++)
+        {
+            // Only consider columns that match the current odd bit
+            if ((col % 2) != current_odd_bit)
+                continue;
+            
+            // Check if this position is in the valid positions matrix
+            if (valid_enemy_positions[row][col])
+            {
+                // Check if any OTHER enemy is at this position
+                UBYTE x = PLATFORM_X_MIN + col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (!has_enemy_at_exact_position_excluding(x, y, enemy_index))
+                {
+                    // Found a valid position with the same odd bit
+                    UBYTE anchor = col / 2;
+                    *pos_value = 1 + row * 10 + anchor;
+                    // *odd_bit and *dir_bit remain unchanged
+                    return;
+                }
+            }
+        }
     }
-    else
-    {
-        // No valid position found
-        *pos_value = 0;
-    }
+    
+    // No valid position found
+    *pos_value = 0;
 }
 
 // Find the previous valid position for an enemy in the level code system
 void find_prev_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED
 {
+    // Preserve the odd bit and direction bit - they should not change during cycling
+    UBYTE current_odd_bit = *odd_bit;
+    
     // Get current position
     UBYTE current_col = (current_level_code.enemy_positions[enemy_index] != 255) ? current_level_code.enemy_positions[enemy_index] : 19;
     UBYTE current_row = get_enemy_row_from_position(enemy_index);
     
-    // Find previous position using enemy-specific system to prevent stacking
-    UBYTE prev_row, prev_col;
-    if (get_prev_valid_enemy_position_for_specific_enemy(current_row, current_col, enemy_index, &prev_row, &prev_col))
+    // Cycle backward through positions that match the current odd bit
+    for (UBYTE row_offset = 0; row_offset < 4; row_offset++)
     {
-        // Calculate the POS41 value (1-40)
-        UBYTE anchor = prev_col / 2;
-        *pos_value = 1 + prev_row * 10 + anchor;
+        UBYTE row = (4 + current_row - row_offset) % 4;
+        BYTE end_col = (row_offset == 0) ? ((BYTE)current_col - 1) : 19;
         
-        // Calculate the odd bit
-        *odd_bit = prev_col % 2;
-        
-        // Keep direction the same
-        *dir_bit = *dir_bit;
+        for (BYTE col = end_col; col >= 0; col--)
+        {
+            // Only consider columns that match the current odd bit
+            if (((UBYTE)col % 2) != current_odd_bit)
+                continue;
+            
+            // Check if this position is in the valid positions matrix
+            if (valid_enemy_positions[row][(UBYTE)col])
+            {
+                // Check if any OTHER enemy is at this position
+                UBYTE x = PLATFORM_X_MIN + (UBYTE)col;
+                UBYTE y = ENEMY_ROWS[row];
+                
+                if (!has_enemy_at_exact_position_excluding(x, y, enemy_index))
+                {
+                    // Found a valid position with the same odd bit
+                    UBYTE anchor = (UBYTE)col / 2;
+                    *pos_value = 1 + row * 10 + anchor;
+                    // *odd_bit and *dir_bit remain unchanged
+                    return;
+                }
+            }
+        }
     }
-    else
-    {
-        // No valid position found
-        *pos_value = 0;
-    }
+    
+    // No valid position found
+    *pos_value = 0;
 }
 
 // ============================================================================
