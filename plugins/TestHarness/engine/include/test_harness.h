@@ -15,8 +15,13 @@ extern void test_stop_execution(void) BANKED;
 // Test result functions
 extern UBYTE test_get_passed_count(void) BANKED;
 extern UBYTE test_get_failed_count(void) BANKED;
+extern UBYTE test_get_total_count(void) BANKED;
 
 // Test functions - returns 1 for PASS, 0 for FAIL
 extern UBYTE test_verify_variable(UBYTE actual_value, UBYTE expected_value, const char* description) BANKED;
+
+// Display functions - default implementations provided, override in your game
+extern void test_display_message(const char* message) BANKED;
+extern void test_clear_display(void) BANKED;
 
 #endif

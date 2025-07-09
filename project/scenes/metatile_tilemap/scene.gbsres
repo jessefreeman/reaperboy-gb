@@ -1084,6 +1084,24 @@
     {
       "command": "EVENT_GROUP",
       "args": {
+        "__label": "Tests"
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_CALL_CUSTOM_EVENT",
+            "args": {
+              "customEventId": "838fab55-7291-4a4b-bab9-6bd6dbaf25f6"
+            },
+            "id": "bf6254bd-fa63-4fa1-8a3a-ea2ccf718686"
+          }
+        ]
+      },
+      "id": "a4aa3273-0fcd-4fa1-b26d-83cb164fd3c2"
+    },
+    {
+      "command": "EVENT_GROUP",
+      "args": {
         "__label": "Game Loop"
       },
       "children": {

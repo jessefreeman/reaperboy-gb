@@ -1,7 +1,0 @@
-{
-    "version": "4.2.0-e7",
-    "files": [
-        "include/test_harness.h",
-        "src/test_harness.c"
-    ]
-}

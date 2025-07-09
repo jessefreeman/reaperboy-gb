@@ -1,0 +1,56 @@
+{
+  "_resourceType": "script",
+  "id": "838fab55-7291-4a4b-bab9-6bd6dbaf25f6",
+  "name": "SCRIPT_TEST_EXAMPLE",
+  "description": "",
+  "variables": {},
+  "actors": {},
+  "symbol": "script_10",
+  "script": [
+    {
+      "command": "EVENT_GROUP",
+      "args": {
+        "__label": "Tests"
+      },
+      "children": {
+        "true": [
+          {
+            "command": "EVENT_TEST_START",
+            "args": {
+              "test_name": "Test Suite",
+              "message": "Starting: {TEST_NAME}",
+              "debug_enabled": true
+            },
+            "id": "a0c20c6f-4cb0-48f0-aecd-5e923976b4ac"
+          },
+          {
+            "command": "EVENT_TEST_VERIFY_VARIABLE",
+            "args": {
+              "variable": "0",
+              "expected_value": 1,
+              "test_name": "V_EDIT_MODE",
+              "message": "Test: {TEST_NAME} - Result: {RESULT}",
+              "pass_message": "Pass",
+              "fail_message": "FAIL {ACTUAL}",
+              "test_label": "Test Label"
+            },
+            "id": "a5654d4b-841d-4dec-ac0e-a40213e158e0",
+            "children": {
+              "true": [],
+              "false": []
+            }
+          },
+          {
+            "command": "EVENT_TEST_END",
+            "args": {
+              "show_results": true,
+              "message": "Tests completed!"
+            },
+            "id": "cc93e4e1-6e62-4fec-a788-eec96ad02a12"
+          }
+        ]
+      },
+      "id": "f5d5ada9-c973-428b-bd0c-a882c6b3a817"
+    }
+  ]
+}

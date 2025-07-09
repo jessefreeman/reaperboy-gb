@@ -11,6 +11,13 @@ const fields = [
         placeholder: "Enter test name..."
     },
     {
+        key: "message",
+        label: "Start Message",
+        type: "text",
+        defaultValue: "Starting: {TEST_NAME}",
+        placeholder: "Available tokens: {TEST_NAME}"
+    },
+    {
         key: "debug_enabled",
         label: "Debug Messages",
         type: "checkbox",
@@ -19,22 +26,17 @@ const fields = [
 ];
 
 const compile = (input, helpers) => {
-    const { appendRaw, _addComment, _addNL, textDialogue } = helpers;
+    const { textDialogue, _addComment, _addNL } = helpers;
     
     _addComment(`Start Test Suite: ${input.test_name || "Test Suite"}`);
     _addNL();
     
-    // Initialize test harness
-    appendRaw(`test_harness_init();`);
-    _addNL();
-    
-    // Start test execution
-    appendRaw(`test_start_execution();`);
-    _addNL();
-    
-    // Show start message if debug enabled
     if (input.debug_enabled) {
-        textDialogue(`Starting tests: ${input.test_name || "Test Suite"}`);
+        const testName = input.test_name || "Test Suite";
+        const startMessage = (input.message || "Starting: {TEST_NAME}")
+            .replace(/{TEST_NAME}/g, testName);
+        
+        textDialogue(startMessage);
         _addNL();
     }
 };

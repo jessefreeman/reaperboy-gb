@@ -1,0 +1,48 @@
+const l10n = require("../helpers/l10n").default;
+
+const id = "EVENT_CLEAR_DATA";
+const groups = ["EVENT_GROUP_SAVE_DATA"];
+
+const fields = [
+  {
+    label: l10n("FIELD_CLEAR_DATA"),
+  },
+  {
+    key: "saveSlot",
+    label: l10n("FIELD_SAVE_SLOT"),
+    description: l10n("FIELD_SAVE_SLOT_DESC"),
+    type: "togglebuttons",
+    options: [
+      [
+        0,
+        l10n("FIELD_SLOT_N", { slot: 1 }),
+        l10n("FIELD_SAVE_SLOT_N", { slot: 1 }),
+      ],
+      [
+        1,
+        l10n("FIELD_SLOT_N", { slot: 2 }),
+        l10n("FIELD_SAVE_SLOT_N", { slot: 2 }),
+      ],
+      [
+        2,
+        l10n("FIELD_SLOT_N", { slot: 3 }),
+        l10n("FIELD_SAVE_SLOT_N", { slot: 3 }),
+      ],
+    ],
+    allowNone: false,
+    defaultValue: 0,
+  },
+];
+
+const compile = (input, helpers) => {
+  const { dataClear } = helpers;
+  dataClear(input.saveSlot);
+};
+
+module.exports = {
+  id,
+  description: l10n("EVENT_CLEAR_DATA_DESC"),
+  groups,
+  fields,
+  compile,
+};
