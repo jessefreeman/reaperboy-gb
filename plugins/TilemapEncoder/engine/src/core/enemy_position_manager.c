@@ -22,6 +22,7 @@ const UBYTE PLATFORM_ROWS[4] = {13, 15, 17, 19};
 // External function declarations
 extern UBYTE get_current_tile_type(UBYTE x, UBYTE y) BANKED;
 extern UBYTE is_valid_platform_row(UBYTE y) BANKED;
+extern void clear_enemy_actor(UBYTE enemy_index) BANKED;
 
 // ============================================================================
 // PLATFORM TRACKING SYSTEM
@@ -521,7 +522,42 @@ void on_platform_changed(UBYTE x, UBYTE y) BANKED
     // Only update if this affects enemy positioning
     if (y == 13 || y == 15 || y == 17 || y == 19)
     {
+        // Update platform positions cache first
+        update_platform_positions();
+        
+        // Clear any enemies that no longer have platforms
+        clear_enemies_without_platforms();
+        
+        // Update valid enemy positions
         update_valid_enemy_positions_unified();
+    }
+}
+
+// Clear enemies that would be left without platforms after a platform is removed
+void clear_enemies_without_platforms(void) BANKED
+{
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        // Skip enemies that are not placed
+        if (current_level_code.enemy_positions[i] == 255)
+            continue;
+        
+        UBYTE enemy_col = current_level_code.enemy_positions[i];
+        UBYTE enemy_row = current_level_code.enemy_rows[i];
+        
+        // Check if there's still a platform below this enemy
+        if (!has_platform_below_cached(enemy_row, enemy_col))
+        {
+            // No platform below - remove this enemy
+            current_level_code.enemy_positions[i] = 255;
+            current_level_code.enemy_rows[i] = 255;
+            
+            // Clear the enemy bit from direction mask
+            current_level_code.enemy_directions &= ~(1 << i);
+            
+            // Clear the enemy actor if it exists
+            clear_enemy_actor(i);
+        }
     }
 }
 
@@ -561,6 +597,94 @@ UBYTE is_valid_enemy_position_for_code(UBYTE x, UBYTE y) BANKED
     // For code-based placement, we allow placement even without platforms
     // The paint system will handle proper platform validation
     return 1;
+}
+
+// ============================================================================
+// OFFSET MASK VALIDATION
+// ============================================================================
+
+// Check if a given offset mask value would result in all enemies being placed in valid positions
+UBYTE is_valid_offset_mask(UBYTE mask_value) BANKED
+{
+    // Test each enemy that has a position to see if the new offset would be valid
+    for (UBYTE i = 0; i < MAX_ENEMIES; i++)
+    {
+        // Skip enemies that are not placed (position 255 means no enemy)
+        if (current_level_code.enemy_positions[i] == 255)
+            continue;
+        
+        // Get the current position values
+        UBYTE current_col = current_level_code.enemy_positions[i];
+        UBYTE current_row = current_level_code.enemy_rows[i];
+        
+        // Calculate the POS41 value for this enemy
+        UBYTE anchor = current_col / 2;
+        
+        // Get the proposed odd bit for this enemy from the mask
+        UBYTE new_odd_bit = (mask_value >> i) & 1;
+        
+        // Calculate what the new column would be
+        UBYTE new_col = anchor * 2 + new_odd_bit;
+        
+        // Check bounds
+        if (new_col >= 20)
+            return 0; // Would place enemy out of bounds
+        
+        // Calculate the tilemap position
+        UBYTE new_x = PLATFORM_X_MIN + new_col;
+        UBYTE new_y = ENEMY_ROWS[current_row];
+        
+        // Check basic position validity
+        if (!is_valid_enemy_position_for_code(new_x, new_y))
+            return 0; // Would place enemy in invalid position
+        
+        // Must have platform directly below (this is essential for gameplay)
+        if (!has_platform_below_cached(current_row, new_col))
+            return 0; // Would place enemy without platform support
+        
+        // Check for conflicts with other enemies at the new position
+        if (has_enemy_at_exact_position_excluding(new_x, new_y, i))
+            return 0; // Would cause enemy stacking
+        
+        // Cannot be directly below player
+        UBYTE player_x = current_level_code.player_column + PLATFORM_X_MIN;
+        if (new_x == player_x)
+            return 0; // Would place enemy under player
+    }
+    
+    return 1; // All enemies would be in valid positions
+}
+
+// Get the next valid offset mask value for cycling
+UBYTE get_next_valid_offset_mask(UBYTE current_mask) BANKED
+{
+    // Try each possible mask value starting from current + 1
+    for (UBYTE test_mask = (current_mask + 1) % 32; test_mask != current_mask; test_mask = (test_mask + 1) % 32)
+    {
+        if (is_valid_offset_mask(test_mask))
+        {
+            return test_mask;
+        }
+    }
+    
+    // If no valid mask found, return current (should not happen in normal cases)
+    return current_mask;
+}
+
+// Get the previous valid offset mask value for cycling
+UBYTE get_prev_valid_offset_mask(UBYTE current_mask) BANKED
+{
+    // Try each possible mask value starting from current - 1
+    for (UBYTE test_mask = (current_mask == 0) ? 31 : current_mask - 1; test_mask != current_mask; test_mask = (test_mask == 0) ? 31 : test_mask - 1)
+    {
+        if (is_valid_offset_mask(test_mask))
+        {
+            return test_mask;
+        }
+    }
+    
+    // If no valid mask found, return current
+    return current_mask;
 }
 
 // ============================================================================

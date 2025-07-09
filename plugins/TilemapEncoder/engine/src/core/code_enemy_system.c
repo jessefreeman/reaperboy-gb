@@ -368,7 +368,24 @@ void handle_enemy_data_edit(UBYTE char_index, UBYTE new_value) BANKED
     {
         if (new_value <= 31) // Valid BASE32 range
         {
-            enemy_values[rel_index] = new_value;
+            // Additional validation for character 22 (offset mask)
+            if (rel_index == 5) // Character 22 (offset mask)
+            {
+                if (is_valid_offset_mask(new_value))
+                {
+                    enemy_values[rel_index] = new_value;
+                }
+                else
+                {
+                    // Invalid offset mask, keep current value
+                    enemy_values[rel_index] = encode_odd_mask_value();
+                }
+            }
+            else
+            {
+                // Character 23 (direction mask) - no additional validation needed
+                enemy_values[rel_index] = new_value;
+            }
         }
     }
 

@@ -38,6 +38,9 @@ extern UBYTE paint_player_id;
 
 // Enemy system validation functions
 extern void update_valid_enemy_positions_unified(void) BANKED;
+extern UBYTE get_next_valid_offset_mask(UBYTE current_mask) BANKED;
+extern UBYTE get_prev_valid_offset_mask(UBYTE current_mask) BANKED;
+extern UBYTE is_valid_offset_mask(UBYTE mask_value) BANKED;
 extern void find_next_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED;
 extern void find_prev_valid_enemy_position_in_code(UBYTE enemy_index, UBYTE *pos_value, UBYTE *odd_bit, UBYTE *dir_bit) BANKED;
 extern UBYTE encode_odd_mask_value(void) BANKED;
@@ -429,17 +432,16 @@ static void cycle_character_internal(UBYTE x, UBYTE y, BYTE direction) BANKED
         else if (char_index == 22 || char_index == 23)
         {
             // Enemy mask values (BASE32 system): 0-31
-            UBYTE max_value = 31;
-
+            // Use validation to ensure only valid offset combinations are allowed
             if (direction > 0)
             {
-                // Forward cycling
-                new_value = (current_value >= max_value) ? 0 : current_value + 1;
+                // Forward cycling - get next valid offset mask
+                new_value = get_next_valid_offset_mask(current_value);
             }
             else
             {
-                // Reverse cycling
-                new_value = (current_value == 0) ? max_value : current_value - 1;
+                // Reverse cycling - get previous valid offset mask
+                new_value = get_prev_valid_offset_mask(current_value);
             }
         }
         else
@@ -659,6 +661,12 @@ void set_level_code_character(UBYTE char_index, UBYTE value) BANKED
     else if (char_index >= 22 && char_index <= 23) // Enemy masks
     {
         if (value > 31) return; // Invalid BASE32 value
+        
+        // Additional validation for character 22 (offset mask) - only allow valid combinations
+        if (char_index == 22)
+        {
+            if (!is_valid_offset_mask(value)) return; // Invalid offset combination
+        }
     }
     
     // Store the character value

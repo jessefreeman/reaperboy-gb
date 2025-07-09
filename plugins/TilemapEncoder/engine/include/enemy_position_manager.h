@@ -104,4 +104,20 @@ UBYTE validate_enemy_placement(UBYTE x, UBYTE y) BANKED;
 // Enhanced validation for paint tool when enemy index is known
 UBYTE validate_enemy_placement_for_enemy(UBYTE x, UBYTE y, UBYTE enemy_index) BANKED;
 
+// ============================================================================
+// OFFSET MASK VALIDATION
+// ============================================================================
+
+// Check if a given offset mask value would result in all enemies being placed in valid positions
+UBYTE is_valid_offset_mask(UBYTE mask_value) BANKED;
+
+// Get the next valid offset mask value for cycling
+UBYTE get_next_valid_offset_mask(UBYTE current_mask) BANKED;
+
+// Get the previous valid offset mask value for cycling
+UBYTE get_prev_valid_offset_mask(UBYTE current_mask) BANKED;
+
+// Clear enemies that would be left without platforms after a platform is removed
+void clear_enemies_without_platforms(void) BANKED;
+
 #endif // ENEMY_POSITION_MANAGER_H
