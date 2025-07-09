@@ -1,0 +1,15 @@
+{
+    "id": "test-harness",
+    "name": "Test Harness Framework",
+    "author": "Your Name",
+    "version": "1.0.0",
+    "description": "A simple test harness for variable testing and validation",
+    "fields": [],
+    "engine": {
+        "version": "4.2.0-e7",
+        "files": [
+            "include/test_harness.h",
+            "src/test_harness_simple.c"
+        ]
+    }
+}
